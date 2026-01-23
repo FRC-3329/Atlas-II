@@ -1,33 +1,34 @@
 package frc.robot.subsystems;
 
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import static edu.wpi.first.units.Units.Meter;
+
 import frc.robot.Constants;
 
 import java.io.File;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
-import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.Filesystem;
-import swervelib.parser.SwerveParser;
-import swervelib.SwerveDrive;
-import swervelib.SwerveDriveTest;
-import swervelib.math.SwerveMath;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Filesystem;
 
-import static edu.wpi.first.units.Units.Meter;
-
+import swervelib.parser.SwerveParser;
+import swervelib.SwerveDrive;
+import swervelib.SwerveDriveTest;
+import swervelib.math.SwerveMath;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.config.PIDConstants;
@@ -119,21 +120,22 @@ public class SwerveSubsystem extends SubsystemBase {
 	/**
 	 * Adds a vision measurement to improve the robot's position estimate.
 	 * 
-	 * This lets us use cameras (like PhotonVision) to correct our position estimate by looking at AprilTags. 
+	 * This lets us use cameras (like PV or QN) to correct our position estimate by looking at AprilTags. 
 	 * The standard deviations (stdDevs) tell the Kalman filter how much to trust this measurement vs our wheel odometry.
 	 * 
-	 * @param visionMeasurement the pose measured by the camera
+	 * @param visionMeasurement the pose measured by the camera (will be converted from 3D to 2D)
 	 * @param timestampSeconds  when the measurement was taken (from FPGA timestamp)
 	 * @param stdDevs           how much we trust this measurement (lower = more trust)
 	 * 
 	 * See {@link SwerveDrivePoseEstimator#addVisionMeasurement(Pose2d, double, Matrix)}.
 	 */
 	public void addVisionMeasurement(
-		Pose2d visionMeasurement, 
+		Pose3d visionMeasurement, 
 		double timestampSeconds, 
 		Matrix<N3, N1> stdDevs
 	){
-		swerveDrive.addVisionMeasurement(visionMeasurement, timestampSeconds, stdDevs);
+		// Pose3d -> Pose2d (drivetrain operates in 2D)
+		swerveDrive.addVisionMeasurement(visionMeasurement.toPose2d(), timestampSeconds, stdDevs);
 	}
 
 	/**
@@ -183,6 +185,7 @@ public class SwerveSubsystem extends SubsystemBase {
 	) {
 		return run(() -> {
 			// Scale translation inputs to 80%
+			// TODO: May need to be tweaked
 			Translation2d scaledInputs = SwerveMath.scaleTranslation(
 				new Translation2d(
 					translationX.getAsDouble(), 
@@ -336,6 +339,7 @@ public class SwerveSubsystem extends SubsystemBase {
 					}
 				},
 				// Configure holonomic drive controller with PID
+				// TODO: PID needs to be tuned
 				new PPHolonomicDriveController(
 					new PIDConstants(3.0, 0.0, 0.1),  // Translation
 					new PIDConstants(3.0, 0.0, 0.1)   // Rotation
@@ -343,15 +347,19 @@ public class SwerveSubsystem extends SubsystemBase {
 				config,
 				() -> {
 					var alliance = DriverStation.getAlliance();
+
 					if (alliance.isPresent()) {
 						return alliance.get() == DriverStation.Alliance.Red;
 					}
+
 					return false;
 				},
 				this
 			);
 		} catch (Exception e) {
-			DriverStation.reportError("Failed to setup PathPlanner: " + e.getMessage(), e.getStackTrace());
+			DriverStation.reportError(
+				"Failed to setup PathPlanner: " + e.getMessage(), e.getStackTrace()
+			);
 		}
 	}
 
@@ -381,7 +389,10 @@ public class SwerveSubsystem extends SubsystemBase {
 			PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
 			return AutoBuilder.pathfindThenFollowPath(path, constraints);
 		} catch (Exception e) {
-			DriverStation.reportError("Unable to load path: " + pathName, e.getStackTrace());
+			DriverStation.reportError(
+				"Unable to load path: " + pathName, e.getStackTrace()
+			);
+
 			return Commands.none();
 		}
 	}
