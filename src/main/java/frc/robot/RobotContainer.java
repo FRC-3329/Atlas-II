@@ -4,6 +4,9 @@ import frc.robot.Constants.OperatorConstants;
 import frc.robot.subsystems.SwerveSubsystem;
 import swervelib.SwerveInputStream;
 
+import com.pathplanner.lib.auto.AutoBuilder;
+
+import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -27,6 +30,9 @@ public class RobotContainer {
     private final SwerveInputStream driveAngularVelocity;
     private final Command driveFieldOrientedAngularVelocity;
 
+    // Autonomous chooser
+    private final SendableChooser<Command> autoChooser;
+
     /** The container for the robot. Contains subsystems, OI devices, and commands. */
     public RobotContainer() {
         // Configure drive input stream with deadband and alliance-relative control
@@ -47,6 +53,12 @@ public class RobotContainer {
 
         // Configure motor brake mode (false = coast)
         setMotorBrake(false);
+
+        // Build autonomous chooser from PathPlanner
+        autoChooser = AutoBuilder.buildAutoChooser();
+        SmartDashboard.putData("Auto Chooser", autoChooser);
+        // Default to no autonomous
+        autoChooser.setDefaultOption("None", Commands.none());
 
         // Configure button bindings
         configureBindings();
@@ -82,11 +94,13 @@ public class RobotContainer {
     }
 
     /**
-     * Use this to pass the autonomous command to the mai n{@link Robot} class.
+     * Use this to pass the autonomous command to the main {@link Robot} class.
      *
      * @return the command to run in autonomous
      */
     public Command getAutonomousCommand() {
-        return Commands.none();
+        // Return the selected autonomous command from the chooser
+        // If no auto is selected, this will return Commands.none()
+        return autoChooser.getSelected();
     }
 }

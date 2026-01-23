@@ -10,6 +10,7 @@ import java.io.File;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Filesystem;
 import swervelib.parser.SwerveParser;
 import swervelib.SwerveDrive;
@@ -26,6 +27,14 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 
 import static edu.wpi.first.units.Units.Meter;
+
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.config.PIDConstants;
+import com.pathplanner.lib.config.RobotConfig;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
 
 /**
  * Subsystem for swerve drivetrain
@@ -80,6 +89,9 @@ public class SwerveSubsystem extends SubsystemBase {
 		swerveDrive.replaceSwerveModuleFeedforward(
 			new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775)
 		);
+
+		// Setup PathPlanner
+		setupPathPlanner();
 	}
 
 	@Override
@@ -282,5 +294,95 @@ public class SwerveSubsystem extends SubsystemBase {
 			),
 			3, 4, 1.5
 		);
+	}
+
+	/**
+	 * Sets up PathPlanner AutoBuilder for autonomous path following.
+	 * 
+	 * Configures:
+	 * - How to get/set robot pose
+	 * - PID constants for translation and rotation
+	 * - Whether to flip paths for red alliance
+	 */
+	public void setupPathPlanner() {
+		RobotConfig config;
+		try {
+			// Load robot configuration from PathPlanner GUI settings
+			config = RobotConfig.fromGUISettings();
+			final boolean enableFeedforward = true;
+
+			/*
+				Configure AutoBuilder with:
+					- pose supplier
+					- reset method
+					- velocity supplier
+					- drive method
+			*/
+			AutoBuilder.configure(
+				swerveDrive::getPose,          // Supplier for current robot pose
+				swerveDrive::resetOdometry,    // Consumer to reset odometry
+				swerveDrive::getRobotVelocity, // Supplier for current robot velocity
+				(speedsRobotRelative, moduleFeedForwards) -> {
+					if (enableFeedforward) {
+						// Drive with feedforward for more accurate path following
+						swerveDrive.drive(
+							speedsRobotRelative,
+							swerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
+							moduleFeedForwards.linearForces()
+						);
+					} else {
+						// Drive without feedforward
+						swerveDrive.setChassisSpeeds(speedsRobotRelative);
+					}
+				},
+				// Configure holonomic drive controller with PID
+				new PPHolonomicDriveController(
+					new PIDConstants(3.0, 0.0, 0.1),  // Translation
+					new PIDConstants(3.0, 0.0, 0.1)   // Rotation
+				),
+				config,
+				() -> {
+					var alliance = DriverStation.getAlliance();
+					if (alliance.isPresent()) {
+						return alliance.get() == DriverStation.Alliance.Red;
+					}
+					return false;
+				},
+				this
+			);
+		} catch (Exception e) {
+			DriverStation.reportError("Failed to setup PathPlanner: " + e.getMessage(), e.getStackTrace());
+		}
+	}
+
+	/**
+	 * Gets a PathPlanner autonomous command by name.
+	 * 
+	 * The path must be created in the PathPlanner GUI and saved in deploy/pathplanner/autos
+	 * 
+	 * @param pathName name of the PathPlanner auto
+	 * @return command to follow the autonomous path
+	 */
+	public Command getAutonomousCommand(String pathName) {
+		return new PathPlannerAuto(pathName);
+	}
+
+	/**
+	 * Creates a command to pathfind to a path and then follow it.
+	 * 
+	 * This will dynamically find a path from the current pose to the start of the specified path, then follow that path.
+	 * 
+	 * @param pathName    name of the path to follow
+	 * @param constraints constraints for pathfinding
+	 * @return command to pathfind and follow
+	 */
+	public Command pathfindThenFollowPath(String pathName, PathConstraints constraints) {
+		try {
+			PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
+			return AutoBuilder.pathfindThenFollowPath(path, constraints);
+		} catch (Exception e) {
+			DriverStation.reportError("Unable to load path: " + pathName, e.getStackTrace());
+			return Commands.none();
+		}
 	}
 }
