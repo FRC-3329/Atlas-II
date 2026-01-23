@@ -52,7 +52,7 @@ public class Robot extends TimedRobot {
         Pathfinding.setPathfinder(new LocalADStar());
         
         // Warmup command to preload PathPlanner classes
-        FollowPathCommand.warmupCommand().schedule();
+        CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     }
 
     /** This function is called once each time the robot enters Disabled mode. */
@@ -75,7 +75,7 @@ public class Robot extends TimedRobot {
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
 
         if (m_autonomousCommand != null) {
-            m_autonomousCommand.schedule();
+            CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
     }
 
