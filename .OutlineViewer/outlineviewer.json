@@ -1,0 +1,36 @@
+{
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "3329"
+  },
+  "timestamp": true,
+  "transitory": {
+    "SmartDashboard": {
+      "open": true,
+      "swerve": {
+        "double[]##v_/SmartDashboard/swerve/measuredStates": {
+          "open": true
+        },
+        "imu": {
+          "open": true
+        },
+        "modules": {
+          "backleft": {
+            "open": true
+          },
+          "backright": {
+            "open": true
+          },
+          "frontleft": {
+            "open": true
+          },
+          "frontright": {
+            "open": true
+          },
+          "open": true
+        },
+        "open": true
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "NetworkTables": {
+    "types": {
+      "/FMSInfo": "FMSInfo",
+      "/SmartDashboard/Alerts": "Alerts",
+      "/SmartDashboard/Encoders": "Alerts",
+      "/SmartDashboard/Field": "Field2d",
+      "/SmartDashboard/IMU": "Alerts",
+      "/SmartDashboard/JSON": "Alerts",
+      "/SmartDashboard/Motors": "Alerts",
+      "/SmartDashboard/Pigeon 2 (v6) [0]": "Gyro",
+      "/SmartDashboard/Swerve Drive": "Alerts"
+    }
+  },
+  "NetworkTables Info": {
+    "visible": true
+  },
+  "NetworkTables Settings": {
+    "mode": "Client (NT4)",
+    "serverTeam": "3329"
+  }
+}
