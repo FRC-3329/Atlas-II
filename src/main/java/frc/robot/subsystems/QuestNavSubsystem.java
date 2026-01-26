@@ -14,17 +14,14 @@ import frc.robot.utils.VisionData.EstimateConsumer;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;
 
-/** Questnav subsystem for position tracking */
 public class QuestNavSubsystem extends SubsystemBase {
     public final QuestNav questNav = new QuestNav();
-    /**  Sends alerts over NetworkTables */
-    private final Alert alert;
 
-    /** Publisher for world pose to NetworkTables */
+    private final Alert alert;
 	private final StructPublisher<Pose3d> worldPosePublisher = NetworkTableInstance
-        .getDefault() // default NT instance
-        .getStructTopic("QuestNav/WorldPose", Pose3d.struct) // Topic name and struct
-        .publish(new PubSubOption[0]); // Publish with default opts
+        .getDefault()
+        .getStructTopic("QuestNav/WorldPose", Pose3d.struct)
+        .publish(new PubSubOption[0]);
     
     /**
      * Consumer that receives vision pose estimates from QN and feeds them to the robot's pose estimator.
@@ -41,37 +38,26 @@ public class QuestNavSubsystem extends SubsystemBase {
 
 	private Optional<Pose3d> questWorldPose = Optional.empty();
 
-    /** Create QuestNav Subsystem. */
-    public QuestNavSubsystem(
-        EstimateConsumer estimateConsumer,
-        boolean useEstimatedConsumer
-    ) {
+    public QuestNavSubsystem(EstimateConsumer estimateConsumer, boolean useEstimatedConsumer) {
         this.estimateConsumer = estimateConsumer;
         this.useEstimatedConsumer = useEstimatedConsumer;
         this.alert = new Alert("QN Not tracking!", Alert.AlertType.kWarning);
     }
     
-    /** 
-     * Sets whether the QN subsystem use the estimation consumer.
-     * If true, the robot's position will be based on QN's pose estimation.
-    */
     public void useEstimatedConsumer(boolean useEstimatedConsumer) {
         this.useEstimatedConsumer = useEstimatedConsumer;
     }
 
-    /** @return Is QN currently tracking. */
     public boolean isTracking() {
         return questNav.isTracking();
     }
 
-    /** @return is QN currently connected. */
     public boolean isConnected() {
         return questNav.isConnected();
     }
 
 	/**
 	 * Sets the Quest's position in worldspace coordinates. 
-     * Applies the necessary robot to quest transformation.
 	 * 
 	 * @param pose The position in worldspace.
 	 */
@@ -90,16 +76,16 @@ public class QuestNavSubsystem extends SubsystemBase {
             questNav.setPose(pose);
         } else {
             DriverStation.reportError(
-                "Failed to set QN position, appears to be not connected.", 
-            true);
+                "Failed to set QN position, appears to be not connected :(", 
+                true
+            );
         }
     }
 
     /**
 	 * Gets the position of the quest in worldspace. 
-     * Applies the nessesary robot to quest transformation.
 	 * 
-	 * @return The Quest's worldspace position. Will be None if not tracking.
+	 * @return The Quest's worldspace position.
 	 */
     public Optional<Pose3d> getQuestPose() {
         return getQuestPoseRaw()
@@ -111,15 +97,16 @@ public class QuestNavSubsystem extends SubsystemBase {
 	/**
      * Gets the quest pose without any transformation.
      * 
-	 * @return The Quest's pose without any transformation. Will be None if not tracking.
+	 * @return The Quest's pose without any transformation.
 	 */
     public Optional<Pose3d> getQuestPoseRaw() {
-        periodic(); // Update
+        periodic();
 
         if (questWorldPose.isEmpty()) {
             DriverStation.reportWarning(
-                "Quest pose unavailable, potentially not tracking/connected", 
-            true);
+                "Quest pose unavailable, potentially not tracking/connected :(", 
+                true
+            );
         }
 
         return questWorldPose;

@@ -37,35 +37,19 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
-/**
- * Subsystem for swerve drivetrain
- */
 public class SwerveSubsystem extends SubsystemBase {
-	// Configuration directory
 	private File directory = new File(Filesystem.getDeployDirectory(), "swerve");
 	private SwerveDrive swerveDrive;
 
-	/**
-	 * Creates a new swerve subsystem.
-	 * 
-	 * Loads the swerve configuration from JSON files in the deploy directory.
-	 * Sets up the drivetrain with our max speed, and configures feedforward values for accurate motor control.
-	 */
 	public SwerveSubsystem() {
-		// Initialize the swerve drive from config files
 		try {
-			// SwerveParser reads all the JSON config files and creates a SwerveDrive object
-			// We give it our max speed and starting position (0, 0) at 0 degrees
 			swerveDrive = new SwerveParser(directory)
 				.createSwerveDrive(Constants.maxSpeed,
-					// A pose is a position and rotation in 2D space
 					new Pose2d(
-						// X and Y position in meters
 						new Translation2d(
 							Meter.of(0), 
 							Meter.of(0)
 						),
-						// Rotation
 						Rotation2d.fromDegrees(0)
 					)
 				);
@@ -76,50 +60,34 @@ public class SwerveSubsystem extends SubsystemBase {
 		/* 
 			Chassis discretization helps make the swerve drive more accurate by accounting
 			for the time delay between when we calculate speeds and when they're actually applied.
-			0.02 = 20ms, which is our loop time (50Hz)
 		*/
 		swerveDrive.setChassisDiscretization(true, 0.02);
 		
 		/* 
-			Replace the default feedforward with values we got from characterization	
-			These numbers (kS, kV, kA) describe how our motors respond to voltage:
-				- kS = voltage to overcome static friction (0.0846525V)
-				- kV = voltage per unit velocity (2.68855V per m/s)
-				- kA = voltage per unit acceleration (0.2266775V per m/s^2)
+			kS = voltage to overcome static friction (0.0846525V)
+			kV = voltage per unit velocity (2.68855V per m/s)
+			kA = voltage per unit acceleration (0.2266775V per m/s^2)
 		*/
 		swerveDrive.replaceSwerveModuleFeedforward(
 			new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775)
 		);
 
-		// Setup PathPlanner
 		setupPathPlanner();
 	}
 
 	@Override
 	public void periodic() {
-		// This runs every 20ms during all robot modes (teleop, auto, disabled)
 	}
 
 	@Override
 	public void simulationPeriodic() {
-		// This would run during simulation mode for testing without hardware
 	}
 
-	/**
-	 * Gets the YAGSL {@link SwerveDrive} object.
-	 * 
-	 * This is useful when you need direct access to YAGSL methods that aren't wrapped by this subsystem. 
-	 * For example, RobotContainer uses this to create the SwerveInputStream for teleop driving.
-	 * 
-	 * @return this subsystem's {@link SwerveDrive}
-	 */
 	public SwerveDrive getSwerveDrive() {
 		return swerveDrive;
 	}
 
 	/**
-	 * Adds a vision measurement to improve the robot's position estimate.
-	 * 
 	 * This lets us use cameras (like PV or QN) to correct our position estimate by looking at AprilTags. 
 	 * The standard deviations (stdDevs) tell the Kalman filter how much to trust this measurement vs our wheel odometry.
 	 * 
@@ -134,13 +102,10 @@ public class SwerveSubsystem extends SubsystemBase {
 		double timestampSeconds, 
 		Matrix<N3, N1> stdDevs
 	){
-		// Pose3d -> Pose2d (drivetrain operates in 2D)
 		swerveDrive.addVisionMeasurement(visionMeasurement.toPose2d(), timestampSeconds, stdDevs);
 	}
 
 	/**
-	 * Drives the swerve drive field-oriented.
-	 * 
 	 * Field-oriented means "forward" on the joystick always moves the robot away 
 	 * from the driver station, regardless of which way the robot is facing.
 	 * 
@@ -151,11 +116,6 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Command to drive the robot field-oriented.
-	 * 
-	 * The supplier is called every loop to get the latest desired speeds. 
-	 * This is what we use for teleop driving with the SwerveInputStream.
-	 * 
 	 * @param velocity a {@link Supplier} that provides {@link ChassisSpeeds} every loop
 	 * @return a command that drives the robot
 	 */
@@ -166,8 +126,6 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Alternative drive command using heading control instead of angular velocity.
-	 * 
 	 * This version lets you specify a target heading direction (headingX, headingY) and
 	 * the robot will automatically rotate to face that direction while translating.
 	 * 
@@ -184,8 +142,6 @@ public class SwerveSubsystem extends SubsystemBase {
 		DoubleSupplier headingY
 	) {
 		return run(() -> {
-			// Scale translation inputs to 80%
-			// TODO: May need to be tweaked
 			Translation2d scaledInputs = SwerveMath.scaleTranslation(
 				new Translation2d(
 					translationX.getAsDouble(), 
@@ -194,10 +150,6 @@ public class SwerveSubsystem extends SubsystemBase {
 				0.8
 			);
 			
-			/*
-				Calculate target speeds using YAGSL's heading controller
-				This will automatically rotate the robot to face the heading direction
-			*/ 
 			driveFieldOriented(
 				swerveDrive.swerveController.getTargetSpeeds(
 					scaledInputs.getX(), 
@@ -212,58 +164,28 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Sets whether the drive motors should brake or coast when idle.
-	 * 
-	 * Brake mode: Motors actively resist movement when not powered.
-	 *   - Good for precise control and stopping quickly
-	 *   - Use during matches
-	 * 
-	 * Coast mode: Motors spin freely when not powered.
-	 *   - Makes robot easier to push around manually
-	 *   - Use during setup/testing
-	 * 
 	 * @param brake {@code true} for brake mode, {@code false} for coast mode
 	 */
 	public void setMotorBrake(boolean brake) {
 		swerveDrive.setMotorIdleMode(brake);
 	}
 
-	/**
-	 * Command to zero the gyro (reset heading to 0 degrees).
-	 * 
-	 * This sets the current direction the robot is facing as "forward" (0 degrees).
-	 * Waits 0.5s after zeroing to let the gyro settle before continuing.
-	 * 
-	 * @return command to zero the gyro and wait
-	 */
 	public Command zeroGyro() {
 		return Commands
 			.runOnce(() -> swerveDrive.zeroGyro())
 			.andThen(Commands.waitSeconds(0.5));
 	}
 
-	/**
-	 * Gets the current gyro heading.
-	 * 
-	 * @return the gyro's yaw (rotation around vertical axis)
-	 */
 	public Rotation2d getGyro() {
 		return swerveDrive.getYaw();
 	}
 
-	/**
-	 * Resets the robot's position on the field.
-	 * 
-	 * @param pose the worldspace position to set the robot to
-	 */
 	public void resetOdometry(Pose2d pose) {
 		swerveDrive.resetOdometry(pose);
 	}
 
 	/**
-	 * Command for characterizing the swerve module angle motors.
-	 * 
-	 * SysId (System Identification) runs automated tests to measure how the motors respond to voltage. 
+	 * SysId runs automated tests to measure how the motors respond to voltage. 
 	 * This helps us tune PID controllers and feedforward values for better control.
 	 * 
 	 * This version tests the angle (steering) motors specifically.
@@ -280,8 +202,6 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Command for characterizing the swerve module drive motors.
-	 * 
 	 * SysId runs automated tests to measure how the motors respond to voltage. 
 	 * This helps us tune PID controllers and feedforward values for better control.
 	 * 
@@ -299,46 +219,28 @@ public class SwerveSubsystem extends SubsystemBase {
 		);
 	}
 
-	/**
-	 * Sets up PathPlanner AutoBuilder for autonomous path following.
-	 * 
-	 * Configures:
-	 * - How to get/set robot pose
-	 * - PID constants for translation and rotation
-	 * - Whether to flip paths for red alliance
-	 */
 	public void setupPathPlanner() {
 		RobotConfig config;
 		try {
-			// Load robot configuration from PathPlanner GUI settings
 			config = RobotConfig.fromGUISettings();
 			final boolean enableFeedforward = true;
 
-			/*
-				Configure AutoBuilder with:
-					- pose supplier
-					- reset method
-					- velocity supplier
-					- drive method
-			*/
 			AutoBuilder.configure(
 				swerveDrive::getPose,          // Supplier for current robot pose
 				swerveDrive::resetOdometry,    // Consumer to reset odometry
 				swerveDrive::getRobotVelocity, // Supplier for current robot velocity
 				(speedsRobotRelative, moduleFeedForwards) -> {
 					if (enableFeedforward) {
-						// Drive with feedforward for more accurate path following
 						swerveDrive.drive(
 							speedsRobotRelative,
 							swerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
 							moduleFeedForwards.linearForces()
 						);
 					} else {
-						// Drive without feedforward
 						swerveDrive.setChassisSpeeds(speedsRobotRelative);
 					}
 				},
-				// Configure holonomic drive controller with PID
+
 				// TODO: PID needs to be tuned
 				new PPHolonomicDriveController(
 					new PIDConstants(3.0, 0.0, 0.1),  // Translation
@@ -364,10 +266,6 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Gets a PathPlanner autonomous command by name.
-	 * 
-	 * The path must be created in the PathPlanner GUI and saved in deploy/pathplanner/autos
-	 * 
 	 * @param pathName name of the PathPlanner auto
 	 * @return command to follow the autonomous path
 	 */
@@ -376,10 +274,6 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Creates a command to pathfind to a path and then follow it.
-	 * 
-	 * This will dynamically find a path from the current pose to the start of the specified path, then follow that path.
-	 * 
 	 * @param pathName    name of the path to follow
 	 * @param constraints constraints for pathfinding
 	 * @return command to pathfind and follow

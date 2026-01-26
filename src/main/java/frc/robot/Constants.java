@@ -11,9 +11,7 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
 
-/** Constants */
 public final class Constants {
-    /** Constants used for operator controls */
     public static final class OperatorConstants {
         public static final int kDriverControllerPort = 0;
         public static final int kOperatorControllerPort = 1;
@@ -21,7 +19,6 @@ public final class Constants {
     }
 
     // TODO: Update values
-    /** Constants used by QN */
     public static final class QNConstants {
         /** Physical offset from robot center to Quest headset mounting location */
         public static final Transform3d Robot_to_Quest = new Transform3d(
@@ -39,8 +36,8 @@ public final class Constants {
         );
     }
 
-    /** How much time between loops. 50 HHz = 0.02 seconds */
+    /** 20ms or 50hz */
     public static final Time LOOP_TIME = Seconds.of(0.02);
-    /** Maximum speed of the robot in meters per second */
+    /** Max speed of robot in meters per second */
     public static final double maxSpeed = Units.feetToMeters(10);
 }

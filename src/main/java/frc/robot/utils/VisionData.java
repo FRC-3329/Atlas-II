@@ -5,17 +5,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 
-/** Utility class for vision-based pose estimation data. */
 public class VisionData {
-    /**
-     * Functional interface for consuming vision pose estimates.
-     * 
-     * This callback interface is used to feed vision measurements into a pose estimator (SwerveDrivePoseEstimator). 
-     * Vision systems like QN or PV use this interface to provide their pose measurements to the drivetrain's pose estimation system.
-     * 
-     * The pose estimator uses a Kalman filter to fuse vision data with wheel odometry and gyro measurements, 
-     * using the standard deviations to determine how much to trust each measurement source.
-     */
     @FunctionalInterface
     public static interface EstimateConsumer {
         /**
