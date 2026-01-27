@@ -26,24 +26,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
-/*
-    TODO:
-        - Integrate QN subsystem
-        - Operator controller
-            - Configure controller bindings
-            - Rumble
-            - SwerveInputStream :(
-        - Auto driving (?)
-            - https://github.com/FRC-3329/2025Reefscape3329/blob/main/src/main/java/frc/robot/RobotContainer.java#L261
-        - Integrate PV subsystem (once coded)
-            - QN -> PV Failover system
-        - Integrate all game-specific subsystems and commands (once coded)
-        - resetOdometry()
-        - Reset odometry to PV if not connected to FMS (?)
-            - https://github.com/FRC-3329/2025Reefscape3329/blob/main/src/main/java/frc/robot/RobotContainer.java#L61
-        - SmartDashboard integration
- */
-
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
