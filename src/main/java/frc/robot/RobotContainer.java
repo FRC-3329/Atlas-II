@@ -10,7 +10,6 @@ import swervelib.SwerveInputStream;
 
 import java.util.Optional;
 
-import com.ctre.phoenix.platform.can.AutocacheState;
 import com.pathplanner.lib.auto.AutoBuilder;
 
 import edu.wpi.first.math.filter.Debouncer.DebounceType;
