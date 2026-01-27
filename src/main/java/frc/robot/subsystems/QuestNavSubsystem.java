@@ -2,7 +2,9 @@ package frc.robot.subsystems;
 
 import java.util.Optional;
 
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.PubSubOption;
 import edu.wpi.first.networktables.StructPublisher;
@@ -61,9 +63,20 @@ public class QuestNavSubsystem extends SubsystemBase {
 	 * 
 	 * @param pose The position in worldspace.
 	 */
-    public void setQuestPose(Pose3d pose) {
-        Pose3d questPose = pose.transformBy(QNConstants.Robot_to_Quest);
-        setQuestPoseRaw(questPose);
+    public void setQuestPose(Pose2d pose) {
+        Pose3d pose3d = new Pose3d(
+            pose.getX(),
+            pose.getY(),
+            0.0,
+            new Rotation3d(
+                0,
+                0,
+                pose.getRotation().getRadians()
+            )
+        );
+        pose3d.transformBy(QNConstants.Robot_to_Quest);
+        
+        setQuestPoseRaw(pose3d);
     }
 
 	/**

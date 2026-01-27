@@ -83,14 +83,14 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 		thetaFilter = new MedianFilter(10);
 
 		photonEstimator = new PhotonPoseEstimator(
-				PVConstants.kTagLayout,
-				PVConstants.Robot_to_Camera
+			PVConstants.kTagLayout,
+			PVConstants.Robot_to_Camera
         );
 
 		lastUpdatedPose = new Pose2d(1, 1, Rotation2d.kZero);
 	}
 
-	public void setUseEsimationConsumer(boolean useEstConsumer) {
+	public void useEstimatedConsumer(boolean useEstConsumer) {
 		this.useEstConsumer = useEstConsumer;
 	}
 
@@ -135,7 +135,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 						.getTranslation()
 						.getDistance(
 						    estimatedPose
-                                .get()
+                            	.get()
                                 .estimatedPose.toPose2d()
 							    .getTranslation()
                         );
