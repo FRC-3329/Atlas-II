@@ -47,11 +47,11 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
-    private final QuestNavSubsystem questNavSystem = new QuestNavSubsystem(
+    private final QuestNavSubsystem questNav = new QuestNavSubsystem(
         drivebase::addVisionMeasurement, 
         true
     );
-    private final PhotonVisionSubsystem photonVisionSubsystem = new PhotonVisionSubsystem(
+    private final PhotonVisionSubsystem photonVision = new PhotonVisionSubsystem(
         drivebase::addVisionMeasurement, 
         false
     );
@@ -86,7 +86,7 @@ public class RobotContainer {
                 new Trigger(DriverStation::isFMSAttached).negate()
             ).onTrue(autoDriving(
                 Commands.runOnce(() -> {
-                    photonVisionSubsystem.getPoseOptional().ifPresent(pose -> {
+                    photonVision.getPoseOptional().ifPresent(pose -> {
                         resetOdometry(pose);  
                     });
                 })
@@ -98,7 +98,7 @@ public class RobotContainer {
          * This will be accurate but require a tag in sight so it may
 		 * become inaccurate if the robot cannot see any tags.
 		 */
-        new Trigger(questNavSystem::isTracking)
+        new Trigger(questNav::isTracking)
             .debounce(0.5, DebounceType.kFalling)
             .onFalse(Commands.runOnce(() -> {
                 DriverStation.reportError(
@@ -106,8 +106,8 @@ public class RobotContainer {
                     false
                 );
 
-                questNavSystem.useEstimatedConsumer(false);
-                photonVisionSubsystem.useEstimatedConsumer(true);
+                questNav.useEstimatedConsumer(false);
+                photonVision.useEstimatedConsumer(true);
             }));
 
         // Configure motor brake mode (false = coast)
@@ -142,7 +142,7 @@ public class RobotContainer {
 	 * @param pose the position in the world
 	 */
     private void resetOdometry(Pose2d pose) {
-        questNavSystem.setQuestPose(pose);
+        questNav.setQuestPose(pose);
         drivebase.resetOdometry(pose);
     }
 
@@ -178,7 +178,7 @@ public class RobotContainer {
         // Callibrate QN when holding B on driver controller
         driverController.b().whileTrue(
             autoDriving(
-                new CalibrateQuestCommand(drivebase, questNavSystem)
+                new CalibrateQuestCommand(drivebase, questNav)
             )
         );
 
@@ -188,10 +188,10 @@ public class RobotContainer {
             Commands.runOnce(() -> {
 			    DataLogManager.log("Attempting to reset QN to PV pose...");
 
-			    photonVisionSubsystem.getPoseOptional().ifPresent(pose -> {
-				    photonVisionSubsystem.useEstimatedConsumer(false);
-				    questNavSystem.setQuestPose(pose);
-				    questNavSystem.useEstimatedConsumer(true);
+			    photonVision.getPoseOptional().ifPresent(pose -> {
+				    photonVision.useEstimatedConsumer(false);
+				    questNav.setQuestPose(pose);
+				    questNav.useEstimatedConsumer(true);
 				    DataLogManager.log("QN pose successfully set from PV!");
 			    });
 		    }
@@ -225,7 +225,7 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         Command auton = autoChooser.getSelected();
-        Optional<Pose2d> pvPose = photonVisionSubsystem.getPoseOptional();
+        Optional<Pose2d> pvPose = photonVision.getPoseOptional();
 
         // auton selected and valid PV pose
         if (auton != null && pvPose.isPresent()) {
