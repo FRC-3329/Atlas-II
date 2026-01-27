@@ -46,7 +46,7 @@ public final class Constants {
     
         /** The layout of the AprilTags on the field */
         public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout
-                .loadField(AprilTagFields.k2025ReefscapeWelded);
+                .loadField(AprilTagFields.k2026RebuiltWelded);
 
         /** Transform from robot center to camera */
         public static final Transform3d ROBOT_TO_CAMERA = new Transform3d(
