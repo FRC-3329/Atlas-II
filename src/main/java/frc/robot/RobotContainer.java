@@ -227,7 +227,7 @@ public class RobotContainer {
         // no auton selected and valid PV pose
         } else if (auton == null && pvPose.isPresent()) {
             DriverStation.reportError(
-                "Auton error: Auton not selected (PV pose is valid)", 
+                "Auton error: Auton not selected (PV pose is valid) :(", 
                 false
             );
 
