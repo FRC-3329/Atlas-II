@@ -8,6 +8,8 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.VecBuilder;
+import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
@@ -31,8 +33,7 @@ public final class Constants {
         );
 
         /**
-         * How much to trust Quest vision measurements (lower = more trust) for pose
-         * estimation
+         * How much to trust Quest vision measurements (lower = more trust) for pose estimation
          */
         public static final Matrix<N3, N1> STD_Devs = VecBuilder.fill(
             0.02, // X position standard deviation in meters
@@ -43,15 +44,14 @@ public final class Constants {
 
     public static final class PVConstants {
         public static final String CAMERA_NAME = "Yellow Camera";
-    
+
         /** The layout of the AprilTags on the field */
         public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout
-                .loadField(AprilTagFields.k2026RebuiltWelded);
+            .loadField(AprilTagFields.k2026RebuiltWelded);
 
-        
         // TODO: These need to be updated
         /** Transform from robot center to camera */
-        public static final Transform3d Robot_to_Camera = new Transform3d(
+        public static final Transform3d ROBOT_TO_CAMERA = new Transform3d(
             Inches.of(5), // x, positive forward
             Inches.of(12.4), // y, positive left
             Inches.of(21.75), // z, positive up
@@ -71,8 +71,31 @@ public final class Constants {
         public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
     }
 
+    // TODO: Update values
+    public static final class FlywheelConstants {
+        /** Left leader/motor ID */
+        public static final int LEFT_ID = 1;
+        /** Right leader/motor ID */
+        public static final int RIGHT_ID = 2;
+
+        public static final double kP = 0.11;
+        public static final double kI = 0.0;
+        public static final double kD = 0.0;
+        public static final double kS = 0.25;
+        public static final double kV = 0.12;
+        public static final double kA = 0.01;
+    }
+
+    // TODO: Update values
+    /** Location of hub on the field */
+    public static final Pose2d HUB_LOCATION = new Pose2d(
+        1,
+        1,
+        Rotation2d.kZero
+    );
+
     /** 20ms or 50hz */
     public static final Time LOOP_TIME = Seconds.of(0.02);
     /** Max speed of robot in meters per second */
-    public static final double maxSpeed = Units.feetToMeters(10);
+    public static final double MAX_SPEED = Units.feetToMeters(10);
 }
