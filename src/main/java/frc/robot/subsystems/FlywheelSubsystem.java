@@ -2,6 +2,8 @@ package frc.robot.subsystems;
 
 import frc.robot.Constants;
 
+import static edu.wpi.first.units.Units.RPM;
+
 import java.util.function.Supplier;
 
 import com.ctre.phoenix6.configs.Slot0Configs;
@@ -9,11 +11,11 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -24,10 +26,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final MotionMagicVelocityVoltage request = new MotionMagicVelocityVoltage(0);
     private final InterpolatingDoubleTreeMap map;
     private final Supplier<Pose2d> robotPoseSupplier;
-
-    public final String RPM_KEY = "Flywheel/RPM";
-    public final String AT_SPEED_KEY = "Flywheel/AtSpeed";
-    public final String SPEED_KEY = "Flywheel/Speed";
 
     /**
      * @param robotPoseSupplier supplier for the robot pose2d
@@ -52,6 +50,17 @@ public class FlywheelSubsystem extends SubsystemBase {
         // TODO: Fill proper values
         map.put(1.0, 1000.0);
         map.put(2.0, 2000.0);
+
+        // Change target RPM of motor from Doglog
+        DogLog.tunable(
+            (getName() + "/RPMSetPoint"),
+            0.0,
+            RPM,
+            (rpm) -> {
+                left.setControl(request.withVelocity(rpm));
+                right.setControl(request.withVelocity(rpm));
+            }
+        );
 
         // Set default command to idle
         setDefaultCommand(
@@ -102,14 +111,13 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        SmartDashboard.putBoolean(AT_SPEED_KEY, isAtSpeed());
-        SmartDashboard.putNumber(
-            RPM_KEY,
-            left
-                .getVelocity()
+        DogLog.log((getName() + "/AtSpeed"), isAtSpeed());
+        DogLog.log((getName() + "/Speed"), left.get());
+        DogLog.log(
+            (getName() + "/RPM"), 
+            left.getVelocity()
                 .getValue()
-                .in(edu.wpi.first.units.Units.RPM)
+                .in(RPM)
         );
-        SmartDashboard.putNumber(SPEED_KEY, left.get());
     }
 }
