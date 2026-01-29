@@ -15,6 +15,8 @@ import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
 
+import com.ctre.phoenix6.signals.InvertedValue;
+
 public final class Constants {
     public static final class OperatorConstants {
         public static final int kDriverControllerPort = 0;
@@ -33,7 +35,8 @@ public final class Constants {
         );
 
         /**
-         * How much to trust Quest vision measurements (lower = more trust) for pose estimation
+         * How much to trust Quest vision measurements (lower = more trust) for pose
+         * estimation
          */
         public static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(
             0.0, // X position standard deviation in meters
@@ -73,9 +76,7 @@ public final class Constants {
 
     // TODO: Update values
     public static final class FlywheelConstants {
-        /** Left leader/motor ID */
         public static final int LEFT_ID = 0;
-        /** Right leader/motor ID */
         public static final int RIGHT_ID = 0;
 
         public static final double kP = 0.0;
@@ -84,6 +85,9 @@ public final class Constants {
         public static final double kS = 0.0;
         public static final double kV = 0.0;
         public static final double kA = 0.0;
+    
+        public static final double CURRENT_LIMIT = 40.0;
+        public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
     }
 
     // TODO: Update values

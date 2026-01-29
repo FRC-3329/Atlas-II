@@ -10,6 +10,7 @@ import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.InvertedValue;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -45,6 +46,20 @@ public class FlywheelSubsystem extends SubsystemBase {
         slot0cfg.kI = FlywheelConstants.kI;
         slot0cfg.kD = FlywheelConstants.kD;
 
+        tfxConfig.CurrentLimits.SupplyCurrentLimit = FlywheelConstants.CURRENT_LIMIT;
+        tfxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+        tfxConfig.MotorOutput.Inverted = FlywheelConstants.INVERTED;
+
+        left.getConfigurator().apply(tfxConfig);
+
+        // Invert the right motor relative to the left
+        tfxConfig.MotorOutput.Inverted = (FlywheelConstants.INVERTED == InvertedValue.CounterClockwise_Positive)
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
+
+        right.getConfigurator().apply(tfxConfig);
+
         // Convert distance from hub to RPM
         map = new InterpolatingDoubleTreeMap();
         // TODO: Fill proper values
@@ -53,14 +68,13 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         // Change target RPM of motor from Doglog
         DogLog.tunable(
-            (getName() + "/RPMSetPoint"),
-            0.0,
-            RPM,
-            (rpm) -> {
-                left.setControl(request.withVelocity(rpm));
-                right.setControl(request.withVelocity(rpm));
-            }
-        );
+                (getName() + "/RPMSetPoint"),
+                0.0,
+                RPM,
+                (rpm) -> {
+                    left.setControl(request.withVelocity(rpm));
+                    right.setControl(request.withVelocity(rpm));
+                });
 
         // Set default command to idle
         setDefaultCommand(
@@ -114,7 +128,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/AtSpeed"), isAtSpeed());
         DogLog.log((getName() + "/Speed"), left.get());
         DogLog.log(
-            (getName() + "/RPM"), 
+            (getName() + "/RPM"),
             left.getVelocity()
                 .getValue()
                 .in(RPM)
