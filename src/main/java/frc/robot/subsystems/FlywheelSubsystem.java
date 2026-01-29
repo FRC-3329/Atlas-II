@@ -6,11 +6,17 @@ import static edu.wpi.first.units.Units.RPM;
 
 import java.util.function.Supplier;
 
+import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+
+import static edu.wpi.first.units.Units.Volts;
+
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -27,6 +33,9 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final MotionMagicVelocityVoltage request = new MotionMagicVelocityVoltage(0);
     private final InterpolatingDoubleTreeMap map;
     private final Supplier<Pose2d> robotPoseSupplier;
+
+    private final VoltageOut sysIdControl = new VoltageOut(0);
+    private final SysIdRoutine sysIdRoutine;
 
     /**
      * @param robotPoseSupplier supplier for the robot pose2d
@@ -68,13 +77,13 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         // Change target RPM of motor from Doglog
         DogLog.tunable(
-                (getName() + "/RPMSetPoint"),
-                0.0,
-                RPM,
-                (rpm) -> {
-                    left.setControl(request.withVelocity(rpm));
-                    right.setControl(request.withVelocity(rpm));
-                });
+            (getName() + "/RPMSetPoint"),
+            0.0,
+            RPM,
+            (rpm) -> {
+                left.setControl(request.withVelocity(rpm));
+                right.setControl(request.withVelocity(rpm));
+            });
 
         // Set default command to idle
         setDefaultCommand(
@@ -83,6 +92,27 @@ public class FlywheelSubsystem extends SubsystemBase {
                 right.set(0);
             }).andThen(
                 this.idle()
+            )
+        );
+
+        // SysID configuration
+        sysIdRoutine = new SysIdRoutine(
+            new SysIdRoutine.Config(
+                null,
+                Volts.of(4),
+                null,
+                (state) -> {
+                    SignalLogger.writeString("state", state.toString());
+                }
+            ),
+
+            new SysIdRoutine.Mechanism(
+                (volts) -> {
+                    left.setControl(sysIdControl.withOutput(volts.in(Volts)));
+                    right.setControl(sysIdControl.withOutput(volts.in(Volts)));
+                },
+                null,
+                this
             )
         );
     }
@@ -113,6 +143,26 @@ public class FlywheelSubsystem extends SubsystemBase {
             left.setControl(request.withVelocity(rpm));
             right.setControl(request.withVelocity(rpm));
         });
+    }
+
+    /**
+     * Shoot the flywheel at a fixed RPM
+     *
+     * @param rpm Target RPM
+     */
+    public Command shoot(double rpm) {
+        return this.run(() -> {
+            left.setControl(request.withVelocity(rpm));
+            right.setControl(request.withVelocity(rpm));
+        });
+    }
+
+    public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.quasistatic(direction);
+    }
+
+    public Command sysIdDynamic(SysIdRoutine.Direction direction) {
+        return sysIdRoutine.dynamic(direction);
     }
 
     /** Check if the flywheel is at the target speed */
