@@ -25,9 +25,9 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final InterpolatingDoubleTreeMap map;
     private final Supplier<Pose2d> robotPoseSupplier;
 
-    public static final String RPM_KEY = "Flywheel/RPM";
-    public static final String AT_SPEED_KEY = "Flywheel/AtSpeed";
-    public static final String SPEED_KEY = "Flywheel/Speed";
+    public final String RPM_KEY = "Flywheel/RPM";
+    public final String AT_SPEED_KEY = "Flywheel/AtSpeed";
+    public final String SPEED_KEY = "Flywheel/Speed";
 
     /**
      * @param robotPoseSupplier supplier for the robot pose2d

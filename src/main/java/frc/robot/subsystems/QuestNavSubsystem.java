@@ -74,7 +74,7 @@ public class QuestNavSubsystem extends SubsystemBase {
                 pose.getRotation().getRadians()
             )
         );
-        pose3d.transformBy(QNConstants.Robot_to_Quest);
+        pose3d.transformBy(QNConstants.ROBOT_TO_QUEST);
         
         setQuestPoseRaw(pose3d);
     }
@@ -103,7 +103,7 @@ public class QuestNavSubsystem extends SubsystemBase {
     public Optional<Pose3d> getQuestPose() {
         return getQuestPoseRaw()
             .map(pose -> pose.transformBy(
-                QNConstants.Robot_to_Quest.inverse()
+                QNConstants.ROBOT_TO_QUEST.inverse()
             ));
 
     }
@@ -145,14 +145,14 @@ public class QuestNavSubsystem extends SubsystemBase {
                 // Timestamp of when data was sent
                 double timestamp = frame.dataTimestamp();
                 // Transform by mount pose to get robot pose
-                Pose3d robotPose = questPose.transformBy(QNConstants.Robot_to_Quest.inverse());
+                Pose3d robotPose = questPose.transformBy(QNConstants.ROBOT_TO_QUEST.inverse());
 
                 // Add quest pos to be tracked seperately from the robot's estimator
                 worldPosePublisher.accept(robotPose);
 
                 // Add the measurement to the estimator
                 if (useEstimatedConsumer) {
-                    estimateConsumer.accept(robotPose, timestamp, QNConstants.STD_Devs);
+                    estimateConsumer.accept(robotPose, timestamp, QNConstants.STD_DEVS);
                 }
             }
         } else {

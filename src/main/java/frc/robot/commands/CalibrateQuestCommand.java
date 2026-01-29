@@ -48,16 +48,16 @@ public class CalibrateQuestCommand extends Command {
     ) {}
 
     // Calibration parameters
-    private static final AngularVelocity ROTATION_SPEED = DegreesPerSecond.of(60);
-    private static final int MIN_DATA_POINTS = 100;
-    private static final double ROTATION_THRESHOLD_DEGREES = 350.0;
+    private final AngularVelocity ROTATION_SPEED = DegreesPerSecond.of(60);
+    private final int MIN_DATA_POINTS = 100;
+    private final double ROTATION_THRESHOLD_DEGREES = 350.0;
     
     // SmartDashboard keys
-    private static final String STATUS_KEY = "QuestCalibration/Status";
-    private static final String OFFSET_X_KEY = "QuestCalibration/OffsetX";
-    private static final String OFFSET_Y_KEY = "QuestCalibration/OffsetY";
-    private static final String OFFSET_Z_KEY = "QuestCalibration/OffsetZ";
-    private static final String DATA_POINTS_KEY = "QuestCalibration/DataPoints";
+    private final String STATUS_KEY = "QuestCalibration/Status";
+    private final String OFFSET_X_KEY = "QuestCalibration/OffsetX";
+    private final String OFFSET_Y_KEY = "QuestCalibration/OffsetY";
+    private final String OFFSET_Z_KEY = "QuestCalibration/OffsetZ";
+    private final String DATA_POINTS_KEY = "QuestCalibration/DataPoints";
 
     private final SwerveSubsystem swerve;
     private final QuestNavSubsystem questNav;

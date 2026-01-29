@@ -25,9 +25,9 @@ public final class Constants {
     // TODO: Update values
     public static final class QNConstants {
         /** Physical offset from robot center to Quest headset mounting location */
-        public static final Transform3d Robot_to_Quest = new Transform3d(
-            Meters.of(-0.222), // X translation from robot center to Quest in meters
-            Meters.of(0.162), // Y translation from robot center to Quest in meters
+        public static final Transform3d ROBOT_TO_QUEST = new Transform3d(
+            Meters.of(0.0), // X translation from robot center to Quest in meters
+            Meters.of(0.0), // Y translation from robot center to Quest in meters
             Meters.of(0.0), // Z translation (height) from robot center to Quest in meters
             new Rotation3d(0, 0, Math.PI) // 180 degree rotation around Z axis
         );
@@ -35,10 +35,10 @@ public final class Constants {
         /**
          * How much to trust Quest vision measurements (lower = more trust) for pose estimation
          */
-        public static final Matrix<N3, N1> STD_Devs = VecBuilder.fill(
-            0.02, // X position standard deviation in meters
-            0.02, // Y position standard deviation in meters
-            0.035 // Heading standard deviation in radians
+        public static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(
+            0.0, // X position standard deviation in meters
+            0.0, // Y position standard deviation in meters
+            0.0 // Heading standard deviation in radians
         );
     }
 
@@ -52,9 +52,9 @@ public final class Constants {
         // TODO: These need to be updated
         /** Transform from robot center to camera */
         public static final Transform3d ROBOT_TO_CAMERA = new Transform3d(
-            Inches.of(5), // x, positive forward
-            Inches.of(12.4), // y, positive left
-            Inches.of(21.75), // z, positive up
+            Inches.of(0.0), // x, positive forward
+            Inches.of(0.0), // y, positive left
+            Inches.of(0.0), // z, positive up
             new Rotation3d(
                 Degrees.of(0), // roll, counterclockwise rotation angle around the X axis
                 Degrees.of(0), // pitch, counterclockwise rotation angle around the y axis
@@ -67,30 +67,30 @@ public final class Constants {
 
         // The standard deviations of our vision estimated poses, which affect correction rate
         // TODO: Fill in the correct values (these are placeholders)
-        public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
-        public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 1);
+        public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(0, 0, 0);
+        public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.0, 0.0, 0.0);
     }
 
     // TODO: Update values
     public static final class FlywheelConstants {
         /** Left leader/motor ID */
-        public static final int LEFT_ID = 1;
+        public static final int LEFT_ID = 0;
         /** Right leader/motor ID */
-        public static final int RIGHT_ID = 2;
+        public static final int RIGHT_ID = 0;
 
-        public static final double kP = 0.11;
+        public static final double kP = 0.0;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
-        public static final double kS = 0.25;
-        public static final double kV = 0.12;
-        public static final double kA = 0.01;
+        public static final double kS = 0.0;
+        public static final double kV = 0.0;
+        public static final double kA = 0.0;
     }
 
     // TODO: Update values
     /** Location of hub on the field */
     public static final Pose2d HUB_LOCATION = new Pose2d(
-        1,
-        1,
+        0,
+        0,
         Rotation2d.kZero
     );
 
