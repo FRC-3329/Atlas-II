@@ -35,8 +35,7 @@ public final class Constants {
         );
 
         /**
-         * How much to trust Quest vision measurements (lower = more trust) for pose
-         * estimation
+         * How much to trust Quest vision measurements (lower = more trust) for pose estimation
          */
         public static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(
             0.0, // X position standard deviation in meters
@@ -85,9 +84,25 @@ public final class Constants {
         public static final double kS = 0.0;
         public static final double kV = 0.0;
         public static final double kA = 0.0;
-    
+
         public static final double CURRENT_LIMIT = 40.0;
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
+    }
+
+    // TODO: Update values
+    public static final class HoodConstants {
+        public static final int HOOD_ID = 0;
+
+        public static final double kP = 0.0;
+        public static final double kI = 0.0;
+        public static final double kD = 0.0;
+        public static final double kS = 0.0;
+        public static final double kV = 0.0;
+        public static final double kA = 0.0;
+
+        public static final double CRUISE_VELOCITY = 0.0;
+        public static final double ACCELERATION = 0.0;
+        public static final double JERK = 0.0;
     }
 
     // TODO: Update values

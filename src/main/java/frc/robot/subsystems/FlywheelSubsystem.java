@@ -10,6 +10,7 @@ import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
@@ -27,11 +28,17 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants.FlywheelConstants;
+import frc.robot.Constants.HoodConstants;
 
 public class FlywheelSubsystem extends SubsystemBase {
-    private final TalonFX left, right;
+    private final TalonFX left, right, hood;
+
     private final MotionMagicVelocityVoltage request = new MotionMagicVelocityVoltage(0);
-    private final InterpolatingDoubleTreeMap map;
+    private final MotionMagicVoltage hoodRequest = new MotionMagicVoltage(0);
+
+    private final InterpolatingDoubleTreeMap flywheelMap;
+    private final InterpolatingDoubleTreeMap hoodMap;
+
     private final Supplier<Pose2d> robotPoseSupplier;
 
     private final VoltageOut sysIdControl = new VoltageOut(0);
@@ -43,37 +50,63 @@ public class FlywheelSubsystem extends SubsystemBase {
     public FlywheelSubsystem(Supplier<Pose2d> robotPoseSupplier) {
         this.left = new TalonFX(FlywheelConstants.LEFT_ID);
         this.right = new TalonFX(FlywheelConstants.RIGHT_ID);
+        this.hood = new TalonFX(HoodConstants.HOOD_ID);
+
         this.robotPoseSupplier = robotPoseSupplier;
 
-        TalonFXConfiguration tfxConfig = new TalonFXConfiguration();
-        Slot0Configs slot0cfg = tfxConfig.Slot0;
+        // Flywheel config
+        TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
+        Slot0Configs flywheelSlot0 = flywheelConfig.Slot0;
 
-        slot0cfg.kS = FlywheelConstants.kS;
-        slot0cfg.kV = FlywheelConstants.kV;
-        slot0cfg.kA = FlywheelConstants.kA;
-        slot0cfg.kP = FlywheelConstants.kP;
-        slot0cfg.kI = FlywheelConstants.kI;
-        slot0cfg.kD = FlywheelConstants.kD;
+        flywheelSlot0.kS = FlywheelConstants.kS;
+        flywheelSlot0.kV = FlywheelConstants.kV;
+        flywheelSlot0.kA = FlywheelConstants.kA;
+        flywheelSlot0.kP = FlywheelConstants.kP;
+        flywheelSlot0.kI = FlywheelConstants.kI;
+        flywheelSlot0.kD = FlywheelConstants.kD;
 
-        tfxConfig.CurrentLimits.SupplyCurrentLimit = FlywheelConstants.CURRENT_LIMIT;
-        tfxConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+        flywheelConfig.CurrentLimits.SupplyCurrentLimit = FlywheelConstants.CURRENT_LIMIT;
+        flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        tfxConfig.MotorOutput.Inverted = FlywheelConstants.INVERTED;
+        flywheelConfig.MotorOutput.Inverted = FlywheelConstants.INVERTED;
 
-        left.getConfigurator().apply(tfxConfig);
+        left.getConfigurator().apply(flywheelConfig);
 
         // Invert the right motor relative to the left
-        tfxConfig.MotorOutput.Inverted = (FlywheelConstants.INVERTED == InvertedValue.CounterClockwise_Positive)
+        flywheelConfig.MotorOutput.Inverted = (FlywheelConstants.INVERTED == InvertedValue.CounterClockwise_Positive)
             ? InvertedValue.Clockwise_Positive
             : InvertedValue.CounterClockwise_Positive;
 
-        right.getConfigurator().apply(tfxConfig);
+        right.getConfigurator().apply(flywheelConfig);
+
+        // Hood config
+        TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
+        Slot0Configs hoodSlot0 = hoodConfig.Slot0;
+
+        hoodSlot0.kP = HoodConstants.kP;
+        hoodSlot0.kI = HoodConstants.kI;
+        hoodSlot0.kD = HoodConstants.kD;
+        hoodSlot0.kS = HoodConstants.kS;
+        hoodSlot0.kV = HoodConstants.kV;
+        hoodSlot0.kA = HoodConstants.kA;
+
+        hoodConfig.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.CRUISE_VELOCITY;
+        hoodConfig.MotionMagic.MotionMagicAcceleration = HoodConstants.ACCELERATION;
+        hoodConfig.MotionMagic.MotionMagicJerk = HoodConstants.JERK;
+
+        hood.getConfigurator().apply(hoodConfig);
 
         // Convert distance from hub to RPM
-        map = new InterpolatingDoubleTreeMap();
+        flywheelMap = new InterpolatingDoubleTreeMap();
         // TODO: Fill proper values
-        map.put(1.0, 1000.0);
-        map.put(2.0, 2000.0);
+        flywheelMap.put(1.0, 1000.0);
+        flywheelMap.put(2.0, 2000.0);
+
+        // Convert distance from hub to hood position
+        hoodMap = new InterpolatingDoubleTreeMap();
+        // TODO: Fill proper values
+        hoodMap.put(1.0, 0.0);
+        hoodMap.put(2.0, 10.0);
 
         // Change target RPM of motor from Doglog
         DogLog.tunable(
@@ -83,7 +116,8 @@ public class FlywheelSubsystem extends SubsystemBase {
             (rpm) -> {
                 left.setControl(request.withVelocity(rpm));
                 right.setControl(request.withVelocity(rpm));
-            });
+            }
+        );
 
         // Set default command to idle
         setDefaultCommand(
@@ -102,7 +136,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                 Volts.of(4),
                 null,
                 (state) -> {
-                    SignalLogger.writeString("state", state.toString());
+                    SignalLogger.writeString("state", state.toString());    
                 }
             ),
 
@@ -138,10 +172,12 @@ public class FlywheelSubsystem extends SubsystemBase {
                 Constants.HUB_LOCATION
             ).getTranslation().getNorm();
 
-            double rpm = map.get(dist);
+            double rpm = flywheelMap.get(dist);
+            double hoodPos = hoodMap.get(dist);
 
             left.setControl(request.withVelocity(rpm));
             right.setControl(request.withVelocity(rpm));
+            hood.setControl(hoodRequest.withPosition(hoodPos));
         });
     }
 
@@ -175,13 +211,26 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        DogLog.log((getName() + "/AtSpeed"), isAtSpeed());
-        DogLog.log((getName() + "/Speed"), left.get());
+        DogLog.log(
+            (getName() + "/AtSpeed"),
+            isAtSpeed()
+        );
+
+        DogLog.log(
+            (getName() + "/Speed"),
+            left.get()
+        );
+
         DogLog.log(
             (getName() + "/RPM"),
-            left.getVelocity()
+             left.getVelocity()
                 .getValue()
                 .in(RPM)
+        );
+
+        DogLog.log(
+            (getName() + "/HoodPosition"),
+            hood.getPosition().getValue()
         );
     }
 }
