@@ -13,20 +13,25 @@ import org.ejml.interfaces.linsol.LinearSolverDense;
  * A utility class to fit a circle to a set of 2D points.
  *
  * The method uses a linear least-squares algorithm to find the circle's center.
- * The equation of a circle is: (x - a)^2 + (y - b)^2 = R^2, where (a, b) is the center. 
+ * The equation of a circle is: (x - a)^2 + (y - b)^2 = R^2, where (a, b) is the
+ * center.
  * This can be rewritten as: 2ax + 2by + (R^2 - a^2 - b^2) = x^2 + y^2.
- * This is a linear equation in terms of the parameters a, b, and c = R^2 - a^2 - b^2. 
+ * This is a linear equation in terms of the parameters a, b, and c = R^2 - a^2
+ * - b^2.
  * We can solve the system Ax = B for the parameters [a, b, c]^T.
  */
 public final class CircleFitter {
-    private CircleFitter() { }
+    private CircleFitter() {
+    }
 
     /**
      * Fits a circle to a list of 2D points.
      *
      * @param points The list of {@link Translation2d} points to fit.
-     * @return An {@link Optional#of(Translation2d)} containing the center of the fitted circle. 
-     * Returns an {@link Optional#empty()} if a fit cannot be determined (fewer than 3 points or a solver error).
+     * @return An {@link Optional#of(Translation2d)} containing the center of the
+     *         fitted circle.
+     *         Returns an {@link Optional#empty()} if a fit cannot be determined
+     *         (fewer than 3 points or a solver error).
      */
     public static Optional<Translation2d> fit(List<Translation2d> points) {
         if (points == null || points.size() < 3) {

@@ -20,32 +20,36 @@ public class QuestNavSubsystem extends SubsystemBase {
     public final QuestNav questNav = new QuestNav();
 
     private final Alert alert;
-	private final StructPublisher<Pose3d> worldPosePublisher = NetworkTableInstance
-        .getDefault()
-        .getStructTopic("QuestNav/WorldPose", Pose3d.struct)
-        .publish(new PubSubOption[0]);
-    
+    private final StructPublisher<Pose3d> worldPosePublisher = NetworkTableInstance
+            .getDefault()
+            .getStructTopic("QuestNav/WorldPose", Pose3d.struct)
+            .publish(new PubSubOption[0]);
+
     /**
-     * Consumer that receives vision pose estimates from QN and feeds them to the robot's pose estimator.
+     * Consumer that receives vision pose estimates from QN and feeds them to the
+     * robot's pose estimator.
      * The pose estimator (SwerveDrivePoseEstimator) fuses multiple data sources:
-     *     - wheel odometry,
-     *     - gyro readings
-     *     - vision measurements 
-     * from QN to produce a more accurate estimate of the robot's position on the field. 
-     * Vision measurements help correct for drift that accumulates in wheel odometry over time. 
-     * The STDDEV in QNConstants determine how much the estimator trusts QN data versus wheel odometry.
+     * - wheel odometry,
+     * - gyro readings
+     * - vision measurements
+     * from QN to produce a more accurate estimate of the robot's position on the
+     * field.
+     * Vision measurements help correct for drift that accumulates in wheel odometry
+     * over time.
+     * The STDDEV in QNConstants determine how much the estimator trusts QN data
+     * versus wheel odometry.
      */
     private final EstimateConsumer estimateConsumer;
     private boolean useEstimatedConsumer;
 
-	private Optional<Pose3d> questWorldPose = Optional.empty();
+    private Optional<Pose3d> questWorldPose = Optional.empty();
 
     public QuestNavSubsystem(EstimateConsumer estimateConsumer, boolean useEstimatedConsumer) {
         this.estimateConsumer = estimateConsumer;
         this.useEstimatedConsumer = useEstimatedConsumer;
         this.alert = new Alert("QN Not tracking!", Alert.AlertType.kWarning);
     }
-    
+
     public void useEstimatedConsumer(boolean useEstimatedConsumer) {
         this.useEstimatedConsumer = useEstimatedConsumer;
     }
@@ -58,68 +62,64 @@ public class QuestNavSubsystem extends SubsystemBase {
         return questNav.isConnected();
     }
 
-	/**
-	 * Sets the Quest's position in worldspace coordinates. 
-	 * 
-	 * @param pose The position in worldspace.
-	 */
+    /**
+     * Sets the Quest's position in worldspace coordinates.
+     * 
+     * @param pose The position in worldspace.
+     */
     public void setQuestPose(Pose2d pose) {
         Pose3d pose3d = new Pose3d(
-            pose.getX(),
-            pose.getY(),
-            0.0,
-            new Rotation3d(
-                0,
-                0,
-                pose.getRotation().getRadians()
-            )
-        );
+                pose.getX(),
+                pose.getY(),
+                0.0,
+                new Rotation3d(
+                        0,
+                        0,
+                        pose.getRotation().getRadians()));
         pose3d.transformBy(QNConstants.ROBOT_TO_QUEST);
-        
+
         setQuestPoseRaw(pose3d);
     }
 
-	/**
-	 * Sets the quest pose without transforming by the robot to quest offset.
-	 * 
-	 * @param pose pose to set the quest to.
-	 */
+    /**
+     * Sets the quest pose without transforming by the robot to quest offset.
+     * 
+     * @param pose pose to set the quest to.
+     */
     public void setQuestPoseRaw(Pose3d pose) {
         if (isConnected()) {
             questNav.setPose(pose);
         } else {
             DriverStation.reportError(
-                "Failed to set QN position, appears to be not connected :(", 
-                true
-            );
+                    "Failed to set QN position, appears to be not connected :(",
+                    true);
         }
     }
 
     /**
-	 * Gets the position of the quest in worldspace. 
-	 * 
-	 * @return The Quest's worldspace position.
-	 */
+     * Gets the position of the quest in worldspace.
+     * 
+     * @return The Quest's worldspace position.
+     */
     public Optional<Pose3d> getQuestPose() {
         return getQuestPoseRaw()
-            .map(pose -> pose.transformBy(
-                QNConstants.ROBOT_TO_QUEST.inverse()
-            ));
+                .map(pose -> pose.transformBy(
+                        QNConstants.ROBOT_TO_QUEST.inverse()));
 
     }
-	/**
+
+    /**
      * Gets the quest pose without any transformation.
      * 
-	 * @return The Quest's pose without any transformation.
-	 */
+     * @return The Quest's pose without any transformation.
+     */
     public Optional<Pose3d> getQuestPoseRaw() {
         periodic();
 
         if (questWorldPose.isEmpty()) {
             DriverStation.reportWarning(
-                "Quest pose unavailable, potentially not tracking/connected :(", 
-                true
-            );
+                    "Quest pose unavailable, potentially not tracking/connected :(",
+                    true);
         }
 
         return questWorldPose;
@@ -138,7 +138,7 @@ public class QuestNavSubsystem extends SubsystemBase {
             for (PoseFrame frame : questFrames) {
                 // Pose of quest
                 Pose3d questPose = frame.questPose3d();
-        
+
                 // Update latest world pose
                 questWorldPose = Optional.of(questPose);
 

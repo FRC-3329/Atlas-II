@@ -21,37 +21,46 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 
 /**
- * Command to calibrate the Quest headset's physical offset from the robot's center of rotation.
+ * Command to calibrate the Quest headset's physical offset from the robot's
+ * center of rotation.
  * 
- * <p><b>How it works:</b></p>
+ * <p>
+ * <b>How it works:</b>
+ * </p>
  * <ol>
- *   <li>The robot rotates in place for a full 360 degree rotation at a controlled speed</li>
- *   <li>During rotation, the Quest's 3D position is recorded at each frame along with the robot's heading</li>
- *   <li>The collected Quest positions form a circular path around the robot's center of rotation</li>
- *   <li>A circle-fitting algorithm determines the center of this circle (the robot's center)</li>
- *   <li>For each data point, the vector from robot center to Quest is calculated and transformed into robot frame</li>
- *   <li>These vectors are averaged to produce the final Quest offset in robot coordinates</li>
+ * <li>The robot rotates in place for a full 360 degree rotation at a controlled
+ * speed</li>
+ * <li>During rotation, the Quest's 3D position is recorded at each frame along
+ * with the robot's heading</li>
+ * <li>The collected Quest positions form a circular path around the robot's
+ * center of rotation</li>
+ * <li>A circle-fitting algorithm determines the center of this circle (the
+ * robot's center)</li>
+ * <li>For each data point, the vector from robot center to Quest is calculated
+ * and transformed into robot frame</li>
+ * <li>These vectors are averaged to produce the final Quest offset in robot
+ * coordinates</li>
  * </ol>
  */
 public class CalibrateQuestCommand extends Command {
-    
+
     /**
      * Record to store a Quest position sample with corresponding robot heading.
      * 
-     * @param position The Quest's 3D position in world coordinates
+     * @param position     The Quest's 3D position in world coordinates
      * @param robotHeading The robot's gyro heading when this sample was taken
      */
     private record QuestDataPoint(
-        Translation2d position,
-        Rotation2d robotHeading,
-        double zPosition
-    ) {}
+            Translation2d position,
+            Rotation2d robotHeading,
+            double zPosition) {
+    }
 
     // Calibration parameters
     private final AngularVelocity ROTATION_SPEED = DegreesPerSecond.of(60);
     private final int MIN_DATA_POINTS = 100;
     private final double ROTATION_THRESHOLD_DEGREES = 350.0;
-    
+
     // SmartDashboard keys
     private final String STATUS_KEY = "QuestCalibration/Status";
     private final String OFFSET_X_KEY = "QuestCalibration/OffsetX";
@@ -61,15 +70,15 @@ public class CalibrateQuestCommand extends Command {
 
     private final SwerveSubsystem swerve;
     private final QuestNavSubsystem questNav;
-    
+
     private final List<QuestDataPoint> collectedPoints = new ArrayList<>();
     private Rotation2d initialHeading;
 
     /**
      * Creates a new Quest calibration command.
      * 
-     * @param swerve Swerve drive subsystem
-     * @param questNav Quest subsystem 
+     * @param swerve   Swerve drive subsystem
+     * @param questNav Quest subsystem
      */
     public CalibrateQuestCommand(SwerveSubsystem swerve, QuestNavSubsystem questNav) {
         addRequirements(swerve, questNav);
@@ -82,21 +91,19 @@ public class CalibrateQuestCommand extends Command {
     public void initialize() {
         collectedPoints.clear();
         initialHeading = swerve.getSwerveDrive().getYaw();
-        
+
         SmartDashboard.putString(STATUS_KEY, "Initializing...");
         SmartDashboard.putNumber(DATA_POINTS_KEY, 0);
-        
+
         if (!questNav.isConnected()) {
             DriverStation.reportWarning(
-                "Quest calibration started but Quest is not connected :(",
-                false
-            );
+                    "Quest calibration started but Quest is not connected :(",
+                    false);
         }
         if (!questNav.isTracking()) {
             DriverStation.reportWarning(
-                "Quest calibration started but Quest is not tracking :(",
-                false
-            );
+                    "Quest calibration started but Quest is not tracking :(",
+                    false);
         }
     }
 
@@ -104,56 +111,50 @@ public class CalibrateQuestCommand extends Command {
     public void execute() {
         // Rotate robot in place at constant speed
         swerve.driveFieldOriented(
-            new ChassisSpeeds(0, 0, ROTATION_SPEED.in(RadiansPerSecond))
-        );
+                new ChassisSpeeds(0, 0, ROTATION_SPEED.in(RadiansPerSecond)));
 
         // Attempt to collect Quest pose data
         Optional<Pose3d> questPoseOpt = questNav.getQuestPoseRaw();
-        
+
         if (questPoseOpt.isPresent()) {
             Pose3d questPose = questPoseOpt.get();
 
             Translation2d questPosition2d = new Translation2d(
-                questPose.getX(),
-                questPose.getY()
-            );
+                    questPose.getX(),
+                    questPose.getY());
 
             double zPosition = questPose.getZ();
             Rotation2d currentHeading = swerve.getSwerveDrive().getYaw();
-            
+
             collectedPoints.add(new QuestDataPoint(questPosition2d, currentHeading, zPosition));
         }
 
         SmartDashboard.putString(
-            STATUS_KEY,
-            String.format(
-                "Collecting data: %d points (%.1f° rotation)",
-                collectedPoints.size(),
-                Math.abs(
-                    swerve
-                        .getSwerveDrive()
-                        .getYaw()
-                        .minus(initialHeading)
-                        .getDegrees()
-                )
-            )
-        );
+                STATUS_KEY,
+                String.format(
+                        "Collecting data: %d points (%.1f° rotation)",
+                        collectedPoints.size(),
+                        Math.abs(
+                                swerve
+                                        .getSwerveDrive()
+                                        .getYaw()
+                                        .minus(initialHeading)
+                                        .getDegrees())));
         SmartDashboard.putNumber(DATA_POINTS_KEY, collectedPoints.size());
     }
 
     @Override
     public boolean isFinished() {
         /*
-            Finishes after completing nearly a full rotation
-            Use 350 degree threshold to ensure completion while allowing for some margin
-        */
+         * Finishes after completing nearly a full rotation
+         * Use 350 degree threshold to ensure completion while allowing for some margin
+         */
         double rotationDegrees = Math.abs(
-            swerve
-                .getSwerveDrive()
-                .getYaw()
-                .minus(initialHeading)
-                .getDegrees()
-        );
+                swerve
+                        .getSwerveDrive()
+                        .getYaw()
+                        .minus(initialHeading)
+                        .getDegrees());
 
         return rotationDegrees > ROTATION_THRESHOLD_DEGREES;
     }
@@ -162,8 +163,7 @@ public class CalibrateQuestCommand extends Command {
     public void end(boolean interrupted) {
         // Stop robot rotation
         swerve.driveFieldOriented(
-            new ChassisSpeeds(0, 0, 0)
-        );
+                new ChassisSpeeds(0, 0, 0));
 
         if (interrupted) {
             handleInterrupt();
@@ -185,12 +185,11 @@ public class CalibrateQuestCommand extends Command {
 
     private void handleInsufficient() {
         String error = String.format(
-            "Quest calibration failed: Insufficient data points (%d/%d). " +
-            "Ensure Quest is connected and tracking throughout the rotation.",
-            collectedPoints.size(),
-            MIN_DATA_POINTS
-        );
-    
+                "Quest calibration failed: Insufficient data points (%d/%d). " +
+                        "Ensure Quest is connected and tracking throughout the rotation.",
+                collectedPoints.size(),
+                MIN_DATA_POINTS);
+
         DriverStation.reportError(error, false);
         SmartDashboard.putString(STATUS_KEY, "Failed, Insufficient data");
     }
@@ -222,8 +221,7 @@ public class CalibrateQuestCommand extends Command {
 
             // Transform to robot frame by rotating by inverse of robot heading
             Translation2d offsetInRobot = offsetInWorld.rotateBy(
-                dataPoint.robotHeading().unaryMinus()
-            );
+                    dataPoint.robotHeading().unaryMinus());
 
             sumOffsetX += offsetInRobot.getX();
             sumOffsetY += offsetInRobot.getY();
@@ -241,14 +239,14 @@ public class CalibrateQuestCommand extends Command {
 
     private void handleFailure() {
         DriverStation.reportError(
-            "Quest calibration failed: Circle fitting could not converge.", 
-            false
-        );
+                "Quest calibration failed: Circle fitting could not converge.",
+                false);
         SmartDashboard.putString(STATUS_KEY, "Failed, Circle fit error");
     }
 
     /**
-     * Publishes the calculated calibration results to SmartDashboard and DriverStation.
+     * Publishes the calculated calibration results to SmartDashboard and
+     * DriverStation.
      * 
      * @param offsetX X offset in meters (forward/backward in robot frame)
      * @param offsetY Y offset in meters (left/right in robot frame)
@@ -261,9 +259,8 @@ public class CalibrateQuestCommand extends Command {
         SmartDashboard.putNumber(OFFSET_Z_KEY, offsetZ);
 
         String result = String.format(
-            "Quest calibration complete! Offset: X=%.4fm, Y=%.4fm, Z=%.4fm (%d points)",
-            offsetX, offsetY, offsetZ, collectedPoints.size()
-        );
+                "Quest calibration complete! Offset: X=%.4fm, Y=%.4fm, Z=%.4fm (%d points)",
+                offsetX, offsetY, offsetZ, collectedPoints.size());
 
         DriverStation.reportWarning(result, false);
     }

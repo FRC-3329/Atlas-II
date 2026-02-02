@@ -72,20 +72,20 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 		cameraNotTrackingAlert = new Alert("photonvision", "PV Not Tracking :(", AlertType.kWarning);
 
 		/*
-		    We will filter the pos data because we do not care about the phase delay added
-		    (the robot will be stationary when the pos is used).
-
-		    Also filtering because we could accidentally set out pos to a bad data pos 
-            if we are just grabbing the raw pos data.
+		 * We will filter the pos data because we do not care about the phase delay
+		 * added
+		 * (the robot will be stationary when the pos is used).
+		 * 
+		 * Also filtering because we could accidentally set out pos to a bad data pos
+		 * if we are just grabbing the raw pos data.
 		 */
 		xFilter = new MedianFilter(10);
 		yFilter = new MedianFilter(10);
 		thetaFilter = new MedianFilter(10);
 
 		photonEstimator = new PhotonPoseEstimator(
-			PVConstants.kTagLayout,
-			PVConstants.ROBOT_TO_CAMERA
-        );
+				PVConstants.kTagLayout,
+				PVConstants.ROBOT_TO_CAMERA);
 
 		lastUpdatedPose = new Pose2d(1, 1, Rotation2d.kZero);
 	}
@@ -98,9 +98,9 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 	 * Calculates new std devs.
 	 * This algorithm is a heuristic that creates dynamic standard deviations based
 	 * on number of:
-	 *     - tags
-	 *     - estimation strategy
-	 *     - distance
+	 * - tags
+	 * - estimation strategy
+	 * - distance
 	 * from the tags.
 	 * 
 	 * @param estimatedPose The estimated pose to guess standard deviations for.
@@ -122,8 +122,8 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 			// average-distance metric
 			for (var tgt : targets) {
 				var tagPose = photonEstimator
-					.getFieldTags()
-					.getTagPose(tgt.getFiducialId());
+						.getFieldTags()
+						.getTagPose(tgt.getFiducialId());
 
 				if (tagPose.isEmpty()) {
 					continue;
@@ -136,11 +136,9 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 						.toPose2d()
 						.getTranslation()
 						.getDistance(
-						    estimatedPose
-                            	.get()
-                                .estimatedPose.toPose2d()
-							    .getTranslation()
-                        );
+								estimatedPose
+										.get().estimatedPose.toPose2d()
+										.getTranslation());
 			}
 
 			if (numTags == 0) {
@@ -233,12 +231,10 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 				}
 
 				lastUpdatedPose = new Pose2d(
-					xFilter.calculate(pose2d.getX()),
-					yFilter.calculate(pose2d.getY()),
-					Rotation2d.fromRadians(
-						thetaFilter.calculate(pose2d.getRotation().getRadians())
-                    )
-                );
+						xFilter.calculate(pose2d.getX()),
+						yFilter.calculate(pose2d.getY()),
+						Rotation2d.fromRadians(
+								thetaFilter.calculate(pose2d.getRotation().getRadians())));
 
 				timeSinceLastUpdatedPose.mut_replace(PVConstants.VALID_TIME);
 				publisherFiltered.accept(lastUpdatedPose);

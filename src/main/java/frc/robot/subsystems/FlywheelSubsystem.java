@@ -80,8 +80,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         // Invert the right motor relative to the left
         flywheelConfig.MotorOutput.Inverted = (FlywheelConstants.INVERTED == InvertedValue.CounterClockwise_Positive)
-            ? InvertedValue.Clockwise_Positive
-            : InvertedValue.CounterClockwise_Positive;
+                ? InvertedValue.Clockwise_Positive
+                : InvertedValue.CounterClockwise_Positive;
 
         right.getConfigurator().apply(flywheelConfig);
 
@@ -122,55 +122,48 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         // Change target RPM of motor from Doglog
         DogLog.tunable(
-            (getName() + "/RPMSetPoint"),
-            0.0,
-            RPM,
-            (rpm) -> {
-                left.setControl(request.withVelocity(rpm));
-                right.setControl(request.withVelocity(rpm));
-            }
-        );
+                (getName() + "/RPMSetPoint"),
+                0.0,
+                RPM,
+                (rpm) -> {
+                    left.setControl(request.withVelocity(rpm));
+                    right.setControl(request.withVelocity(rpm));
+                });
 
         // Change target hood angle from Doglog
         DogLog.tunable(
-            (getName() + "/HoodAngleSetPoint"),
-            0.0,
-            Degrees,
-            (angle) -> {
-                hood.setControl(hoodRequest.withPosition(angle));
-            }
-        );
+                (getName() + "/HoodAngleSetPoint"),
+                0.0,
+                Degrees,
+                (angle) -> {
+                    hood.setControl(hoodRequest.withPosition(angle));
+                });
 
         // Set default command to idle
         setDefaultCommand(
-            this.runOnce(() -> {
-                left.set(0);
-                right.set(0);
-            }).andThen(
-                this.idle()
-            )
-        );
+                this.runOnce(() -> {
+                    left.set(0);
+                    right.set(0);
+                }).andThen(
+                        this.idle()));
 
         // SysID configuration
         sysIdRoutine = new SysIdRoutine(
-            new SysIdRoutine.Config(
-                null,
-                Volts.of(4),
-                null,
-                (state) -> {
-                    SignalLogger.writeString("state", state.toString());    
-                }
-            ),
+                new SysIdRoutine.Config(
+                        null,
+                        Volts.of(4),
+                        null,
+                        (state) -> {
+                            SignalLogger.writeString("state", state.toString());
+                        }),
 
-            new SysIdRoutine.Mechanism(
-                (volts) -> {
-                    left.setControl(sysIdControl.withOutput(volts.in(Volts)));
-                    right.setControl(sysIdControl.withOutput(volts.in(Volts)));
-                },
-                null,
-                this
-            )
-        );
+                new SysIdRoutine.Mechanism(
+                        (volts) -> {
+                            left.setControl(sysIdControl.withOutput(volts.in(Volts)));
+                            right.setControl(sysIdControl.withOutput(volts.in(Volts)));
+                        },
+                        null,
+                        this));
     }
 
     /**
@@ -190,11 +183,10 @@ public class FlywheelSubsystem extends SubsystemBase {
         return this.run(() -> {
             // Calculate distance to hub (in meters)
             Distance dist = Meters.of(
-                robotPoseSupplier
-                    .get()
-                    .getTranslation()
-                    .getDistance(Constants.HUB_LOCATION)
-            );
+                    robotPoseSupplier
+                            .get()
+                            .getTranslation()
+                            .getDistance(Constants.HUB_LOCATION));
 
             double rpm = flywheelMap.get(dist.in(Meters));
             double hoodPos = hoodMap.get(dist.in(Meters));
@@ -204,16 +196,15 @@ public class FlywheelSubsystem extends SubsystemBase {
             hood.setControl(hoodRequest.withPosition(hoodPos));
 
             DogLog.log(
-                (getName() + "/DistanceToHub"),
-                dist
-            );
+                    (getName() + "/DistanceToHub"),
+                    dist);
         });
     }
 
     /**
      * Shoot the flywheel at a fixed RPM and hood angle
      *
-     * @param rpm Target RPM
+     * @param rpm   Target RPM
      * @param angle Target hood angle
      */
     public Command shoot(AngularVelocity rpm, Angle angle) {
@@ -243,25 +234,21 @@ public class FlywheelSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         DogLog.log(
-            (getName() + "/AtSpeed"),
-            isAtSpeed()
-        );
+                (getName() + "/AtSpeed"),
+                isAtSpeed());
 
         DogLog.log(
-            (getName() + "/Speed"),
-            left.get()
-        );
+                (getName() + "/Speed"),
+                left.get());
 
         DogLog.log(
-            (getName() + "/RPM"),
-             left.getVelocity()
-                .getValue()
-                .in(RPM)
-        );
+                (getName() + "/RPM"),
+                left.getVelocity()
+                        .getValue()
+                        .in(RPM));
 
         DogLog.log(
-            (getName() + "/HoodPosition"),
-            hood.getPosition().getValue()
-        );
+                (getName() + "/HoodPosition"),
+                hood.getPosition().getValue());
     }
 }

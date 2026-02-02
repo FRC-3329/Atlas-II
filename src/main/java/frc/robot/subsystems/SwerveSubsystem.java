@@ -44,33 +44,31 @@ public class SwerveSubsystem extends SubsystemBase {
 	public SwerveSubsystem() {
 		try {
 			swerveDrive = new SwerveParser(directory)
-				.createSwerveDrive(Constants.MAX_SPEED,
-					new Pose2d(
-						new Translation2d(
-							Meter.of(0), 
-							Meter.of(0)
-						),
-						Rotation2d.fromDegrees(0)
-					)
-				);
+					.createSwerveDrive(Constants.MAX_SPEED,
+							new Pose2d(
+									new Translation2d(
+											Meter.of(0),
+											Meter.of(0)),
+									Rotation2d.fromDegrees(0)));
 		} catch (Exception e) {
 			throw new RuntimeException(e);
 		}
 
-		/* 
-			Chassis discretization helps make the swerve drive more accurate by accounting
-			for the time delay between when we calculate speeds and when they're actually applied.
-		*/
+		/*
+		 * Chassis discretization helps make the swerve drive more accurate by
+		 * accounting
+		 * for the time delay between when we calculate speeds and when they're actually
+		 * applied.
+		 */
 		swerveDrive.setChassisDiscretization(true, 0.02);
-		
-		/* 
-			kS = voltage to overcome static friction (0.0846525V)
-			kV = voltage per unit velocity (2.68855V per m/s)
-			kA = voltage per unit acceleration (0.2266775V per m/s^2)
-		*/
+
+		/*
+		 * kS = voltage to overcome static friction (0.0846525V)
+		 * kV = voltage per unit velocity (2.68855V per m/s)
+		 * kA = voltage per unit acceleration (0.2266775V per m/s^2)
+		 */
 		swerveDrive.replaceSwerveModuleFeedforward(
-			new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775)
-		);
+				new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775));
 
 		setupPathPlanner();
 	}
@@ -88,35 +86,41 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * This lets us use cameras (like PV or QN) to correct our position estimate by looking at AprilTags. 
-	 * The standard deviations (stdDevs) tell the Kalman filter how much to trust this measurement vs our wheel odometry.
+	 * This lets us use cameras (like PV or QN) to correct our position estimate by
+	 * looking at AprilTags.
+	 * The standard deviations (stdDevs) tell the Kalman filter how much to trust
+	 * this measurement vs our wheel odometry.
 	 * 
-	 * @param visionMeasurement the pose measured by the camera (will be converted from 3D to 2D)
+	 * @param visionMeasurement the pose measured by the camera (will be converted
+	 *                          from 3D to 2D)
 	 * @param timestampSeconds  when the measurement was taken (from FPGA timestamp)
-	 * @param stdDevs           how much we trust this measurement (lower = more trust)
+	 * @param stdDevs           how much we trust this measurement (lower = more
+	 *                          trust)
 	 * 
-	 * See {@link SwerveDrivePoseEstimator#addVisionMeasurement(Pose2d, double, Matrix)}.
+	 *                          See
+	 *                          {@link SwerveDrivePoseEstimator#addVisionMeasurement(Pose2d, double, Matrix)}.
 	 */
 	public void addVisionMeasurement(
-		Pose3d visionMeasurement, 
-		double timestampSeconds, 
-		Matrix<N3, N1> stdDevs
-	){
+			Pose3d visionMeasurement,
+			double timestampSeconds,
+			Matrix<N3, N1> stdDevs) {
 		swerveDrive.addVisionMeasurement(visionMeasurement.toPose2d(), timestampSeconds, stdDevs);
 	}
 
 	/**
-	 * Field-oriented means "forward" on the joystick always moves the robot away 
+	 * Field-oriented means "forward" on the joystick always moves the robot away
 	 * from the driver station, regardless of which way the robot is facing.
 	 * 
-	 * @param velocity the desired field-oriented {@link ChassisSpeeds} (vx, vy, omega)
+	 * @param velocity the desired field-oriented {@link ChassisSpeeds} (vx, vy,
+	 *                 omega)
 	 */
 	public void driveFieldOriented(ChassisSpeeds velocity) {
 		swerveDrive.driveFieldOriented(velocity);
 	}
 
 	/**
-	 * @param velocity a {@link Supplier} that provides {@link ChassisSpeeds} every loop
+	 * @param velocity a {@link Supplier} that provides {@link ChassisSpeeds} every
+	 *                 loop
 	 * @return a command that drives the robot
 	 */
 	public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity) {
@@ -126,7 +130,8 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * This version lets you specify a target heading direction (headingX, headingY) and
+	 * This version lets you specify a target heading direction (headingX, headingY)
+	 * and
 	 * the robot will automatically rotate to face that direction while translating.
 	 * 
 	 * @param translationX forward/backward speed (-1 to 1)
@@ -136,30 +141,25 @@ public class SwerveSubsystem extends SubsystemBase {
 	 * @return command that drives with heading control
 	 */
 	public Command driveCommand(
-		DoubleSupplier translationX, 
-		DoubleSupplier translationY, 
-		DoubleSupplier headingX,
-		DoubleSupplier headingY
-	) {
+			DoubleSupplier translationX,
+			DoubleSupplier translationY,
+			DoubleSupplier headingX,
+			DoubleSupplier headingY) {
 		return run(() -> {
 			Translation2d scaledInputs = SwerveMath.scaleTranslation(
-				new Translation2d(
-					translationX.getAsDouble(), 
-					translationY.getAsDouble()
-				), 
-				0.8
-			);
-			
+					new Translation2d(
+							translationX.getAsDouble(),
+							translationY.getAsDouble()),
+					0.8);
+
 			driveFieldOriented(
-				swerveDrive.swerveController.getTargetSpeeds(
-					scaledInputs.getX(), 
-					scaledInputs.getY(),
-					headingX.getAsDouble(), 
-					headingY.getAsDouble(), 
-					swerveDrive.getOdometryHeading().getRadians(),
-					swerveDrive.getMaximumChassisVelocity()
-				)
-			);
+					swerveDrive.swerveController.getTargetSpeeds(
+							scaledInputs.getX(),
+							scaledInputs.getY(),
+							headingX.getAsDouble(),
+							headingY.getAsDouble(),
+							swerveDrive.getOdometryHeading().getRadians(),
+							swerveDrive.getMaximumChassisVelocity()));
 		});
 	}
 
@@ -172,8 +172,8 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	public Command zeroGyro() {
 		return Commands
-			.runOnce(() -> swerveDrive.zeroGyro())
-			.andThen(Commands.waitSeconds(0.5));
+				.runOnce(() -> swerveDrive.zeroGyro())
+				.andThen(Commands.waitSeconds(0.5));
 	}
 
 	public Rotation2d getGyro() {
@@ -185,7 +185,7 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * SysId runs automated tests to measure how the motors respond to voltage. 
+	 * SysId runs automated tests to measure how the motors respond to voltage.
 	 * This helps us tune PID controllers and feedforward values for better control.
 	 * 
 	 * This version tests the angle (steering) motors specifically.
@@ -194,15 +194,13 @@ public class SwerveSubsystem extends SubsystemBase {
 	 */
 	public Command getAngleCharacterizationCommand() {
 		return SwerveDriveTest.generateSysIdCommand(
-			SwerveDriveTest.setAngleSysIdRoutine(
-				new SysIdRoutine.Config(), this, swerveDrive
-			),
-			3, 6, 3
-		);
+				SwerveDriveTest.setAngleSysIdRoutine(
+						new SysIdRoutine.Config(), this, swerveDrive),
+				3, 6, 3);
 	}
 
 	/**
-	 * SysId runs automated tests to measure how the motors respond to voltage. 
+	 * SysId runs automated tests to measure how the motors respond to voltage.
 	 * This helps us tune PID controllers and feedforward values for better control.
 	 * 
 	 * This version tests the drive (wheel) motors specifically.
@@ -211,12 +209,10 @@ public class SwerveSubsystem extends SubsystemBase {
 	 */
 	public Command getDriveCharacterizationCommand() {
 		return SwerveDriveTest.generateSysIdCommand(
-			SwerveDriveTest.setDriveSysIdRoutine(
-				new SysIdRoutine.Config(), this, swerveDrive, 
-				12, true
-			),
-			3, 4, 1.5
-		);
+				SwerveDriveTest.setDriveSysIdRoutine(
+						new SysIdRoutine.Config(), this, swerveDrive,
+						12, true),
+				3, 4, 1.5);
 	}
 
 	public void setupPathPlanner() {
@@ -226,42 +222,39 @@ public class SwerveSubsystem extends SubsystemBase {
 			final boolean enableFeedforward = true;
 
 			AutoBuilder.configure(
-				swerveDrive::getPose,          // Supplier for current robot pose
-				swerveDrive::resetOdometry,    // Consumer to reset odometry
-				swerveDrive::getRobotVelocity, // Supplier for current robot velocity
-				(speedsRobotRelative, moduleFeedForwards) -> {
-					if (enableFeedforward) {
-						swerveDrive.drive(
-							speedsRobotRelative,
-							swerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
-							moduleFeedForwards.linearForces()
-						);
-					} else {
-						swerveDrive.setChassisSpeeds(speedsRobotRelative);
-					}
-				},
+					swerveDrive::getPose, // Supplier for current robot pose
+					swerveDrive::resetOdometry, // Consumer to reset odometry
+					swerveDrive::getRobotVelocity, // Supplier for current robot velocity
+					(speedsRobotRelative, moduleFeedForwards) -> {
+						if (enableFeedforward) {
+							swerveDrive.drive(
+									speedsRobotRelative,
+									swerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
+									moduleFeedForwards.linearForces());
+						} else {
+							swerveDrive.setChassisSpeeds(speedsRobotRelative);
+						}
+					},
 
-				// TODO: PID needs to be tuned
-				new PPHolonomicDriveController(
-					new PIDConstants(3.0, 0.0, 0.1),  // Translation
-					new PIDConstants(3.0, 0.0, 0.1)   // Rotation
-				),
-				config,
-				() -> {
-					var alliance = DriverStation.getAlliance();
+					// TODO: PID needs to be tuned
+					new PPHolonomicDriveController(
+							new PIDConstants(3.0, 0.0, 0.1), // Translation
+							new PIDConstants(3.0, 0.0, 0.1) // Rotation
+					),
+					config,
+					() -> {
+						var alliance = DriverStation.getAlliance();
 
-					if (alliance.isPresent()) {
-						return alliance.get() == DriverStation.Alliance.Red;
-					}
+						if (alliance.isPresent()) {
+							return alliance.get() == DriverStation.Alliance.Red;
+						}
 
-					return false;
-				},
-				this
-			);
+						return false;
+					},
+					this);
 		} catch (Exception e) {
 			DriverStation.reportError(
-				"Failed to setup PathPlanner: " + e.getMessage(), e.getStackTrace()
-			);
+					"Failed to setup PathPlanner: " + e.getMessage(), e.getStackTrace());
 		}
 	}
 
@@ -284,8 +277,7 @@ public class SwerveSubsystem extends SubsystemBase {
 			return AutoBuilder.pathfindThenFollowPath(path, constraints);
 		} catch (Exception e) {
 			DriverStation.reportError(
-				"Unable to load path: " + pathName, e.getStackTrace()
-			);
+					"Unable to load path: " + pathName, e.getStackTrace());
 
 			return Commands.none();
 		}
