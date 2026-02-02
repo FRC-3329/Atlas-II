@@ -3,6 +3,8 @@ package frc.robot.subsystems;
 import frc.robot.Constants;
 
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Meters;
 
 import java.util.function.Supplier;
 
@@ -14,6 +16,7 @@ import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import static edu.wpi.first.units.Units.Volts;
 
@@ -21,8 +24,10 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -69,6 +74,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         flywheelConfig.MotorOutput.Inverted = FlywheelConstants.INVERTED;
+        flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         left.getConfigurator().apply(flywheelConfig);
 
@@ -94,6 +100,12 @@ public class FlywheelSubsystem extends SubsystemBase {
         hoodConfig.MotionMagic.MotionMagicAcceleration = HoodConstants.ACCELERATION;
         hoodConfig.MotionMagic.MotionMagicJerk = HoodConstants.JERK;
 
+        hoodConfig.CurrentLimits.SupplyCurrentLimit = HoodConstants.CURRENT_LIMIT;
+        hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
+
+        hoodConfig.MotorOutput.Inverted = HoodConstants.INVERTED;
+        hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
         hood.getConfigurator().apply(hoodConfig);
 
         // Convert distance from hub to RPM
@@ -116,6 +128,16 @@ public class FlywheelSubsystem extends SubsystemBase {
             (rpm) -> {
                 left.setControl(request.withVelocity(rpm));
                 right.setControl(request.withVelocity(rpm));
+            }
+        );
+
+        // Change target hood angle from Doglog
+        DogLog.tunable(
+            (getName() + "/HoodAngleSetPoint"),
+            0.0,
+            Degrees,
+            (angle) -> {
+                hood.setControl(hoodRequest.withPosition(angle));
             }
         );
 
@@ -166,30 +188,39 @@ public class FlywheelSubsystem extends SubsystemBase {
     /** Shoot the flywheel at the appropriate speed based on distance to the hub */
     public Command shoot() {
         return this.run(() -> {
-            // Calculate distance to hub
-            double dist = new Transform2d(
-                robotPoseSupplier.get(),
-                Constants.HUB_LOCATION
-            ).getTranslation().getNorm();
+            // Calculate distance to hub (in meters)
+            Distance dist = Meters.of(
+                robotPoseSupplier
+                    .get()
+                    .getTranslation()
+                    .getDistance(Constants.HUB_LOCATION)
+            );
 
-            double rpm = flywheelMap.get(dist);
-            double hoodPos = hoodMap.get(dist);
+            double rpm = flywheelMap.get(dist.in(Meters));
+            double hoodPos = hoodMap.get(dist.in(Meters));
 
             left.setControl(request.withVelocity(rpm));
             right.setControl(request.withVelocity(rpm));
             hood.setControl(hoodRequest.withPosition(hoodPos));
+
+            DogLog.log(
+                (getName() + "/DistanceToHub"),
+                dist
+            );
         });
     }
 
     /**
-     * Shoot the flywheel at a fixed RPM
+     * Shoot the flywheel at a fixed RPM and hood angle
      *
      * @param rpm Target RPM
+     * @param angle Target hood angle
      */
-    public Command shoot(double rpm) {
+    public Command shoot(AngularVelocity rpm, Angle angle) {
         return this.run(() -> {
             left.setControl(request.withVelocity(rpm));
             right.setControl(request.withVelocity(rpm));
+            hood.setControl(hoodRequest.withPosition(angle));
         });
     }
 

@@ -8,10 +8,9 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.math.VecBuilder;
-import edu.wpi.first.math.geometry.Pose2d;
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Rotation3d;
 import edu.wpi.first.math.geometry.Transform3d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
 
@@ -38,9 +37,9 @@ public final class Constants {
          * How much to trust Quest vision measurements (lower = more trust) for pose estimation
          */
         public static final Matrix<N3, N1> STD_DEVS = VecBuilder.fill(
-            0.0, // X position standard deviation in meters
-            0.0, // Y position standard deviation in meters
-            0.0 // Heading standard deviation in radians
+            0.02, // X position standard deviation in meters
+            0.02, // Y position standard deviation in meters
+            0.035 // Heading standard deviation in radians
         );
     }
 
@@ -85,7 +84,7 @@ public final class Constants {
         public static final double kV = 0.0;
         public static final double kA = 0.0;
 
-        public static final double CURRENT_LIMIT = 40.0;
+        public static final double CURRENT_LIMIT = 40.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
     }
 
@@ -103,14 +102,16 @@ public final class Constants {
         public static final double CRUISE_VELOCITY = 0.0;
         public static final double ACCELERATION = 0.0;
         public static final double JERK = 0.0;
+
+        public static final double CURRENT_LIMIT = 25.0; // Amps
+        public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
     }
 
     // TODO: Update values
     /** Location of hub on the field */
-    public static final Pose2d HUB_LOCATION = new Pose2d(
+    public static final Translation2d HUB_LOCATION = new Translation2d(
         0,
-        0,
-        Rotation2d.kZero
+        0
     );
 
     /** 20ms or 50hz */
