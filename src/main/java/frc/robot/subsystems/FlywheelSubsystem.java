@@ -1,6 +1,6 @@
 package frc.robot.subsystems;
 
-import frc.robot.Constants;
+import frc.robot.constants.Constants;
 
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Degrees;
@@ -32,8 +32,8 @@ import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-import frc.robot.Constants.FlywheelConstants;
-import frc.robot.Constants.HoodConstants;
+import frc.robot.constants.FlywheelConstants.Flywheel;
+import frc.robot.constants.FlywheelConstants.Hood;
 
 public class FlywheelSubsystem extends SubsystemBase {
     private final TalonFX left, right, hood;
@@ -53,9 +53,9 @@ public class FlywheelSubsystem extends SubsystemBase {
      * @param robotPoseSupplier supplier for the robot pose2d
      */
     public FlywheelSubsystem(Supplier<Pose2d> robotPoseSupplier) {
-        this.left = new TalonFX(FlywheelConstants.LEFT_ID);
-        this.right = new TalonFX(FlywheelConstants.RIGHT_ID);
-        this.hood = new TalonFX(HoodConstants.HOOD_ID);
+        this.left = new TalonFX(Flywheel.LEFT_ID);
+        this.right = new TalonFX(Flywheel.RIGHT_ID);
+        this.hood = new TalonFX(Hood.HOOD_ID);
 
         this.robotPoseSupplier = robotPoseSupplier;
 
@@ -63,23 +63,23 @@ public class FlywheelSubsystem extends SubsystemBase {
         TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
         Slot0Configs flywheelSlot0 = flywheelConfig.Slot0;
 
-        flywheelSlot0.kS = FlywheelConstants.kS;
-        flywheelSlot0.kV = FlywheelConstants.kV;
-        flywheelSlot0.kA = FlywheelConstants.kA;
-        flywheelSlot0.kP = FlywheelConstants.kP;
-        flywheelSlot0.kI = FlywheelConstants.kI;
-        flywheelSlot0.kD = FlywheelConstants.kD;
+        flywheelSlot0.kS = Flywheel.kS;
+        flywheelSlot0.kV = Flywheel.kV;
+        flywheelSlot0.kA = Flywheel.kA;
+        flywheelSlot0.kP = Flywheel.kP;
+        flywheelSlot0.kI = Flywheel.kI;
+        flywheelSlot0.kD = Flywheel.kD;
 
-        flywheelConfig.CurrentLimits.SupplyCurrentLimit = FlywheelConstants.CURRENT_LIMIT;
+        flywheelConfig.CurrentLimits.SupplyCurrentLimit = Flywheel.CURRENT_LIMIT;
         flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        flywheelConfig.MotorOutput.Inverted = FlywheelConstants.INVERTED;
+        flywheelConfig.MotorOutput.Inverted = Flywheel.INVERTED;
         flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         left.getConfigurator().apply(flywheelConfig);
 
         // Invert the right motor relative to the left
-        flywheelConfig.MotorOutput.Inverted = (FlywheelConstants.INVERTED == InvertedValue.CounterClockwise_Positive)
+        flywheelConfig.MotorOutput.Inverted = (Flywheel.INVERTED == InvertedValue.CounterClockwise_Positive)
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
 
@@ -89,21 +89,21 @@ public class FlywheelSubsystem extends SubsystemBase {
         TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
         Slot0Configs hoodSlot0 = hoodConfig.Slot0;
 
-        hoodSlot0.kP = HoodConstants.kP;
-        hoodSlot0.kI = HoodConstants.kI;
-        hoodSlot0.kD = HoodConstants.kD;
-        hoodSlot0.kS = HoodConstants.kS;
-        hoodSlot0.kV = HoodConstants.kV;
-        hoodSlot0.kA = HoodConstants.kA;
+        hoodSlot0.kP = Hood.kP;
+        hoodSlot0.kI = Hood.kI;
+        hoodSlot0.kD = Hood.kD;
+        hoodSlot0.kS = Hood.kS;
+        hoodSlot0.kV = Hood.kV;
+        hoodSlot0.kA = Hood.kA;
 
-        hoodConfig.MotionMagic.MotionMagicCruiseVelocity = HoodConstants.CRUISE_VELOCITY;
-        hoodConfig.MotionMagic.MotionMagicAcceleration = HoodConstants.ACCELERATION;
-        hoodConfig.MotionMagic.MotionMagicJerk = HoodConstants.JERK;
+        hoodConfig.MotionMagic.MotionMagicCruiseVelocity = Hood.CRUISE_VELOCITY;
+        hoodConfig.MotionMagic.MotionMagicAcceleration = Hood.ACCELERATION;
+        hoodConfig.MotionMagic.MotionMagicJerk = Hood.JERK;
 
-        hoodConfig.CurrentLimits.SupplyCurrentLimit = HoodConstants.CURRENT_LIMIT;
+        hoodConfig.CurrentLimits.SupplyCurrentLimit = Hood.CURRENT_LIMIT;
         hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
-        hoodConfig.MotorOutput.Inverted = HoodConstants.INVERTED;
+        hoodConfig.MotorOutput.Inverted = Hood.INVERTED;
         hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         hood.getConfigurator().apply(hoodConfig);

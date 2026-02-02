@@ -1,0 +1,39 @@
+package frc.robot.constants;
+
+import com.ctre.phoenix6.signals.InvertedValue;
+
+// TODO: Update values
+public final class FlywheelConstants {
+    public static final class Flywheel {
+        public static final int LEFT_ID = 0;
+        public static final int RIGHT_ID = 0;
+
+        public static final double kP = 0.0;
+        public static final double kI = 0.0;
+        public static final double kD = 0.0;
+        public static final double kS = 0.0;
+        public static final double kV = 0.0;
+        public static final double kA = 0.0;
+
+        public static final double CURRENT_LIMIT = 40.0; // Amps
+        public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
+    }
+
+    public static final class Hood {
+        public static final int HOOD_ID = 0;
+
+        public static final double kP = 0.0;
+        public static final double kI = 0.0;
+        public static final double kD = 0.0;
+        public static final double kS = 0.0;
+        public static final double kV = 0.0;
+        public static final double kA = 0.0;
+
+        public static final double CRUISE_VELOCITY = 0.0;
+        public static final double ACCELERATION = 0.0;
+        public static final double JERK = 0.0;
+
+        public static final double CURRENT_LIMIT = 25.0; // Amps
+        public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
+    }
+}

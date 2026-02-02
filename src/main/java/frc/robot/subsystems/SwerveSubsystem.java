@@ -2,7 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Meter;
 
-import frc.robot.Constants;
+import frc.robot.constants.Constants;
 
 import java.io.File;
 import java.util.function.DoubleSupplier;

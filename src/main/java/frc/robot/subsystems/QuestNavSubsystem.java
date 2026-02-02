@@ -11,7 +11,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Constants.QNConstants;
+import frc.robot.constants.QNConstants;
 import frc.robot.utils.VisionData.EstimateConsumer;
 import gg.questnav.questnav.PoseFrame;
 import gg.questnav.questnav.QuestNav;

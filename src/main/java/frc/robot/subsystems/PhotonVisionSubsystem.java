@@ -5,8 +5,8 @@ import static edu.wpi.first.units.Units.Seconds;
 import java.util.List;
 import java.util.Optional;
 
-import frc.robot.Constants;
-import frc.robot.Constants.PVConstants;
+import frc.robot.constants.Constants;
+import frc.robot.constants.PVConstants;
 import frc.robot.utils.VisionData.EstimateConsumer;
 
 import org.photonvision.EstimatedRobotPose;
