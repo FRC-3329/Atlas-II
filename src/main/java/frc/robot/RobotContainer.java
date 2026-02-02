@@ -2,6 +2,7 @@ package frc.robot;
 
 import frc.robot.Constants.OperatorConstants;
 import frc.robot.commands.CalibrateQuestCommand;
+import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.PhotonVisionSubsystem;
 import frc.robot.subsystems.QuestNavSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
@@ -227,7 +228,7 @@ public class RobotContainer {
         // no auton selected and valid PV pose
         } else if (auton == null && pvPose.isPresent()) {
             DriverStation.reportError(
-                "Auton error: Auton not selected (PV pose is valid)", 
+                "Auton error: Auton not selected (PV pose is valid) :(", 
                 false
             );
 

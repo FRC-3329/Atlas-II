@@ -68,8 +68,8 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 		camera = new PhotonCamera(PVConstants.CAMERA_NAME);
 
-		cameraDisconnectedAlert = new Alert("photonvision", "PV Not Connected!!", AlertType.kError);
-		cameraNotTrackingAlert = new Alert("photonvision", "PV Not Tracking!!", AlertType.kWarning);
+		cameraDisconnectedAlert = new Alert("photonvision", "PV Not Connected :(", AlertType.kError);
+		cameraNotTrackingAlert = new Alert("photonvision", "PV Not Tracking :(", AlertType.kWarning);
 
 		/*
 		    We will filter the pos data because we do not care about the phase delay added
@@ -84,7 +84,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 		photonEstimator = new PhotonPoseEstimator(
 			PVConstants.kTagLayout,
-			PVConstants.Robot_to_Camera
+			PVConstants.ROBOT_TO_CAMERA
         );
 
 		lastUpdatedPose = new Pose2d(1, 1, Rotation2d.kZero);
@@ -121,7 +121,9 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 			// Precalculation, see how many tags we found, and calculate an
 			// average-distance metric
 			for (var tgt : targets) {
-				var tagPose = photonEstimator.getFieldTags().getTagPose(tgt.getFiducialId());
+				var tagPose = photonEstimator
+					.getFieldTags()
+					.getTagPose(tgt.getFiducialId());
 
 				if (tagPose.isEmpty()) {
 					continue;
@@ -178,7 +180,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 		if (timeSinceLastUpdatedPose.gt(Seconds.zero())) {
 			return Optional.of(lastUpdatedPose);
 		} else {
-			DriverStation.reportWarning("Tried to get PV pose but it was invalid!!", false);
+			DriverStation.reportWarning("Tried to get PV pose but it was invalid :(", false);
 			return Optional.empty();
 		}
 	}
