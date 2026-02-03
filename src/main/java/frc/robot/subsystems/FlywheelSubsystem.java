@@ -70,6 +70,10 @@ public class FlywheelSubsystem extends SubsystemBase {
         flywheelSlot0.kI = Flywheel.kI;
         flywheelSlot0.kD = Flywheel.kD;
 
+        flywheelConfig.MotionMagic.MotionMagicCruiseVelocity = Flywheel.CRUISE_VELOCITY;
+        flywheelConfig.MotionMagic.MotionMagicAcceleration = Flywheel.ACCELERATION;
+        // flywheelConfig.MotionMagic.MotionMagicJerk = Flywheel.JERK;
+
         flywheelConfig.CurrentLimits.SupplyCurrentLimit = Flywheel.CURRENT_LIMIT;
         flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
