@@ -5,8 +5,8 @@ import com.ctre.phoenix6.signals.InvertedValue;
 // TODO: Update values
 public final class FlywheelConstants {
     public static final class Flywheel {
-        public static final int LEFT_ID = 0;
-        public static final int RIGHT_ID = 0;
+        public static final int LEFT_ID = 2;
+        public static final int RIGHT_ID = 1;
 
         public static final double kP = 0.0;
         public static final double kI = 0.0;
