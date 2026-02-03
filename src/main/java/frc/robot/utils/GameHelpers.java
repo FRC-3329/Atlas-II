@@ -2,6 +2,7 @@ package frc.robot.utils;
 
 import static edu.wpi.first.units.Units.Meters;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import edu.wpi.first.math.geometry.Pose2d;
@@ -64,7 +65,7 @@ public class GameHelpers {
      * @return The current alliance (Red or Blue) if present, otherwise null
      */
     public Alliance getAlliance() {
-        var alliance = DriverStation.getAlliance();
+        Optional<Alliance> alliance = DriverStation.getAlliance();
         return alliance.isPresent() ? alliance.get() : null;
     }
 
@@ -74,7 +75,7 @@ public class GameHelpers {
      * @return true if the alliance is Red, false otherwise
      */
     public boolean isRedAlliance() {
-        var alliance = DriverStation.getAlliance();
+        Optional<Alliance> alliance = DriverStation.getAlliance();
         return alliance.isPresent() && alliance.get() == Alliance.Red;
     }
 
@@ -84,7 +85,7 @@ public class GameHelpers {
      * @return true if the alliance is Blue, false otherwise
      */
     public boolean isBlueAlliance() {
-        var alliance = DriverStation.getAlliance();
+        Optional<Alliance> alliance = DriverStation.getAlliance();
         return alliance.isPresent() && alliance.get() == Alliance.Blue;
     }
 
