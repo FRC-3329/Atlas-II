@@ -1,41 +1,25 @@
 package frc.robot;
 
-import frc.robot.commands.CalibrateQuestCommand;
 import frc.robot.constants.OperatorConstants;
-import frc.robot.subsystems.FlywheelSubsystem;
-import frc.robot.subsystems.PhotonVisionSubsystem;
-import frc.robot.subsystems.QuestNavSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 
 import swervelib.SwerveInputStream;
 
-import java.util.Optional;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 
-import edu.wpi.first.math.filter.Debouncer.DebounceType;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.RobotState;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
-    private final QuestNavSubsystem questNav = new QuestNavSubsystem(
-            drivebase::addVisionMeasurement,
-            true);
-    private final PhotonVisionSubsystem photonVision = new PhotonVisionSubsystem(
-            drivebase::addVisionMeasurement,
-            false);
 
     // Controllers
     private final CommandXboxController driverController = new CommandXboxController(
@@ -52,40 +36,7 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
-
-        /*
-         * On teleop, reset the odometry to the PV result only if not connected to FMS.
-         * At comp, we only want to reset the pose at the start of auton because we know
-         * the robot will be looking at a tag.
-         * We cannot garentee that at the start ofteleop.
-         */
-        new Trigger(RobotState::isTeleop)
-                .and(
-                        new Trigger(DriverStation::isFMSAttached).negate())
-                .onTrue(autoDriving(
-                        Commands.runOnce(() -> {
-                            photonVision.getPoseOptional().ifPresent(pose -> {
-                                resetOdometry(pose);
-                            });
-                        })));
-
-        /*
-         * In the event that QN stops tracking,
-         * failover to PV for updating our global robot pose.
-         * This will be accurate but require a tag in sight so it may
-         * become inaccurate if the robot cannot see any tags.
-         */
-        new Trigger(questNav::isTracking)
-                .debounce(0.5, DebounceType.kFalling)
-                .onFalse(Commands.runOnce(() -> {
-                    DriverStation.reportError(
-                            "QN tracking lost!! Failing over to PV...",
-                            false);
-
-                    questNav.useEstimatedConsumer(false);
-                    photonVision.useEstimatedConsumer(true);
-                }));
+        drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
 
         // Configure motor brake mode (false = coast)
         setMotorBrake(false);
@@ -109,16 +60,6 @@ public class RobotContainer {
         autoChooser.setDefaultOption("None", Commands.none());
 
         configureBindings();
-    }
-
-    /**
-     * Resets both the drivetrain's position and sets the quest's position.
-     * 
-     * @param pose the position in the world
-     */
-    private void resetOdometry(Pose2d pose) {
-        questNav.setQuestPose(pose);
-        drivebase.resetOdometry(pose);
     }
 
     /**
@@ -149,25 +90,6 @@ public class RobotContainer {
             setMotorBrake(false);
             SmartDashboard.putBoolean("Brake Mode", false);
         })).repeatedly());
-
-        // Callibrate QN when holding B on driver controller
-        driverController.b().whileTrue(
-                autoDriving(
-                        new CalibrateQuestCommand(drivebase, questNav)));
-
-        // Add button to the dashboard to reset QN's position with PV
-        SmartDashboard.putData(
-                "Reset QN from PV",
-                Commands.runOnce(() -> {
-                    DataLogManager.log("Attempting to reset QN to PV pose...");
-
-                    photonVision.getPoseOptional().ifPresent(pose -> {
-                        photonVision.useEstimatedConsumer(false);
-                        questNav.setQuestPose(pose);
-                        questNav.useEstimatedConsumer(true);
-                        DataLogManager.log("QN pose successfully set from PV!");
-                    });
-                }));
     }
 
     public void setMotorBrake(boolean brake) {
@@ -197,34 +119,13 @@ public class RobotContainer {
 
     public Command getAutonomousCommand() {
         Command auton = autoChooser.getSelected();
-        Optional<Pose2d> pvPose = photonVision.getPoseOptional();
 
-        // auton selected and valid PV pose
-        if (auton != null && pvPose.isPresent()) {
-            return autoDriving(
-                    auton.beforeStarting(
-                            () -> resetOdometry(pvPose.get())));
-            // auton selected and no valid PV pose
-        } else if (auton != null && pvPose.isEmpty()) {
-            DriverStation.reportError(
-                    "Auton error: Auton selected but the PV pose is invalid :(",
-                    false);
-
-            return Commands.none();
-            // no auton selected and valid PV pose
-        } else if (auton == null && pvPose.isPresent()) {
-            DriverStation.reportError(
-                    "Auton error: Auton not selected (PV pose is valid) :(",
-                    false);
-
-            return Commands.runOnce(() -> {
-                resetOdometry(pvPose.get());
-            });
+        if (auton != null) {
+            return autoDriving(auton);
         } else {
             DriverStation.reportError(
-                    "Auton error: Auton not selected and PV pose is invalid :(",
+                    "Auton error: No auton selected :(",
                     false);
-
             return Commands.none();
         }
     }
