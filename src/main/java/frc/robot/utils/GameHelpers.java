@@ -5,6 +5,8 @@ import static edu.wpi.first.units.Units.Meters;
 import java.util.Optional;
 import java.util.function.Supplier;
 
+import com.pathplanner.lib.util.FlippingUtil;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -27,51 +29,54 @@ public class GameHelpers {
     }
 
     /**
-     * Gets the distance from the robot to the hub.
-     * 
-     * @return The distance to the hub in meters (as a Distance unit)
+     * @return The hub position in the current alliance's coordinate system
+     */
+    public Translation2d calculateHubPosition() {
+        Translation2d hubPosition = Constants.HUB_LOCATION;
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+        if (alliance.isPresent() && alliance.get() == Alliance.Red) {
+            hubPosition = FlippingUtil.flipFieldPosition(hubPosition);
+        }
+        
+        return hubPosition;
+    }
+
+    /**
+     * @return The distance to the hub in meters
      */
     public Distance getHubDistance() {
         Translation2d robotTranslation = robotPoseSupplier.get().getTranslation();
-        double distanceMeters = robotTranslation.getDistance(Constants.HUB_LOCATION);
+        double distanceMeters = robotTranslation.getDistance(calculateHubPosition());
         return Meters.of(distanceMeters);
     }
 
     /**
-     * Gets the distance from the robot to the hub as a raw double value.
-     * 
      * @return The distance to the hub in meters
      */
     public double getHubDistanceMeters() {
         Translation2d robotTranslation = robotPoseSupplier.get().getTranslation();
-        return robotTranslation.getDistance(Constants.HUB_LOCATION);
+        return robotTranslation.getDistance(calculateHubPosition());
     }
 
     /**
-     * Gets the angle from the robot to the hub.
      * This is the angle from the robot's position to the hub, relative to the field's x-axis.
      * 
      * @return The angle to the hub as a Rotation2d
      */
     public Rotation2d getAngleToHub() {
         Translation2d robotTranslation = robotPoseSupplier.get().getTranslation();
-        // Calculate the vector from robot to hub, then get its angle
-        return Constants.HUB_LOCATION.minus(robotTranslation).getAngle();
+        return calculateHubPosition().minus(robotTranslation).getAngle();
     }
 
     /**
-     * Gets the current alliance color.
-     * 
-     * @return The current alliance (Red or Blue) if present, otherwise null
+     * @return current alliance (Red or Blue) if present
      */
-    public Alliance getAlliance() {
-        Optional<Alliance> alliance = DriverStation.getAlliance();
-        return alliance.isPresent() ? alliance.get() : null;
+    public Optional<Alliance> getAlliance() {
+        return DriverStation.getAlliance();
     }
 
     /**
-     * Checks if the current alliance is Red.
-     * 
      * @return true if the alliance is Red, false otherwise
      */
     public boolean isRedAlliance() {
@@ -80,8 +85,6 @@ public class GameHelpers {
     }
 
     /**
-     * Checks if the current alliance is Blue.
-     * 
      * @return true if the alliance is Blue, false otherwise
      */
     public boolean isBlueAlliance() {
@@ -90,8 +93,6 @@ public class GameHelpers {
     }
 
     /**
-     * Gets the robot's current pose.
-     * 
      * @return The robot's current pose on the field
      */
     public Pose2d getRobotPose() {
