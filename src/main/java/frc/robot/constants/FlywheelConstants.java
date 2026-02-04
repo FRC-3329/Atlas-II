@@ -15,7 +15,7 @@ public final class FlywheelConstants {
         public static final double kA = 0.023967;
 
         public static final double CRUISE_VELOCITY = 10000.0;
-        public static final double ACCELERATION = 10.0;
+        public static final double ACCELERATION = 10000.0;
         // public static final double JERK = 0.0;
 
         public static final double CURRENT_LIMIT = 45.0; // Amps
