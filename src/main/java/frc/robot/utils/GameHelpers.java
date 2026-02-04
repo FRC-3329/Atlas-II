@@ -20,6 +20,7 @@ import frc.robot.constants.Constants;
  */
 public class GameHelpers {
     private final Supplier<Pose2d> robotPoseSupplier;
+    private String cachedGameData = "";
 
     /**
      * @param robotPoseSupplier A supplier that provides the robot's current pose on the field
@@ -97,5 +98,52 @@ public class GameHelpers {
      */
     public Pose2d getRobotPose() {
         return robotPoseSupplier.get();
+    }
+
+    /**
+     * Determines which alliance's goal is currently active based on match time and game data.
+     * The game data specifies which alliance's goal goes inactive first.
+     * During auto, the team's own goal is always active.
+     * 
+     * @return The active Alliance (Red or Blue), or empty if game data is unavailable
+     */
+    public Optional<Alliance> getActiveGoalAlliance() {
+        if (DriverStation.isAutonomous()) {
+            return DriverStation.getAlliance();
+        }
+
+        double currentTime = DriverStation.getMatchTime();
+
+        if (cachedGameData.isEmpty()) {
+            cachedGameData = DriverStation.getGameSpecificMessage();
+
+            if (cachedGameData.isEmpty()) {
+                return Optional.empty();
+            }
+        }
+
+        Alliance firstInactiveAlliance = cachedGameData.charAt(0) == 'R' ? Alliance.Red : Alliance.Blue;
+
+        if (currentTime >= 130 || currentTime < 30) {
+            return DriverStation.getAlliance();
+        } else if (currentTime >= 105 || (currentTime < 80 && currentTime >= 55)) {
+            return Optional.of(firstInactiveAlliance == Alliance.Red ? Alliance.Blue : Alliance.Red);
+        } else {
+            return Optional.of(firstInactiveAlliance);
+        }
+    }
+
+    /**
+     * @return true if the team's goal is active, false otherwise or if game data is unavailable
+     */
+    public boolean isAllianceGoalActive() {
+        Optional<Alliance> activeAlliance = getActiveGoalAlliance();
+        Optional<Alliance> teamAlliance = DriverStation.getAlliance();
+
+        if (activeAlliance.isEmpty() || teamAlliance.isEmpty()) {
+            return false;
+        }
+
+        return activeAlliance.get() == teamAlliance.get();
     }
 }
