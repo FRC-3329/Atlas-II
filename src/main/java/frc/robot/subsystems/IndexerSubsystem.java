@@ -1,5 +1,9 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Volts;
+
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
@@ -33,21 +37,16 @@ public class IndexerSubsystem extends SubsystemBase {
 
     public void setVoltage(double voltage) {
         motor.setVoltage(voltage);
-        DogLog.log(getName() + "/Voltage", voltage);
+        DogLog.log(getName() + "/Voltage", voltage, Volts);
     }
 
     public Command feed() {
         return this.run(() -> setVoltage(IndexerConstants.FEED_VOLTAGE));
     }
 
-    public Command idle() {
-        return this.run(() -> {
-        });
-    }
-
     @Override
     public void periodic() {
-        DogLog.log(getName() + "/Current", motor.getOutputCurrent());
-        DogLog.log(getName() + "/Velocity", motor.getEncoder().getVelocity());
+        DogLog.log(getName() + "/Current", motor.getOutputCurrent(), Amps);
+        DogLog.log(getName() + "/Velocity", motor.getEncoder().getVelocity(), RPM);
     }
 }
