@@ -1,7 +1,5 @@
 package frc.robot.subsystems;
 
-import frc.robot.constants.Constants;
-
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
@@ -23,7 +21,6 @@ import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -44,20 +41,20 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final InterpolatingDoubleTreeMap flywheelMap;
     private final InterpolatingDoubleTreeMap hoodMap;
 
-    private final Supplier<Pose2d> robotPoseSupplier;
+    private final Supplier<Distance> hubDistanceSupplier;
 
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
 
     /**
-     * @param robotPoseSupplier supplier for the robot pose2d
+     * @param hubDistanceSupplier supplier for the distance to the hub
      */
-    public FlywheelSubsystem(Supplier<Pose2d> robotPoseSupplier) {
+    public FlywheelSubsystem(Supplier<Distance> hubDistanceSupplier) {
         this.left = new TalonFX(Flywheel.LEFT_ID);
         this.right = new TalonFX(Flywheel.RIGHT_ID);
         this.hood = new TalonFX(Hood.HOOD_ID);
 
-        this.robotPoseSupplier = robotPoseSupplier;
+        this.hubDistanceSupplier = hubDistanceSupplier;
 
         // Flywheel config
         TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
@@ -185,12 +182,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     /** Shoot the flywheel at the appropriate speed based on distance to the hub */
     public Command shoot() {
         return this.run(() -> {
-            // Calculate distance to hub (in meters)
-            Distance dist = Meters.of(
-                    robotPoseSupplier
-                            .get()
-                            .getTranslation()
-                            .getDistance(Constants.HUB_LOCATION));
+            // Get distance to hub from supplier
+            Distance dist = hubDistanceSupplier.get();
 
             double rpm = flywheelMap.get(dist.in(Meters));
             double hoodPos = hoodMap.get(dist.in(Meters));
