@@ -1,7 +1,11 @@
 package frc.robot;
 
 import frc.robot.constants.OperatorConstants;
+import frc.robot.subsystems.FlywheelSubsystem;
+import frc.robot.subsystems.IndexerSubsystem;
+import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.utils.GameHelpers;
 
 import swervelib.SwerveInputStream;
 
@@ -20,6 +24,9 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
+    private final FlywheelSubsystem flywheel;
+    private final IndexerSubsystem indexer = new IndexerSubsystem();
+    private final IntakeSubsystem intake = new IntakeSubsystem();
 
     // Controllers
     private final CommandXboxController driverController = new CommandXboxController(
@@ -28,14 +35,17 @@ public class RobotContainer {
             OperatorConstants.kOperatorControllerPort);
 
     // Commands
-    private final SwerveInputStream driveAngularVelocity;
     private final Command driveFieldOrientedAngularVelocity;
 
+    private final SwerveInputStream driveAngularVelocity;
+    private final GameHelpers gameHelpers;
+    private final SendableChooser<Command> autoChooser;
     private boolean autoDriving = false;
 
-    private final SendableChooser<Command> autoChooser;
-
     public RobotContainer() {
+        gameHelpers = new GameHelpers(() -> drivebase.getSwerveDrive().getPose());
+        flywheel = new FlywheelSubsystem(gameHelpers::getHubDistance);
+
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
 
         // Configure motor brake mode (false = coast)
@@ -115,6 +125,25 @@ public class RobotContainer {
             autoDriving = false;
             driveAngularVelocity.get();
         });
+    }
+
+    /**
+     * 1. Spin up the flywheel
+     * 2. In parallel, wait until the flywheel is at speed, then run the indexer and
+     * intake
+     * 
+     * @return Command to shoot fuel
+     */
+    public Command shoot() {
+        return Commands.parallel(
+                // Continuously run the flywheel
+                flywheel.shoot(),
+                // Wait for flywheel to reach speed, then feed
+                Commands.sequence(
+                        Commands.waitUntil(flywheel::isAtSpeed),
+                        Commands.parallel(
+                                indexer.feed(),
+                                intake.intakeForward())));
     }
 
     public Command getAutonomousCommand() {
