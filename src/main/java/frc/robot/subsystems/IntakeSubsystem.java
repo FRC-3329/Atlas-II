@@ -67,9 +67,6 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotConfig.MotorOutput.Inverted = IntakeConstants.Pivot.INVERTED;
         pivotConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // 80:1 gearbox into 43:24 belting = 143.333:1
-        pivotConfig.Feedback.SensorToMechanismRatio = 430.0 / 3.0;
-
         pivotMotor.getConfigurator().apply(pivotConfig);
 
         absoluteEncoder = new DutyCycleEncoder(IntakeConstants.Pivot.ABSOLUTE_ENCODER_PORT);

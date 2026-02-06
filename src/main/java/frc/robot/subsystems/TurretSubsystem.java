@@ -60,9 +60,6 @@ public class TurretSubsystem extends SubsystemBase {
         config.MotorOutput.Inverted = TurretConstants.INVERTED;
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // 3:1 gearbox into 100:1 main gear = 300:1
-        config.Feedback.SensorToMechanismRatio = 300.0;
-
         motor.getConfigurator().apply(config);
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
