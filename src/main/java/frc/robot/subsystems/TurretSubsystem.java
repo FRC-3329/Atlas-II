@@ -14,6 +14,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -63,12 +64,13 @@ public class TurretSubsystem extends SubsystemBase {
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
             double absoluteAngleDegrees = absoluteEncoder.get();
-            double absoluteAngleRotations = absoluteAngleDegrees / 360.0;
+            double absoluteAngleRotations = Units.degreesToRotations(absoluteAngleDegrees);
     
             motor.setPosition(absoluteAngleRotations);
 
             DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
-            DogLog.log((getName() + "/InitialAbsoluteAngle"), absoluteAngleDegrees);
+            DogLog.log((getName() + "/InitialAbsoluteAngle"), absoluteAngleDegrees, Degrees);
+            DogLog.log((getName() + "/InitialMotorPosition"), absoluteAngleRotations, Rotations);
         } else {
             DogLog.log((getName() + "/AbsoluteEncoderInitialized"), false);
         }
@@ -134,10 +136,17 @@ public class TurretSubsystem extends SubsystemBase {
     }
 
     /**
-     * @return Absolute encoder angle in degrees
+     * @return Absolute encoder raw angle in degrees
      */
-    public double getAbsoluteAngle() {
+    public double getAbsoluteAngleRaw() {
         return absoluteEncoder.get();
+    }
+
+    /**
+     * @return Absolute encoder angle with units
+     */
+    public Angle getAbsoluteAngle() {
+        return Degrees.of(getAbsoluteAngleRaw());
     }
 
     /**
@@ -223,7 +232,7 @@ public class TurretSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        DogLog.log((getName() + "/Angle"), getAngle());
+        DogLog.log((getName() + "/Angle"), getAngle(), Rotations);
         DogLog.log((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/AtTarget"), isAtTarget());
         DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
@@ -231,7 +240,7 @@ public class TurretSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/MotorCurrent"), motor.getSupplyCurrent().getValue());
         
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
-            DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngle());
+            DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
         }
     }
 }
