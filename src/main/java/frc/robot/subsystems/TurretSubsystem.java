@@ -68,7 +68,7 @@ public class TurretSubsystem extends SubsystemBase {
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
             double absoluteAngleDegrees = absoluteEncoder.get();
             double absoluteAngleRotations = Units.degreesToRotations(absoluteAngleDegrees);
-    
+
             motor.setPosition(absoluteAngleRotations);
 
             DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
@@ -184,7 +184,7 @@ public class TurretSubsystem extends SubsystemBase {
         }).andThen(this.run(() -> {
             // TODO: https://github.com/FRC-3329/2026-Rebuilt/issues/18
             DogLog.log((getName() + "/AutoTrackingActive"), true);
-        }));
+        })).withName("TurretAutoTrack");
     }
 
     /**
@@ -194,7 +194,7 @@ public class TurretSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             disableAutoTracking();
             motor.set(0);
-        });
+        }).withName("TurretStopAutoTracking");
     }
 
     /**
@@ -203,7 +203,7 @@ public class TurretSubsystem extends SubsystemBase {
     public Command moveLeft() {
         return this.run(() -> {
             motor.set(-TurretConstants.MANUAL_SPEED);
-        });
+        }).withName("TurretMoveLeft");
     }
 
     /**
@@ -212,7 +212,7 @@ public class TurretSubsystem extends SubsystemBase {
     public Command moveRight() {
         return this.run(() -> {
             motor.set(TurretConstants.MANUAL_SPEED);
-        });
+        }).withName("TurretMoveRight");
     }
 
     /**
@@ -222,7 +222,7 @@ public class TurretSubsystem extends SubsystemBase {
     public Command moveToAngle(Angle angle) {
         return this.run(() -> {
             setTargetAngle(angle);
-        });
+        }).withName("TurretMoveToAngle");
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -241,7 +241,7 @@ public class TurretSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
         DogLog.log((getName() + "/MotorOutput"), motor.get());
         DogLog.log((getName() + "/MotorCurrent"), motor.getSupplyCurrent().getValue());
-        
+
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
             DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
         }

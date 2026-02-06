@@ -128,7 +128,7 @@ public class SwerveSubsystem extends SubsystemBase {
 	public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity) {
 		return run(() -> {
 			swerveDrive.driveFieldOriented(velocity.get());
-		});
+		}).withName("SwerveDriveFieldOriented");
 	}
 
 	/**
@@ -162,7 +162,7 @@ public class SwerveSubsystem extends SubsystemBase {
 							headingY.getAsDouble(),
 							swerveDrive.getOdometryHeading().getRadians(),
 							swerveDrive.getMaximumChassisVelocity()));
-		});
+		}).withName("SwerveDriveWithHeading");
 	}
 
 	/**
@@ -175,7 +175,8 @@ public class SwerveSubsystem extends SubsystemBase {
 	public Command zeroGyro() {
 		return Commands
 				.runOnce(() -> swerveDrive.zeroGyro())
-				.andThen(Commands.waitSeconds(0.5));
+				.andThen(Commands.waitSeconds(0.5))
+				.withName("SwerveZeroGyro");
 	}
 
 	public Rotation2d getGyro() {

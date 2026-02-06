@@ -170,7 +170,8 @@ public class IntakeSubsystem extends SubsystemBase {
         }).andThen(
                 // Wait until at target, then disable PID control
                 Commands.waitUntil(this::isPivotAtTarget).andThen(
-                        disablePivotPID()));
+                        disablePivotPID()))
+                .withName("IntakeLower");
     }
 
     /**
@@ -183,7 +184,7 @@ public class IntakeSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.UP_ANGLE);
             currentState = IntakeState.UP;
-        });
+        }).withName("IntakeRaise");
     }
 
     /**
@@ -201,7 +202,8 @@ public class IntakeSubsystem extends SubsystemBase {
                     DogLog.log(getName() + "/IntakeForwardBlocked",
                             "Intake forward command blocked - intake is up");
                 }),
-                this::isDown);
+                this::isDown)
+                .withName("IntakeForward");
     }
 
     /**
@@ -219,7 +221,8 @@ public class IntakeSubsystem extends SubsystemBase {
                     DogLog.log(getName() + "/IntakeBackwardBlocked",
                             "Intake backward command blocked - intake is up");
                 }),
-                this::isDown);
+                this::isDown)
+                .withName("IntakeBackward");
     }
 
     /**
@@ -232,7 +235,7 @@ public class IntakeSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             pivotMotor.setControl(pivotDisableRequest);
             pivotPIDEnabled = false;
-        });
+        }).withName("IntakeDisablePivotPID");
     }
 
     @Override

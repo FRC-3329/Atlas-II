@@ -110,7 +110,8 @@ public class FlywheelSubsystem extends SubsystemBase {
         hoodConfig.MotorOutput.Inverted = Hood.INVERTED;
         hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // TODO: Set SensorToMechanismRatio for hood (9:1 gearbox into belting - need final ratio)
+        // TODO: Set SensorToMechanismRatio for hood (9:1 gearbox into belting - need
+        // final ratio)
 
         hood.getConfigurator().apply(hoodConfig);
 
@@ -181,7 +182,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         return this.run(() -> {
             left.set(speed);
             right.set(speed);
-        });
+        }).withName("FlywheelSetSpeed");
     }
 
     /** Shoot the flywheel at the appropriate speed based on distance to the hub */
@@ -200,7 +201,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             DogLog.log(
                     (getName() + "/DistanceToHub"),
                     dist);
-        });
+        }).withName("FlywheelShoot");
     }
 
     /**
@@ -214,7 +215,7 @@ public class FlywheelSubsystem extends SubsystemBase {
             left.setControl(request.withVelocity(rpm));
             right.setControl(request.withVelocity(rpm));
             hood.setControl(hoodRequest.withPosition(angle));
-        });
+        }).withName("FlywheelShootFixed");
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

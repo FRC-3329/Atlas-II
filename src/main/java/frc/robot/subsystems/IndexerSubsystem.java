@@ -41,7 +41,8 @@ public class IndexerSubsystem extends SubsystemBase {
     }
 
     public Command feed() {
-        return this.run(() -> setVoltage(IndexerConstants.FEED_VOLTAGE));
+        return this.run(() -> setVoltage(IndexerConstants.FEED_VOLTAGE))
+                .withName("IndexerFeed");
     }
 
     @Override

@@ -87,7 +87,8 @@ public class RobotContainer {
                 .andThen(() -> {
                     driverController.setRumble(RumbleType.kBothRumble, 0);
                     operatorController.setRumble(RumbleType.kBothRumble, 0);
-                });
+                })
+                .withName("RumbleControllers");
     }
 
     private void configureBindings() {
@@ -99,7 +100,7 @@ public class RobotContainer {
         }).andThen(Commands.runOnce(() -> {
             setMotorBrake(false);
             SmartDashboard.putBoolean("Brake Mode", false);
-        })).repeatedly());
+        })).repeatedly().withName("ToggleBrakeMode"));
     }
 
     public void setMotorBrake(boolean brake) {
@@ -124,7 +125,7 @@ public class RobotContainer {
         }).finallyDo(interrupted -> {
             autoDriving = false;
             driveAngularVelocity.get();
-        });
+        }).withName("AutoDriving");
     }
 
     /**
@@ -143,7 +144,8 @@ public class RobotContainer {
                         Commands.waitUntil(flywheel::isAtSpeed),
                         Commands.parallel(
                                 indexer.feed(),
-                                intake.intakeForward())));
+                                intake.intakeForward())))
+                .withName("Shoot");
     }
 
     public Command getAutonomousCommand() {
