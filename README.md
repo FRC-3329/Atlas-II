@@ -38,20 +38,20 @@ Utility classes for calculations and data structures
 - **VisionData.java** - Data structures and interfaces for vision pose estimates
 
 ## Contributing
-All contributions are welcome! To get started:\
+All contributions are welcome! To get started:
 1. Clone the repo
-```
+```sh
 # Fork https://github.com/FRC-3329/2026-Rebuilt.git
 git clone https://github.com/YOUR_USERNAME/2026-Rebuilt.git
 ```
 2. Add your feature
-```
+```sh
 git checkout -b feature-name
 git add .
 git commit -m "feat: my amazing feature"
 ```
 3. Push
-```
+```sh
 git push -u origin feature-name
 ```
 Then make a [pull request!](https://github.com/FRC-3329/2026-Rebuilt/compare)
