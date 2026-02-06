@@ -14,7 +14,9 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -22,6 +24,7 @@ import frc.robot.constants.TurretConstants;
 
 public class TurretSubsystem extends SubsystemBase {
     private final TalonFX motor;
+    private final AnalogPotentiometer absoluteEncoder;
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
@@ -30,6 +33,11 @@ public class TurretSubsystem extends SubsystemBase {
 
     public TurretSubsystem() {
         motor = new TalonFX(TurretConstants.MOTOR_ID);
+
+        absoluteEncoder = new AnalogPotentiometer(
+                TurretConstants.ABSOLUTE_ENCODER_CHANNEL,
+                TurretConstants.ABSOLUTE_ENCODER_FULL_RANGE,
+                TurretConstants.ABSOLUTE_ENCODER_OFFSET);
 
         // Configure motor
         TalonFXConfiguration config = new TalonFXConfiguration();
@@ -53,6 +61,19 @@ public class TurretSubsystem extends SubsystemBase {
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         motor.getConfigurator().apply(config);
+
+        if (TurretConstants.USE_ABSOLUTE_ENCODER) {
+            double absoluteAngleDegrees = absoluteEncoder.get();
+            double absoluteAngleRotations = Units.degreesToRotations(absoluteAngleDegrees);
+    
+            motor.setPosition(absoluteAngleRotations);
+
+            DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
+            DogLog.log((getName() + "/InitialAbsoluteAngle"), absoluteAngleDegrees, Degrees);
+            DogLog.log((getName() + "/InitialMotorPosition"), absoluteAngleRotations, Rotations);
+        } else {
+            DogLog.log((getName() + "/AbsoluteEncoderInitialized"), false);
+        }
 
         // Allow tuning turret angle from DogLog
         DogLog.tunable(
@@ -112,6 +133,20 @@ public class TurretSubsystem extends SubsystemBase {
      */
     public Angle getAngleMeasure() {
         return Rotations.of(getAngle());
+    }
+
+    /**
+     * @return Absolute encoder raw angle in degrees
+     */
+    public double getAbsoluteAngleRaw() {
+        return absoluteEncoder.get();
+    }
+
+    /**
+     * @return Absolute encoder angle with units
+     */
+    public Angle getAbsoluteAngle() {
+        return Degrees.of(getAbsoluteAngleRaw());
     }
 
     /**
@@ -197,11 +232,15 @@ public class TurretSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        DogLog.log((getName() + "/Angle"), getAngle());
+        DogLog.log((getName() + "/Angle"), getAngle(), Rotations);
         DogLog.log((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/AtTarget"), isAtTarget());
         DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
         DogLog.log((getName() + "/MotorOutput"), motor.get());
         DogLog.log((getName() + "/MotorCurrent"), motor.getSupplyCurrent().getValue());
+        
+        if (TurretConstants.USE_ABSOLUTE_ENCODER) {
+            DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
+        }
     }
 }

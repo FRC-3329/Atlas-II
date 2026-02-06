@@ -24,4 +24,9 @@ public final class TurretConstants {
     public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
 
     public static final double MANUAL_SPEED = 0.2; // Percent output for manual movement
+
+    public static final int ABSOLUTE_ENCODER_CHANNEL = 0; // 0-3 on-board, 4-7 on MXP
+    public static final double ABSOLUTE_ENCODER_FULL_RANGE = 360.0; // Degrees for full rotation
+    public static final double ABSOLUTE_ENCODER_OFFSET = -180.0; // Offset in degrees
+    public static final boolean USE_ABSOLUTE_ENCODER = false;
 }
