@@ -22,6 +22,7 @@ import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.IntakeConstants;
@@ -40,6 +41,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
 
     private IntakeState currentState = IntakeState.UP;
+    private boolean pivotPIDEnabled = false;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
@@ -128,6 +130,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     private void setPivotAngle(Angle angle) {
         pivotMotor.setControl(pivotPositionRequest.withPosition(angle.in(Rotations)));
+        pivotPIDEnabled = true;
     }
 
     /**
@@ -163,8 +166,7 @@ public class IntakeSubsystem extends SubsystemBase {
             currentState = IntakeState.DOWN;
         }).andThen(
                 // Wait until at target, then disable PID control
-                this.run(() -> {
-                }).until(this::isPivotAtTarget).andThen(
+                Commands.waitUntil(this::isPivotAtTarget).andThen(
                         disablePivotPID()));
     }
 
@@ -193,6 +195,8 @@ public class IntakeSubsystem extends SubsystemBase {
                     rollerMotor.setVoltage(IntakeConstants.Roller.INTAKE_VOLTAGE);
                 }),
                 this.runOnce(() -> {
+                    DogLog.log(getName() + "/IntakeForwardBlocked",
+                            "Intake forward command blocked - intake is up");
                 }),
                 this::isDown);
     }
@@ -209,6 +213,8 @@ public class IntakeSubsystem extends SubsystemBase {
                     rollerMotor.setVoltage(IntakeConstants.Roller.OUTTAKE_VOLTAGE);
                 }),
                 this.runOnce(() -> {
+                    DogLog.log(getName() + "/IntakeBackwardBlocked",
+                            "Intake backward command blocked - intake is up");
                 }),
                 this::isDown);
     }
@@ -222,6 +228,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public Command disablePivotPID() {
         return this.runOnce(() -> {
             pivotMotor.setControl(pivotDisableRequest);
+            pivotPIDEnabled = false;
         });
     }
 
@@ -241,5 +248,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
         DogLog.log((getName() + "/State"), currentState.toString());
         DogLog.log((getName() + "/IsDown"), isDown());
+        DogLog.log((getName() + "/PivotPIDEnabled"), pivotPIDEnabled);
     }
 }
