@@ -27,6 +27,7 @@ Robot subsystems that control physical mechanisms
 - **FlywheelSubsystem.java** - Controls shooter flywheel speed and hood angle with distance-based interpolation maps
 - **IndexerSubsystem.java** - Feeds notes from intake mechanism to the shooter
 - **IntakeSubsystem.java** - Deploys and retracts the intake arm, runs roller to collect notes from the ground
+- **LEDsSubsystem.java** - Control the PDH / LEDs
 - **PhotonVisionSubsystem.java** - Processes AprilTag detection data for robot pose estimation
 - **SwerveSubsystem.java** - Swerve drive control with field-relative driving, odometry, and pathfinding
 - **TurretSubsystem.java** - Rotates turret to aim at targets with auto-tracking capability

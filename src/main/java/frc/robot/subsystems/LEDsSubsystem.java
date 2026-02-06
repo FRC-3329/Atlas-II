@@ -3,10 +3,10 @@ package frc.robot.subsystems;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class LEDs extends SubsystemBase {
+public class LEDsSubsystem extends SubsystemBase {
     private final PowerDistribution pdh;
 
-    public LEDs() {
+    public LEDsSubsystem() {
         pdh = new PowerDistribution();
         pdh.clearStickyFaults();
     }
