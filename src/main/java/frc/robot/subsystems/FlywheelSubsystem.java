@@ -77,6 +77,9 @@ public class FlywheelSubsystem extends SubsystemBase {
         flywheelConfig.MotorOutput.Inverted = Flywheel.INVERTED;
         flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
+        // 1:2 belting = 0.5 (2x speedup)
+        flywheelConfig.Feedback.SensorToMechanismRatio = 0.5;
+
         left.getConfigurator().apply(flywheelConfig);
 
         // Invert the right motor relative to the left
@@ -106,6 +109,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         hoodConfig.MotorOutput.Inverted = Hood.INVERTED;
         hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+
+        // TODO: Set SensorToMechanismRatio for hood (9:1 gearbox into belting - need final ratio)
 
         hood.getConfigurator().apply(hoodConfig);
 
