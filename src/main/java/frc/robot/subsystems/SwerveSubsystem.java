@@ -5,6 +5,7 @@ import static edu.wpi.first.units.Units.Meter;
 import frc.robot.constants.Constants;
 
 import java.io.File;
+import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -23,6 +24,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Filesystem;
 
 import swervelib.parser.SwerveParser;
@@ -243,7 +245,7 @@ public class SwerveSubsystem extends SubsystemBase {
 					),
 					config,
 					() -> {
-						var alliance = DriverStation.getAlliance();
+						Optional<Alliance> alliance = DriverStation.getAlliance();
 
 						if (alliance.isPresent()) {
 							return alliance.get() == DriverStation.Alliance.Red;

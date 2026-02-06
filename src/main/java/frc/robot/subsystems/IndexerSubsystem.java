@@ -35,7 +35,7 @@ public class IndexerSubsystem extends SubsystemBase {
                         this.idle()));
     }
 
-    public void setVoltage(double voltage) {
+    private void setVoltage(double voltage) {
         motor.setVoltage(voltage);
         DogLog.log(getName() + "/Voltage", voltage, Volts);
     }

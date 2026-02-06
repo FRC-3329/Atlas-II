@@ -111,7 +111,7 @@ public class TurretSubsystem extends SubsystemBase {
     /**
      * @param angle Target angle
      */
-    public void setTargetAngle(Angle angle) {
+    private void setTargetAngle(Angle angle) {
         double targetRotations = angle.in(Rotations);
         targetRotations = MathUtil.clamp(
                 targetRotations,
