@@ -14,6 +14,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
@@ -21,6 +22,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.TurretConstants;
+import frc.robot.utils.GameHelpers;
 
 public class TurretSubsystem extends SubsystemBase {
     private final TalonFX motor;
@@ -28,10 +30,15 @@ public class TurretSubsystem extends SubsystemBase {
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
+    private final SwerveSubsystem swerveSubsystem;
+    private final GameHelpers gameHelpers;
 
     private boolean autoTrackingEnabled = false;
 
-    public TurretSubsystem() {
+    public TurretSubsystem(SwerveSubsystem swerveSubsystem, GameHelpers gameHelpers) {
+        this.swerveSubsystem = swerveSubsystem;
+        this.gameHelpers = gameHelpers;
+
         motor = new TalonFX(TurretConstants.MOTOR_ID);
 
         absoluteEncoder = new AnalogPotentiometer(
@@ -176,14 +183,58 @@ public class TurretSubsystem extends SubsystemBase {
     }
 
     /**
-     * @return Command to auto-track
+     * Command to automatically aim the turret based on the robot's position on the field.
+     * 
+     * 1. In our alliance zone: Aim directly at the hub center
+     * 2. In opponent zone, above hub: Aim at the top free space above the hub
+     * 3. In opponent zone, below hub: Aim at the bottom free space below the hub
+     * 
+     * The turret angle is calculated as: targetFieldAngle - robotHeading
+     * This converts the field-relative angle to the target into a robot-relative angle.
+     * 
+     * @return Command that continuously updates turret angle to track the target
      */
     public Command autoTrack() {
         return this.runOnce(() -> {
             enableAutoTracking();
         }).andThen(this.run(() -> {
-            // TODO: https://github.com/FRC-3329/2026-Rebuilt/issues/18
+            // Determine the field-relative angle to aim at based on robot position
+            Rotation2d targetFieldAngle;
+
+            if (gameHelpers.isInOurZone()) {
+                // In our alliance zone - aim directly at hub center
+                targetFieldAngle = gameHelpers.getAngleToHub();
+                DogLog.log((getName() + "/TargetZone"), "OurZone");
+            } else if (gameHelpers.isAboveHub()) {
+                // In opponent zone and above hub - aim at top free space
+                Rotation2d hubAngle = gameHelpers.getAngleToHub();
+                targetFieldAngle = hubAngle.plus(Rotation2d.fromDegrees(TurretConstants.TOP_FREE_SPACE_ANGLE_OFFSET));
+
+                DogLog.log((getName() + "/TargetZone"), "OpponentZoneTop");
+            } else {
+                // In opponent zone and below hub - aim at bottom free space
+                Rotation2d hubAngle = gameHelpers.getAngleToHub();
+                targetFieldAngle = hubAngle
+                        .plus(Rotation2d.fromDegrees(TurretConstants.BOTTOM_FREE_SPACE_ANGLE_OFFSET));
+
+                DogLog.log((getName() + "/TargetZone"), "OpponentZoneBottom");
+            }
+
+            // Convert field-relative angle to robot-relative angle
+            Rotation2d robotHeading = swerveSubsystem.getGyro();
+            Rotation2d turretAngle = targetFieldAngle.minus(robotHeading);
+            
+            // Normalize angle to [-180, 180] degrees to prevent wraparound issues
+            double turretAngleDegrees = MathUtil.inputModulus(turretAngle.getDegrees(), -180.0, 180.0);
+
+            setTargetAngle(Degrees.of(turretAngleDegrees));
+
             DogLog.log((getName() + "/AutoTrackingActive"), true);
+            DogLog.log((getName() + "/TargetFieldAngle"), targetFieldAngle.getDegrees(), Degrees);
+            DogLog.log((getName() + "/RobotHeading"), robotHeading.getDegrees(), Degrees);
+            DogLog.log((getName() + "/CalculatedTurretAngle"), turretAngleDegrees, Degrees);
+            DogLog.log((getName() + "/InOurZone"), gameHelpers.isInOurZone());
+            DogLog.log((getName() + "/AboveHub"), gameHelpers.isAboveHub());
         })).withName("TurretAutoTrack");
     }
 

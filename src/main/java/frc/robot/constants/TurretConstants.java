@@ -29,4 +29,15 @@ public final class TurretConstants {
     public static final double ABSOLUTE_ENCODER_FULL_RANGE = 360.0; // Degrees for full rotation
     public static final double ABSOLUTE_ENCODER_OFFSET = -180.0; // Offset in degrees
     public static final boolean USE_ABSOLUTE_ENCODER = false;
+
+    /**
+     * The angle offset from hub center to the top free space when aiming from
+     * opponent zone
+     */
+    public static final double TOP_FREE_SPACE_ANGLE_OFFSET = 45.0; // degrees
+    /**
+     * The angle offset from hub center to the bottom free space when aiming from
+     * opponent zone
+     */
+    public static final double BOTTOM_FREE_SPACE_ANGLE_OFFSET = -45.0; // degrees
 }

@@ -48,6 +48,8 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+
+        CommandScheduler.getInstance().schedule(m_robotContainer.getTurret().autoTrack());
     }
 
     @Override
@@ -59,6 +61,8 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             m_autonomousCommand.cancel();
         }
+
+        CommandScheduler.getInstance().schedule(m_robotContainer.getTurret().autoTrack());
     }
 
     @Override
