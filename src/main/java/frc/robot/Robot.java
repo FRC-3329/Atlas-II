@@ -49,7 +49,7 @@ public class Robot extends TimedRobot {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
 
-        CommandScheduler.getInstance().schedule(m_robotContainer.getTurret().autoTrack());
+        CommandScheduler.getInstance().schedule(m_robotContainer.getTurretAutoTrack());
     }
 
     @Override
@@ -62,7 +62,7 @@ public class Robot extends TimedRobot {
             m_autonomousCommand.cancel();
         }
 
-        CommandScheduler.getInstance().schedule(m_robotContainer.getTurret().autoTrack());
+        CommandScheduler.getInstance().schedule(m_robotContainer.getTurretAutoTrack());
     }
 
     @Override

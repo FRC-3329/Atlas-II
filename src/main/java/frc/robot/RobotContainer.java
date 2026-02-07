@@ -152,10 +152,10 @@ public class RobotContainer {
     }
 
     /**
-     * @return The turret subsystem
+     * @return Command to auto-track the turret to the target
      */
-    public TurretSubsystem getTurret() {
-        return turret;
+    public Command getTurretAutoTrack() {
+        return turret.autoTrack();
     }
 
     public Command getAutonomousCommand() {

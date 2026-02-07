@@ -31,13 +31,14 @@ public final class TurretConstants {
     public static final boolean USE_ABSOLUTE_ENCODER = false;
 
     /**
-     * The angle offset from hub center to the top free space when aiming from
-     * opponent zone
+     * The Y offset in meters from hub center to the top free space when aiming from
+     * opponent zone. Positive Y is towards the top of the field.
      */
-    public static final double TOP_FREE_SPACE_ANGLE_OFFSET = 45.0; // degrees
+    public static final double TOP_FREE_SPACE_Y_OFFSET = 0.5; // meters
     /**
-     * The angle offset from hub center to the bottom free space when aiming from
-     * opponent zone
+     * The Y offset in meters from hub center to the bottom free space when aiming
+     * from
+     * opponent zone. Positive value for offset downward.
      */
-    public static final double BOTTOM_FREE_SPACE_ANGLE_OFFSET = -45.0; // degrees
+    public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 0.5; // meters
 }
