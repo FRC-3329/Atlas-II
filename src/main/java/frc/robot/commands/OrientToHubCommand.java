@@ -48,18 +48,18 @@ public class OrientToHubCommand extends Command {
 
     @Override
     public void initialize() {
-        Rotation2d currentHeading = swerveSubsystem.getGyro();
+        Rotation2d angleToHub = gameHelpers.getAngleToHub();
+        Rotation2d targetAngle = angleToHub.plus(Rotation2d.fromDegrees(180.0));
+        Rotation2d currentHeading = swerveSubsystem.getSwerveDrive().getPose().getRotation();
+
         rotationController.reset(currentHeading.getRadians());
+        rotationController.setGoal(targetAngle.getRadians());
     }
 
     @Override
     public void execute() {
-        Rotation2d angleToHub = gameHelpers.getAngleToHub();
-        Rotation2d targetAngle = angleToHub.plus(Rotation2d.fromDegrees(180.0));
-        Rotation2d currentHeading = swerveSubsystem.getGyro();
-        double rotationSpeed = rotationController.calculate(
-                currentHeading.getRadians(),
-                targetAngle.getRadians());
+        Rotation2d currentHeading = swerveSubsystem.getSwerveDrive().getPose().getRotation();
+        double rotationSpeed = rotationController.calculate(currentHeading.getRadians());
         ChassisSpeeds chassisSpeeds = new ChassisSpeeds(0.0, 0.0, rotationSpeed);
 
         swerveSubsystem.driveFieldOriented(chassisSpeeds);
