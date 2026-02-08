@@ -146,4 +146,41 @@ public class GameHelpers {
 
         return activeAlliance.get() == teamAlliance.get();
     }
+
+    /**
+     * Checks if the robot is in its own alliance zone.
+     * The field is divided at the center line (X = half field width).
+     * For blue alliance, our zone is X < center.
+     * For red alliance, our zone is X > center.
+     * 
+     * @return true if robot is in its alliance's zone, false otherwise
+     */
+    public boolean isInOurZone() {
+        Pose2d robotPose = getRobotPose();
+        double robotX = robotPose.getX();
+        Translation2d hubPosition = calculateHubPosition();
+        Optional<Alliance> alliance = DriverStation.getAlliance();
+
+        if (alliance.isEmpty()) {
+            return false;
+        }
+        
+        if (alliance.get() == Alliance.Blue) {
+            return robotX < hubPosition.getX();
+        } else {
+            return robotX > hubPosition.getX();
+        }
+    }
+
+    /**
+     * Checks if the robot is above the hub in Y position.
+     * 
+     * @return true if robot Y position is greater than hub Y position
+     */
+    public boolean isAboveHub() {
+        Pose2d robotPose = getRobotPose();
+        Translation2d hubPosition = calculateHubPosition();
+
+        return robotPose.getY() > hubPosition.getY();
+    }
 }

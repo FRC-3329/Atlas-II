@@ -5,6 +5,7 @@ import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
+import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.utils.GameHelpers;
 
 import swervelib.SwerveInputStream;
@@ -24,9 +25,11 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
+    private final GameHelpers gameHelpers;
     private final FlywheelSubsystem flywheel;
     private final IndexerSubsystem indexer = new IndexerSubsystem();
     private final IntakeSubsystem intake = new IntakeSubsystem();
+    private final TurretSubsystem turret;
 
     // Controllers
     private final CommandXboxController driverController = new CommandXboxController(
@@ -38,13 +41,13 @@ public class RobotContainer {
     private final Command driveFieldOrientedAngularVelocity;
 
     private final SwerveInputStream driveAngularVelocity;
-    private final GameHelpers gameHelpers;
     private final SendableChooser<Command> autoChooser;
     private boolean autoDriving = false;
 
     public RobotContainer() {
         gameHelpers = new GameHelpers(() -> drivebase.getSwerveDrive().getPose());
         flywheel = new FlywheelSubsystem(gameHelpers::getHubDistance);
+        turret = new TurretSubsystem(drivebase, gameHelpers);
 
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
 
@@ -146,6 +149,13 @@ public class RobotContainer {
                                 indexer.feed(),
                                 intake.intakeForward())))
                 .withName("Shoot");
+    }
+
+    /**
+     * @return Command to auto-track the turret to the target
+     */
+    public Command getTurretAutoTrack() {
+        return turret.autoTrack();
     }
 
     public Command getAutonomousCommand() {

@@ -9,6 +9,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.constants.TurretConstants;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -48,6 +49,10 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
+
+        if (TurretConstants.ENABLE_AUTO_AIM) {
+            CommandScheduler.getInstance().schedule(m_robotContainer.getTurretAutoTrack());
+        }
     }
 
     @Override
@@ -58,6 +63,10 @@ public class Robot extends TimedRobot {
     public void teleopInit() {
         if (m_autonomousCommand != null) {
             m_autonomousCommand.cancel();
+        }
+
+        if (TurretConstants.ENABLE_AUTO_AIM) {
+            CommandScheduler.getInstance().schedule(m_robotContainer.getTurretAutoTrack());
         }
     }
 
