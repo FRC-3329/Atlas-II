@@ -41,4 +41,6 @@ public final class TurretConstants {
      * opponent zone. Positive value for offset downward.
      */
     public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 0.5; // meters
+
+    public static final boolean ENABLE_AUTO_AIM = false;
 }
