@@ -1,13 +1,29 @@
 # 2026 Rebuilt
 Source code for the robot used in REBUILT developed by team 3329, the Wildbots!
 
+## Prerequisites
+- **WPILib 2026** - [Installation Guide](https://docs.wpilib.org/en/stable/docs/zero-to-robot/step-2/wpilib-setup.html)
+    - Includes all needed dependencies
+
+## Building and Deploying
+### Build the Project
+```sh
+./gradlew build
+```
+
+### Deploy to Robot
+```sh
+./gradlew deploy
+```
+
 ## Code Outline
 Code outline for `src/main/java/frc/robot`
 
-### commands
+### `commands`
 Custom commands for robot actions
+- **OrientToHubCommand.java** - Automatically orients the robot so the rear-mounted turret faces the hub for shooting
 
-### constants
+### `constants`
 All constant values
 - **Constants.java** - Global constants (hub location, loop time, max speed)
 - **FlywheelConstants.java** - PID gains, motion magic parameters, and current limits for flywheel and hood motors
@@ -22,7 +38,7 @@ All constant values
 - **Robot.java** - Main robot class with periodic methods and autonomous/teleop initialization
 - **RobotContainer.java** - Binds controllers to commands and configures all subsystems
 
-### subsystems
+### `subsystems`
 Robot subsystems that control physical mechanisms
 - **FlywheelSubsystem.java** - Controls shooter flywheel speed and hood angle with distance-based interpolation maps
 - **IndexerSubsystem.java** - Feeds notes from intake mechanism to the shooter
@@ -32,11 +48,19 @@ Robot subsystems that control physical mechanisms
 - **SwerveSubsystem.java** - Swerve drive control with field-relative driving, odometry, and pathfinding
 - **TurretSubsystem.java** - Rotates turret to aim at targets with auto-tracking capability
 
-### utils
+### `utils`
 Utility classes for calculations and data structures
 - **CircleFitter.java** - Fits circles to sets of points for trajectory calculations
 - **GameHelpers.java** - Helper methods for game-specific logic and calculations
 - **VisionData.java** - Data structures and interfaces for vision pose estimates
+
+## Dependencies
+- **YAGSL** - Yet Another Generic Swerve Library
+- **PathplannerLib** - Path planning and autonomous
+- **PhotonLib** - Vision processing with PhotonVision
+- **REVLib** - REV Robotics motor controllers
+- **Phoenix5/Phoenix6** - CTRE motor controllers
+- **DogLog** - Advanced logging framework
 
 ## Contributing
 All contributions are welcome! To get started:

@@ -1,6 +1,7 @@
 package frc.robot.commands;
 
 import static edu.wpi.first.units.Units.RadiansPerSecond;
+import static edu.wpi.first.units.Units.RadiansPerSecondPerSecond;
 
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -37,7 +38,7 @@ public class OrientToHubCommand extends Command {
                 new TrapezoidProfile.Constraints(
                         OrientToHubConstants.ORIENT_TO_HUB_MAX_VELOCITY.in(RadiansPerSecond),
                         OrientToHubConstants.ORIENT_TO_HUB_MAX_ACCELERATION
-                                .in(RadiansPerSecond.per(edu.wpi.first.units.Units.Second))));
+                                .in(RadiansPerSecondPerSecond)));
 
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
         rotationController.setTolerance(
