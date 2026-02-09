@@ -1,5 +1,6 @@
 package frc.robot;
 
+import frc.robot.commands.OrientToHubCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
@@ -42,7 +43,6 @@ public class RobotContainer {
 
     private final SwerveInputStream driveAngularVelocity;
     private final SendableChooser<Command> autoChooser;
-    private boolean autoDriving = false;
 
     public RobotContainer() {
         gameHelpers = new GameHelpers(() -> drivebase.getSwerveDrive().getPose());
@@ -94,9 +94,10 @@ public class RobotContainer {
                 .withName("RumbleControllers");
     }
 
+    // See CONTROLLER.md
     private void configureBindings() {
         driverController.start().onTrue(drivebase.zeroGyro());
-
+ 
         driverController.back().onTrue(Commands.runOnce(() -> {
             setMotorBrake(true);
             SmartDashboard.putBoolean("Brake Mode", true);
@@ -104,6 +105,39 @@ public class RobotContainer {
             setMotorBrake(false);
             SmartDashboard.putBoolean("Brake Mode", false);
         })).repeatedly().withName("ToggleBrakeMode"));
+
+        driverController.leftBumper()
+                .whileTrue(Commands.parallel(
+                        intake.lower(),
+                        intake.intakeForward())
+                        .withName("IntakeGamePiece"));
+
+        driverController.rightBumper()
+                .whileTrue(Commands.parallel(
+                        shoot(),
+                        turret.autoTrack())
+                        .withName("ShootWithAutoTrack"));
+
+        driverController.leftTrigger(0.5)
+                .whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
+
+        driverController.rightTrigger(0.5)
+                .whileTrue(turret.autoTrack());
+
+        driverController.a()
+                .onTrue(intake.raise());
+
+        driverController.b()
+                .whileTrue(Commands.parallel(
+                        intake.intakeBackward(),
+                        indexer.feed())
+                        .withName("EjectGamePiece"));
+
+        driverController.x()
+                .whileTrue(turret.moveLeft());
+
+        driverController.y()
+                .whileTrue(turret.moveRight());
     }
 
     public void setMotorBrake(boolean brake) {
@@ -121,12 +155,9 @@ public class RobotContainer {
      */
     private Command autoDriving(Command drivingCommand) {
         return drivingCommand.beforeStarting(() -> {
-            // Set internal state to tracking
-            autoDriving = true;
             // Update state in controller supplier
             driveAngularVelocity.get();
         }).finallyDo(interrupted -> {
-            autoDriving = false;
             driveAngularVelocity.get();
         }).withName("AutoDriving");
     }
