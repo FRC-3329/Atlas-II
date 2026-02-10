@@ -22,20 +22,19 @@ public final class FlywheelConstants {
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
     }
 
-    // TODO: Populate hood constants
     public static final class Hood {
         public static final int HOOD_ID = 0;
 
-        public static final double kP = 0.0;
+        public static final double kP = 12.87; // V/rotation
         public static final double kI = 0.0;
-        public static final double kD = 0.0;
-        public static final double kS = 0.0;
-        public static final double kV = 0.0;
-        public static final double kA = 0.0;
+        public static final double kD = 0.05; // V*s/rotation
+        public static final double kS = 0.0; // V
+        public static final double kV = 1.67; // V*s/rotation
+        public static final double kA = 0.01; // v*s^2/rotation
 
-        public static final double CRUISE_VELOCITY = 0.0;
-        public static final double ACCELERATION = 0.0;
-        public static final double JERK = 0.0;
+        public static final double CRUISE_VELOCITY = 10.0;
+        public static final double ACCELERATION = 2.0;
+        // public static final double JERK = 0.0;
 
         public static final double CURRENT_LIMIT = 25.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;

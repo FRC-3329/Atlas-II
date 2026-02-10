@@ -102,7 +102,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         hoodConfig.MotionMagic.MotionMagicCruiseVelocity = Hood.CRUISE_VELOCITY;
         hoodConfig.MotionMagic.MotionMagicAcceleration = Hood.ACCELERATION;
-        hoodConfig.MotionMagic.MotionMagicJerk = Hood.JERK;
+        // hoodConfig.MotionMagic.MotionMagicJerk = Hood.JERK;
 
         hoodConfig.CurrentLimits.SupplyCurrentLimit = Hood.CURRENT_LIMIT;
         hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
