@@ -22,7 +22,7 @@ public final class IntakeConstants {
         public static final double kG = 0.0;
         
         // TODO: Check with CAD
-        public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0;
+        public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0; // rotations
 
         public static final double CRUISE_VELOCITY = 0.0; // rotations per second
         public static final double ACCELERATION = 0.0; // rotations per second squared
