@@ -13,6 +13,7 @@ import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -99,6 +100,10 @@ public class FlywheelSubsystem extends SubsystemBase {
         hoodSlot0.kS = Hood.kS;
         hoodSlot0.kV = Hood.kV;
         hoodSlot0.kA = Hood.kA;
+        hoodSlot0.kG = Hood.kG;
+
+        hoodSlot0.GravityType = GravityTypeValue.Arm_Cosine;
+        hoodSlot0.GravityArmPositionOffset = Hood.GRAVITY_ARM_POSITION_OFFSET;
 
         hoodConfig.MotionMagic.MotionMagicCruiseVelocity = Hood.CRUISE_VELOCITY;
         hoodConfig.MotionMagic.MotionMagicAcceleration = Hood.ACCELERATION;

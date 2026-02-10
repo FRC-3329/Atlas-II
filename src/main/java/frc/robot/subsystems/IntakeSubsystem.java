@@ -11,6 +11,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
@@ -56,6 +57,10 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotSlot0.kS = IntakeConstants.Pivot.kS;
         pivotSlot0.kV = IntakeConstants.Pivot.kV;
         pivotSlot0.kA = IntakeConstants.Pivot.kA;
+        pivotSlot0.kG = IntakeConstants.Pivot.kG;
+        
+        pivotSlot0.GravityType = GravityTypeValue.Arm_Cosine;
+        pivotSlot0.GravityArmPositionOffset = IntakeConstants.Pivot.GRAVITY_ARM_POSITION_OFFSET;
 
         pivotConfig.MotionMagic.MotionMagicCruiseVelocity = IntakeConstants.Pivot.CRUISE_VELOCITY;
         pivotConfig.MotionMagic.MotionMagicAcceleration = IntakeConstants.Pivot.ACCELERATION;
