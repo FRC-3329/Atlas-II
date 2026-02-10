@@ -107,7 +107,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         hoodConfig.MotionMagic.MotionMagicCruiseVelocity = Hood.CRUISE_VELOCITY;
         hoodConfig.MotionMagic.MotionMagicAcceleration = Hood.ACCELERATION;
-        hoodConfig.MotionMagic.MotionMagicJerk = Hood.JERK;
+        // hoodConfig.MotionMagic.MotionMagicJerk = Hood.JERK;
 
         hoodConfig.CurrentLimits.SupplyCurrentLimit = Hood.CURRENT_LIMIT;
         hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -115,10 +115,19 @@ public class FlywheelSubsystem extends SubsystemBase {
         hoodConfig.MotorOutput.Inverted = Hood.INVERTED;
         hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // TODO: Set SensorToMechanismRatio for hood (9:1 gearbox into belting - need
-        // final ratio)
+        // 9:1 gearbox with 48:24 (2:1) belting = 18:1 total reduction
+        hoodConfig.Feedback.SensorToMechanismRatio = 18.0;
 
         hood.getConfigurator().apply(hoodConfig);
+
+        left.getVelocity().setUpdateFrequency(50); // 50 Hz for velocity control
+        right.getVelocity().setUpdateFrequency(50);
+        hood.getPosition().setUpdateFrequency(50); // 50 Hz for position control
+        hood.getVelocity().setUpdateFrequency(50);
+        
+        left.optimizeBusUtilization();
+        right.optimizeBusUtilization();
+        hood.optimizeBusUtilization();
 
         // Convert distance from hub to RPM
         flywheelMap = new InterpolatingDoubleTreeMap();
@@ -196,11 +205,11 @@ public class FlywheelSubsystem extends SubsystemBase {
             // Get distance to hub from supplier
             Distance dist = hubDistanceSupplier.get();
 
-            double rpm = flywheelMap.get(dist.in(Meters));
+            double rps = flywheelMap.get(dist.in(Meters));
             double hoodPos = hoodMap.get(dist.in(Meters));
 
-            left.setControl(request.withVelocity(rpm));
-            right.setControl(request.withVelocity(rpm));
+            left.setControl(request.withVelocity(rps));
+            right.setControl(request.withVelocity(rps));
             hood.setControl(hoodRequest.withPosition(hoodPos));
 
             DogLog.log(
