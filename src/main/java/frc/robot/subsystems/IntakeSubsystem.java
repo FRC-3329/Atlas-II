@@ -72,6 +72,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
         pivotMotor.getConfigurator().apply(pivotConfig);
 
+        pivotMotor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
+        pivotMotor.getVelocity().setUpdateFrequency(50);
+        pivotMotor.optimizeBusUtilization();
+
         absoluteEncoder = new DutyCycleEncoder(IntakeConstants.Pivot.ABSOLUTE_ENCODER_PORT);
 
         Angle absoluteAngle = getAbsoluteAngle();
@@ -85,6 +89,19 @@ public class IntakeSubsystem extends SubsystemBase {
         rollerConfig.inverted(IntakeConstants.Roller.INVERTED);
         rollerConfig.idleMode(IntakeConstants.Roller.IDLE_MODE);
         rollerConfig.voltageCompensation(IntakeConstants.Roller.VOLTAGE_COMPENSATION);
+
+        rollerConfig.signals
+            .absoluteEncoderPositionAlwaysOn(false)
+            .primaryEncoderVelocityAlwaysOn(false)
+            .analogPositionAlwaysOn(false)
+            .analogVelocityAlwaysOn(false)
+            .externalOrAltEncoderPositionAlwaysOn(false)
+            .externalOrAltEncoderVelocityAlwaysOn(false)
+            .primaryEncoderPositionAlwaysOn(false)
+            .primaryEncoderVelocityAlwaysOn(false)
+            .iAccumulationAlwaysOn(false)
+            .appliedOutputPeriodMs(20)
+            .faultsPeriodMs(20);
 
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 

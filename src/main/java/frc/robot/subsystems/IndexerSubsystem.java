@@ -26,6 +26,19 @@ public class IndexerSubsystem extends SubsystemBase {
         config.inverted(IndexerConstants.INVERTED);
         config.idleMode(IndexerConstants.IDLE_MODE);
 
+        config.signals
+            .absoluteEncoderPositionAlwaysOn(false)
+            .primaryEncoderVelocityAlwaysOn(false)
+            .analogPositionAlwaysOn(false)
+            .analogVelocityAlwaysOn(false)
+            .externalOrAltEncoderPositionAlwaysOn(false)
+            .externalOrAltEncoderVelocityAlwaysOn(false)
+            .primaryEncoderPositionAlwaysOn(false)
+            .primaryEncoderVelocityAlwaysOn(false)
+            .iAccumulationAlwaysOn(false)
+            .appliedOutputPeriodMs(20)
+            .faultsPeriodMs(20);
+
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         setDefaultCommand(
