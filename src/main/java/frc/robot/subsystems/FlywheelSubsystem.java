@@ -200,11 +200,11 @@ public class FlywheelSubsystem extends SubsystemBase {
             // Get distance to hub from supplier
             Distance dist = hubDistanceSupplier.get();
 
-            double rpm = flywheelMap.get(dist.in(Meters));
+            double rps = flywheelMap.get(dist.in(Meters));
             double hoodPos = hoodMap.get(dist.in(Meters));
 
-            left.setControl(request.withVelocity(rpm));
-            right.setControl(request.withVelocity(rpm));
+            left.setControl(request.withVelocity(rps));
+            right.setControl(request.withVelocity(rps));
             hood.setControl(hoodRequest.withPosition(hoodPos));
 
             DogLog.log(
