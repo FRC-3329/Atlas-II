@@ -31,6 +31,10 @@ public final class FlywheelConstants {
         public static final double kS = 0.0; // V
         public static final double kV = 1.67; // V*s/rotation
         public static final double kA = 0.01; // v*s^2/rotation
+        public static final double kG = 0.0; // V
+         
+        // TODO: Check with CAD
+        public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0; // rotations
 
         public static final double CRUISE_VELOCITY = 10.0;
         public static final double ACCELERATION = 2.0;
