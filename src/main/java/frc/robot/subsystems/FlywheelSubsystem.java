@@ -115,6 +115,15 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         hood.getConfigurator().apply(hoodConfig);
 
+        left.getVelocity().setUpdateFrequency(50); // 50 Hz for velocity control
+        right.getVelocity().setUpdateFrequency(50);
+        hood.getPosition().setUpdateFrequency(50); // 50 Hz for position control
+        hood.getVelocity().setUpdateFrequency(50);
+        
+        left.optimizeBusUtilization();
+        right.optimizeBusUtilization();
+        hood.optimizeBusUtilization();
+
         // Convert distance from hub to RPM
         flywheelMap = new InterpolatingDoubleTreeMap();
         // TODO: Fill proper values

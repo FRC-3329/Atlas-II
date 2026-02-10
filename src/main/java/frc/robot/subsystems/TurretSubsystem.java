@@ -73,6 +73,10 @@ public class TurretSubsystem extends SubsystemBase {
 
         motor.getConfigurator().apply(config);
 
+        motor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
+        motor.getVelocity().setUpdateFrequency(50);
+        motor.optimizeBusUtilization();
+
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
             double absoluteAngleDegrees = absoluteEncoder.get();
             double absoluteAngleRotations = Units.degreesToRotations(absoluteAngleDegrees);

@@ -26,6 +26,15 @@ public class IndexerSubsystem extends SubsystemBase {
         config.inverted(IndexerConstants.INVERTED);
         config.idleMode(IndexerConstants.IDLE_MODE);
 
+        // We only need basic motor control (status 0)
+        // Set all telemetry frames (status 1-6) to 500ms to minimize CAN traffic
+        config.signals
+            .primaryEncoderVelocityPeriodMs(500)
+            .primaryEncoderPositionPeriodMs(500)
+            .analogVoltagePeriodMs(500)
+            .analogVelocityPeriodMs(500)
+            .analogPositionPeriodMs(500);
+
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         setDefaultCommand(

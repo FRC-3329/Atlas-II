@@ -72,6 +72,10 @@ public class IntakeSubsystem extends SubsystemBase {
 
         pivotMotor.getConfigurator().apply(pivotConfig);
 
+        pivotMotor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
+        pivotMotor.getVelocity().setUpdateFrequency(50);
+        pivotMotor.optimizeBusUtilization();
+
         absoluteEncoder = new DutyCycleEncoder(IntakeConstants.Pivot.ABSOLUTE_ENCODER_PORT);
 
         Angle absoluteAngle = getAbsoluteAngle();
@@ -85,6 +89,15 @@ public class IntakeSubsystem extends SubsystemBase {
         rollerConfig.inverted(IntakeConstants.Roller.INVERTED);
         rollerConfig.idleMode(IntakeConstants.Roller.IDLE_MODE);
         rollerConfig.voltageCompensation(IntakeConstants.Roller.VOLTAGE_COMPENSATION);
+
+        // We only need basic motor control (status 0)
+        // Set all telemetry frames (status 1-6) to 500ms to minimize CAN traffic
+        rollerConfig.signals
+            .primaryEncoderVelocityPeriodMs(500)
+            .primaryEncoderPositionPeriodMs(500)
+            .analogVoltagePeriodMs(500)
+            .analogVelocityPeriodMs(500)
+            .analogPositionPeriodMs(500);
 
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
