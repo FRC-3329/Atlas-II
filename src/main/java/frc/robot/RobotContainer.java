@@ -12,6 +12,7 @@ import frc.robot.utils.GameHelpers;
 import swervelib.SwerveInputStream;
 
 import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.auto.NamedCommands;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -72,6 +73,7 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Chooser", autoChooser);
         autoChooser.setDefaultOption("None", Commands.none());
 
+        configurePathPlannerCommands();
         configureBindings();
     }
 
@@ -92,6 +94,27 @@ public class RobotContainer {
                     operatorController.setRumble(RumbleType.kBothRumble, 0);
                 })
                 .withName("RumbleControllers");
+    }
+
+    private void configurePathPlannerCommands() {
+        NamedCommands.registerCommand("IntakeGamePiece", 
+            Commands.parallel(
+                intake.lower(),
+                intake.intakeForward())
+                .withName("IntakeGamePiece"));    
+        NamedCommands.registerCommand("RaiseIntake", intake.raise());  
+        NamedCommands.registerCommand("EjectGamePiece",
+            Commands.parallel(
+                intake.intakeBackward(),
+                indexer.feed())
+                .withName("EjectGamePiece"));   
+        NamedCommands.registerCommand("Shoot", shoot());
+        NamedCommands.registerCommand("ShootWithAutoTrack",
+            Commands.parallel(
+                shoot(),
+                turret.autoTrack())
+                .withName("ShootWithAutoTrack"));
+        NamedCommands.registerCommand("AutoTrackTurret", turret.autoTrack());
     }
 
     // See CONTROLLER.md
