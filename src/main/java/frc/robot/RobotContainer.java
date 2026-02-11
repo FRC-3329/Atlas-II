@@ -104,70 +104,76 @@ public class RobotContainer {
     }
 
     private void configurePathPlannerCommands() {
-        NamedCommands.registerCommand("IntakeGamePiece", 
-            Commands.parallel(
-                intake.lower(),
-                intake.intakeForward())
-                .withName("IntakeGamePiece"));    
-        NamedCommands.registerCommand("RaiseIntake", intake.raise());  
+        NamedCommands.registerCommand("IntakeGamePiece",
+                Commands.parallel(
+                        intake.lower(),
+                        intake.intakeForward())
+                        .withName("IntakeGamePiece"));
+        NamedCommands.registerCommand("RaiseIntake", intake.raise());
         NamedCommands.registerCommand("EjectGamePiece",
-            Commands.parallel(
-                intake.intakeBackward(),
-                indexer.feed())
-                .withName("EjectGamePiece"));   
+                Commands.parallel(
+                        intake.intakeBackward(),
+                        indexer.feed())
+                        .withName("EjectGamePiece"));
         NamedCommands.registerCommand("Shoot", shoot());
         NamedCommands.registerCommand("ShootWithAutoTrack",
-            Commands.parallel(
-                shoot(),
-                turret.autoTrack())
-                .withName("ShootWithAutoTrack"));
+                shoot().withName("ShootWithAutoTrack"));
         NamedCommands.registerCommand("AutoTrackTurret", turret.autoTrack());
     }
 
     // See CONTROLLER.md
     private void configureBindings() {
-        driverController.start().onTrue(drivebase.zeroGyro());
- 
-        driverController.back().onTrue(Commands.runOnce(() -> {
-            setMotorBrake(true);
-            SmartDashboard.putBoolean("Brake Mode", true);
-        }).andThen(Commands.runOnce(() -> {
-            setMotorBrake(false);
-            SmartDashboard.putBoolean("Brake Mode", false);
-        })).repeatedly().withName("ToggleBrakeMode"));
-
-        driverController.leftBumper()
+        //// === TRIGGERS === ////
+        // Left Trigger: Intake
+        driverController.leftTrigger(0.5)
                 .whileTrue(Commands.parallel(
                         intake.lower(),
                         intake.intakeForward())
                         .withName("IntakeGamePiece"));
-
-        driverController.rightBumper()
-                .whileTrue(Commands.parallel(
-                        shoot(),
-                        turret.autoTrack())
-                        .withName("ShootWithAutoTrack"));
-
-        driverController.leftTrigger(0.5)
-                .whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
-
+        // Right Trigger: Shoot
         driverController.rightTrigger(0.5)
-                .whileTrue(turret.autoTrack());
+                .whileTrue(shoot().withName("Shoot"));
 
+        //// === BUMPERS === ////
+        // Left Bumper: Align robot to hub
+        driverController.leftBumper()
+                .whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
+        // Right Bumper: Auto drive under trench (Not yet implemented)
+
+        //// === FACE BUTTONS === ////
+        // A Button: Out take
         driverController.a()
-                .onTrue(intake.raise());
-
-        driverController.b()
                 .whileTrue(Commands.parallel(
                         intake.intakeBackward(),
                         indexer.feed())
-                        .withName("EjectGamePiece"));
-
+                        .withName("OutTake"));
+        // B Button: N/A
+        // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
-                .whileTrue(turret.moveLeft());
+                .whileTrue(drivebase.lockWheels());
+        // Y Button: Auto drive to outpost (Not yet implemented)
 
-        driverController.y()
+        //// === D-PAD === ////
+        // Up: Move intake up
+        driverController.povUp()
+                .onTrue(intake.raise());
+        // Down: Move intake down
+        driverController.povDown()
+                .onTrue(intake.lower());
+        // Left: Move turret left
+        driverController.povLeft()
+                .whileTrue(turret.moveLeft());
+        // Right: Move turret right
+        driverController.povRight()
                 .whileTrue(turret.moveRight());
+
+        //// === MENU BUTTONS === ////
+        // Start: Start auto turret tracking
+        driverController.start()
+                .whileTrue(turret.autoTrack());
+        // Back: Stop auto turret tracking
+        driverController.back()
+                .onTrue(turret.stopAutoTracking());
     }
 
     public void setMotorBrake(boolean brake) {

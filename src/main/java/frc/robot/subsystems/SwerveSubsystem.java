@@ -179,6 +179,17 @@ public class SwerveSubsystem extends SubsystemBase {
 				.withName("SwerveZeroGyro");
 	}
 
+	/**
+	 * Lock the wheels in an X formation for defense
+	 * This makes the robot very difficult to push
+	 * 
+	 * @return command to lock wheels
+	 */
+	public Command lockWheels() {
+		return run(() -> swerveDrive.lockPose())
+				.withName("SwerveLockWheels");
+	}
+
 	public Rotation2d getGyro() {
 		return swerveDrive.getYaw();
 	}

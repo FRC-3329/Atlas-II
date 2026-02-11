@@ -1,4 +1,5 @@
 # Controller Bindings
+![Picture of Controller](./controller.png)
 
 ## Drive Controller
 
@@ -7,19 +8,25 @@
 - **Right Stick (X-Axis)**: Robot rotation
 
 ### Triggers
-- **Left Trigger**: Auto-orient robot to face hub
-- **Right Trigger**: Auto-track turret only
+- **Left Trigger**: Intake
+- **Right Trigger**: Shoot
 
 ### Bumpers
-- **Left Bumper**: Deploy intake and collect game piece
-- **Right Bumper**: Shoot with auto-tracking
+- **Left Bumper**: Align robot to hub
+- **Right Bumper**: Auto drive under trench
 
 ### Face Buttons
-- **A Button**: Raise intake
-- **B Button**: Eject game piece
-- **X Button**: Manual turret control left
-- **Y Button**: Manual turret control right
+- **A Button**: Out take
+- **B Button**: N/A
+- **X Button**: Rotate swerve wheels inward
+- **Y Button**: Auto drive to outpust
+
+### D-Pad
+- **Up**: Move intake up
+- **Right**: Move turret right
+- **Left**: Move turret left
+- **Down**: Move intake down
 
 ### Menu Buttons
-- **Start**: Zero gyro
-- **Back**: Toggle between brake and coast mode
+- **Start**: Start auto turret tracking
+- **Back**: Stop auto turret tracking
