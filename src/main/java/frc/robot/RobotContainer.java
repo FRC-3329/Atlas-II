@@ -5,6 +5,7 @@ import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
+import frc.robot.subsystems.LEDsSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.utils.GameHelpers;
@@ -32,6 +33,7 @@ public class RobotContainer {
     private final IndexerSubsystem indexer = new IndexerSubsystem();
     private final IntakeSubsystem intake = new IntakeSubsystem();
     private final TurretSubsystem turret;
+    private final LEDsSubsystem leds = new LEDsSubsystem();
 
     // Controllers
     private final CommandXboxController driverController = new CommandXboxController(
@@ -68,6 +70,11 @@ public class RobotContainer {
         driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
 
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+
+        leds.setDefaultCommand(
+                leds.run(() -> {
+                    leds.set(turret.isAutoTrackingEnabled() && turret.isOnTarget());
+                }).withName("LEDTurretFeedback"));
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);

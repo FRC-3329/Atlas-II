@@ -43,4 +43,7 @@ public final class TurretConstants {
     public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 0.5; // meters
 
     public static final boolean ENABLE_AUTO_AIM = false;
+
+    /** Tolerance in degrees for LED feedback when turret is on target. */
+    public static final double LED_TOLERANCE_DEGREES = 2.0;
 }
