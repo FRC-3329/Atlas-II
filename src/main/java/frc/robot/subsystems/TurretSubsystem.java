@@ -171,6 +171,19 @@ public class TurretSubsystem extends SubsystemBase {
         return motor.getMotionMagicAtTarget().getValue();
     }
 
+    /**
+     * @return true if within LED tolerance of target, false otherwise
+     */
+    public boolean isOnTarget() {
+        double targetRotations = positionRequest.Position;
+        double currentRotations = motor.getPosition().getValueAsDouble();
+        double targetDegrees = Units.rotationsToDegrees(targetRotations);
+        double currentDegrees = Units.rotationsToDegrees(currentRotations);
+
+        double error = Math.abs(targetDegrees - currentDegrees);
+        return error <= TurretConstants.LED_TOLERANCE_DEGREES;
+    }
+
     public void enableAutoTracking() {
         autoTrackingEnabled = true;
     }
@@ -298,6 +311,7 @@ public class TurretSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/Angle"), getAngle(), Rotations);
         DogLog.log((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/AtTarget"), isAtTarget());
+        DogLog.log((getName() + "/OnTarget"), isOnTarget());
         DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
         DogLog.log((getName() + "/MotorOutput"), motor.get());
         DogLog.log((getName() + "/MotorCurrent"), motor.getSupplyCurrent().getValue());
