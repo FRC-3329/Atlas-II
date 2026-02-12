@@ -7,26 +7,39 @@ import java.util.function.Supplier;
 
 import com.pathplanner.lib.util.FlippingUtil;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
+import frc.robot.constants.TurretConstants;
 
 /**
  * Utility class for game-specific operations.
  */
-public class GameHelpers {
+public class GameHelpers extends SubsystemBase {
     private final Supplier<Pose2d> robotPoseSupplier;
+    private final Supplier<ChassisSpeeds> robotVelocitySupplier;
+    private Rotation2d virtualTargetFieldAngle;
+    private Distance virtualTargetDistance;
     private String cachedGameData = "";
+    private ShotParameters.Parameters shotParameters;
 
     /**
-     * @param robotPoseSupplier A supplier that provides the robot's current pose on the field
+     * @param robotPoseSupplier     A supplier that provides the robot's current
+     *                              pose on
+     *                              the field
+     * @param robotVelocitySupplier A supplier to provide the current robot centric
+     *                              velocity
      */
-    public GameHelpers(Supplier<Pose2d> robotPoseSupplier) {
+    public GameHelpers(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> robotVelocitySupplier) {
         this.robotPoseSupplier = robotPoseSupplier;
+        this.robotVelocitySupplier = robotVelocitySupplier;
     }
 
     /**
@@ -39,7 +52,7 @@ public class GameHelpers {
         if (alliance.isPresent() && alliance.get() == Alliance.Red) {
             hubPosition = FlippingUtil.flipFieldPosition(hubPosition);
         }
-        
+
         return hubPosition;
     }
 
@@ -61,7 +74,37 @@ public class GameHelpers {
     }
 
     /**
-     * This is the angle from the robot's position to the hub, relative to the field's x-axis.
+     * @return The angle between the robot and the target depending on the robot's
+     *         current position on the field and velocity. The current position
+     *         selects the target while the position and velocity adjust the virtual
+     *         target for SOTM.
+     */
+    public Rotation2d getVirtualTargetFieldAngle() {
+        return virtualTargetFieldAngle;
+    }
+
+    /**
+     * @return The distance between the robot and the target depending on the
+     *         robot's current position on the field and velocity. The current
+     *         position selects the target while the position and velocity adjust
+     *         the virtual target for SOTM.
+     */
+    public Distance getVirtualTargetDistance() {
+        return virtualTargetDistance;
+    }
+
+    /**
+     * @return The updated shot parameters for the robot's current state on the
+     *         field. This uses the position and velocity to determine both the
+     *         correct target and offset the target to account for SOTM.
+     */
+    public ShotParameters.Parameters getShotParameters() {
+        return shotParameters;
+    }
+
+    /**
+     * This is the angle from the robot's position to the hub, relative to the
+     * field's x-axis.
      * 
      * @return The angle to the hub as a Rotation2d
      */
@@ -101,11 +144,20 @@ public class GameHelpers {
     }
 
     /**
-     * Determines which alliance's goal is currently active based on match time and game data.
+     * @return The robot's current velocity (not field velocity)
+     */
+    public ChassisSpeeds getRobotVelocites() {
+        return robotVelocitySupplier.get();
+    }
+
+    /**
+     * Determines which alliance's goal is currently active based on match time and
+     * game data.
      * The game data specifies which alliance's goal goes inactive first.
      * During auto, the team's own goal is always active.
      * 
-     * @return The active Alliance (Red or Blue), or empty if game data is unavailable
+     * @return The active Alliance (Red or Blue), or empty if game data is
+     *         unavailable
      */
     public Optional<Alliance> getActiveGoalAlliance() {
         if (DriverStation.isAutonomous()) {
@@ -134,7 +186,8 @@ public class GameHelpers {
     }
 
     /**
-     * @return true if the team's goal is active, false otherwise or if game data is unavailable
+     * @return true if the team's goal is active, false otherwise or if game data is
+     *         unavailable
      */
     public boolean isAllianceGoalActive() {
         Optional<Alliance> activeAlliance = getActiveGoalAlliance();
@@ -164,7 +217,7 @@ public class GameHelpers {
         if (alliance.isEmpty()) {
             return false;
         }
-        
+
         if (alliance.get() == Alliance.Blue) {
             return robotX < hubPosition.getX();
         } else {
@@ -182,5 +235,52 @@ public class GameHelpers {
         Translation2d hubPosition = calculateHubPosition();
 
         return robotPose.getY() > hubPosition.getY();
+    }
+
+    @Override
+    public void periodic() {
+        // calculate proper target so we don't fire at the hub if we are not in our zone
+        Translation2d targetPosition;
+        Translation2d hubPosition = calculateHubPosition();
+
+        if (isInOurZone()) {
+            // In our alliance zone - aim directly at hub center
+            targetPosition = hubPosition;
+            DogLog.log((getName() + "/TargetZone"), "OurZone");
+        } else if (isAboveHub()) {
+            // In opponent zone and above hub - aim at top free space
+            targetPosition = new Translation2d(
+                    hubPosition.getX(),
+                    hubPosition.getY() + TurretConstants.TOP_FREE_SPACE_Y_OFFSET);
+
+            DogLog.log((getName() + "/TargetZone"), "OpponentZoneTop");
+        } else {
+            // In opponent zone and below hub - aim at bottom free space
+            targetPosition = new Translation2d(
+                    hubPosition.getX(),
+                    hubPosition.getY() - TurretConstants.BOTTOM_FREE_SPACE_Y_OFFSET);
+
+            DogLog.log((getName() + "/TargetZone"), "OpponentZoneBottom");
+        }
+
+        // now that we have the target position, calculate the virtual target and shot
+        // parameters
+        ShootOnTheMove.Shot shot = ShootOnTheMove.calculate(getRobotPose(), getRobotVelocites(),
+                pose -> ShotParameters.getShotParameters(pose.getTranslation().getDistance(targetPosition)));
+        this.shotParameters = shot.parameters();
+        Translation2d virtualTarget = shot.virtualTarget().getTranslation();
+
+        // store distance/angle to virtual target
+        Translation2d robotTranslation = getRobotPose().getTranslation();
+        this.virtualTargetFieldAngle = virtualTarget.minus(robotTranslation).getAngle();
+        this.virtualTargetDistance = Meters.of(robotTranslation.getDistance(virtualTarget));
+
+        // logging
+        DogLog.log((getName() + "/InOurZone"), isInOurZone());
+        DogLog.log((getName() + "/AboveHub"), isAboveHub());
+        DogLog.log((getName() + "/VirtualTargetFieldAngle"), virtualTargetFieldAngle);
+        DogLog.log((getName() + "/VirtualTargetDistance"), virtualTargetDistance);
+        DogLog.log((getName() + "/TargetPosition"), targetPosition);
+        DogLog.log((getName() + "/VirtualTarget"), virtualTarget);
     }
 }

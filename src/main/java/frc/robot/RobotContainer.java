@@ -48,9 +48,9 @@ public class RobotContainer {
     private final SendableChooser<Command> autoChooser;
 
     public RobotContainer() {
-        gameHelpers = new GameHelpers(() -> drivebase.getSwerveDrive().getPose());
-        flywheel = new FlywheelSubsystem(gameHelpers::getHubDistance);
-        turret = new TurretSubsystem(drivebase, gameHelpers);
+        gameHelpers = new GameHelpers(drivebase::getPose, drivebase::getRobotVelocity);
+        flywheel = new FlywheelSubsystem(gameHelpers::getShotParameters);
+        turret = new TurretSubsystem(drivebase::getPose, gameHelpers::getVirtualTargetFieldAngle);
 
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
 
