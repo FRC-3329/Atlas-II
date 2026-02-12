@@ -73,7 +73,9 @@ public class RobotContainer {
 
         leds.setDefaultCommand(
                 leds.run(() -> {
-                    leds.set(turret.isAutoTrackingEnabled() && turret.isOnTarget());
+                    leds.set(turret.isAutoTrackingEnabled() 
+                        && turret.isOnTarget() 
+                        && gameHelpers.isValidShotDistance());
                 }).withName("LEDTurretFeedback"));
 
         autoChooser = AutoBuilder.buildAutoChooser();
