@@ -249,8 +249,6 @@ public class SwerveSubsystem extends SubsystemBase {
 							swerveDrive.setChassisSpeeds(speedsRobotRelative);
 						}
 					},
-
-					// TODO: PID needs to be tuned
 					new PPHolonomicDriveController(
 							new PIDConstants(3.0, 0.0, 0.1), // Translation
 							new PIDConstants(3.0, 0.0, 0.1) // Rotation
