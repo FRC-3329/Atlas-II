@@ -132,7 +132,10 @@ public class RobotContainer {
                         .withName("IntakeGamePiece"));
         // Right Trigger: Shoot
         driverController.rightTrigger(0.5)
-                .whileTrue(shoot().withName("Shoot"));
+                .whileTrue(shoot()
+                        .beforeStarting(drivebase::enableSlewRateLimiters)
+                        .finallyDo(drivebase::disableSlewRateLimiters)
+                        .withName("Shoot"));
 
         //// === BUMPERS === ////
         // Left Bumper: Align robot to hub
