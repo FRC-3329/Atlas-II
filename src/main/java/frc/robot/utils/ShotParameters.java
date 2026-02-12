@@ -8,6 +8,8 @@ import edu.wpi.first.math.interpolation.InterpolatingTreeMap;
 import edu.wpi.first.math.interpolation.InverseInterpolator;
 import edu.wpi.first.units.measure.Distance;
 
+// credit to 1683
+// https://github.com/TechnoTitans/TitanWare2024/blob/master/src/main/java/frc/robot/subsystems/superstructure/ShootOnTheMove.java
 public class ShotParameters {
     /** The parameters we characterize for each distance key in the map */
     public record Parameters(double flywheelRPS, double hoodRotations, double tofSeconds)
