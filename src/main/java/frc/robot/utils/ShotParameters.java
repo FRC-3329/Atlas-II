@@ -47,7 +47,8 @@ public class ShotParameters {
     // add to the map
     static {
         // key units are in meters
-        map.put(1.2, new Parameters(0, 0, 0));
+        map.put(1.0, new Parameters(10, 10, 1));
+        map.put(2.0, new Parameters(10, 10, 1.5));
     }
 
 }

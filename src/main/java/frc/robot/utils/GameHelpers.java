@@ -13,6 +13,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.units.measure.Distance;
+import edu.wpi.first.units.measure.MutDistance;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -25,8 +26,8 @@ import frc.robot.constants.TurretConstants;
 public class GameHelpers extends SubsystemBase {
     private final Supplier<Pose2d> robotPoseSupplier;
     private final Supplier<ChassisSpeeds> robotVelocitySupplier;
+    private final MutDistance virtualTargetDistance;
     private Rotation2d virtualTargetFieldAngle;
-    private Distance virtualTargetDistance;
     private String cachedGameData = "";
     private ShotParameters.Parameters shotParameters;
 
@@ -40,6 +41,7 @@ public class GameHelpers extends SubsystemBase {
     public GameHelpers(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> robotVelocitySupplier) {
         this.robotPoseSupplier = robotPoseSupplier;
         this.robotVelocitySupplier = robotVelocitySupplier;
+        this.virtualTargetDistance = Meters.mutable(0.0);
     }
 
     /**
@@ -240,47 +242,63 @@ public class GameHelpers extends SubsystemBase {
     @Override
     public void periodic() {
         // calculate proper target so we don't fire at the hub if we are not in our zone
-        Translation2d targetPosition;
-        Translation2d hubPosition = calculateHubPosition();
+        Translation2d targetTranslation;
+        Translation2d hubTranslation = calculateHubPosition();
 
         if (isInOurZone()) {
             // In our alliance zone - aim directly at hub center
-            targetPosition = hubPosition;
+            targetTranslation = hubTranslation;
             DogLog.log((getName() + "/TargetZone"), "OurZone");
         } else if (isAboveHub()) {
             // In opponent zone and above hub - aim at top free space
-            targetPosition = new Translation2d(
-                    hubPosition.getX(),
-                    hubPosition.getY() + TurretConstants.TOP_FREE_SPACE_Y_OFFSET);
+            targetTranslation = new Translation2d(
+                    hubTranslation.getX(),
+                    hubTranslation.getY() + TurretConstants.TOP_FREE_SPACE_Y_OFFSET);
 
             DogLog.log((getName() + "/TargetZone"), "OpponentZoneTop");
         } else {
             // In opponent zone and below hub - aim at bottom free space
-            targetPosition = new Translation2d(
-                    hubPosition.getX(),
-                    hubPosition.getY() - TurretConstants.BOTTOM_FREE_SPACE_Y_OFFSET);
+            targetTranslation = new Translation2d(
+                    hubTranslation.getX(),
+                    hubTranslation.getY() - TurretConstants.BOTTOM_FREE_SPACE_Y_OFFSET);
 
             DogLog.log((getName() + "/TargetZone"), "OpponentZoneBottom");
         }
 
-        // now that we have the target position, calculate the virtual target and shot
+        // now that we have the target location, calculate the virtual target and shot
         // parameters
         ShootOnTheMove.Shot shot = ShootOnTheMove.calculate(getRobotPose(), getRobotVelocites(),
-                pose -> ShotParameters.getShotParameters(pose.getTranslation().getDistance(targetPosition)));
-        this.shotParameters = shot.parameters();
-        Translation2d virtualTarget = shot.virtualTarget().getTranslation();
+                pose -> ShotParameters.getShotParameters(pose.getTranslation().getDistance(targetTranslation)));
+        this.shotParameters = shot.parameters(); // store for flywheel to use
+
+        // get the current and future robot translations
+        Translation2d currentRobotTranslation = getRobotPose().getTranslation();
+        Translation2d futureRobotTranslation = shot.futureRobotPose().getTranslation();
+
+        // Virtual target is the target translation minus the difference between the
+        // future and current robot translation. The order of subtractions here matters.
+        Translation2d virtualTargetTranslation = targetTranslation
+                .minus(futureRobotTranslation.minus(currentRobotTranslation));
 
         // store distance/angle to virtual target
-        Translation2d robotTranslation = getRobotPose().getTranslation();
-        this.virtualTargetFieldAngle = virtualTarget.minus(robotTranslation).getAngle();
-        this.virtualTargetDistance = Meters.of(robotTranslation.getDistance(virtualTarget));
+        // if the future is equal to the current, then just use current
+        if (currentRobotTranslation.equals(futureRobotTranslation)) {
+            this.virtualTargetFieldAngle = targetTranslation.minus(currentRobotTranslation).getAngle();
+            this.virtualTargetDistance.mut_replace(targetTranslation.getDistance(currentRobotTranslation), Meters);
+        } else {
+            this.virtualTargetFieldAngle = virtualTargetTranslation.minus(currentRobotTranslation).getAngle();
+            this.virtualTargetDistance.mut_replace(virtualTargetTranslation.getDistance(currentRobotTranslation),
+                    Meters);
+        }
 
         // logging
         DogLog.log((getName() + "/InOurZone"), isInOurZone());
         DogLog.log((getName() + "/AboveHub"), isAboveHub());
         DogLog.log((getName() + "/VirtualTargetFieldAngle"), virtualTargetFieldAngle);
         DogLog.log((getName() + "/VirtualTargetDistance"), virtualTargetDistance);
-        DogLog.log((getName() + "/TargetPosition"), targetPosition);
-        DogLog.log((getName() + "/VirtualTarget"), virtualTarget);
+        DogLog.log((getName() + "/SelectedTargetPosition"), new Pose2d(targetTranslation, Rotation2d.kZero));
+        DogLog.log((getName() + "/VirtualTargetPosition"),
+                new Pose2d(virtualTargetTranslation, virtualTargetFieldAngle));
+        DogLog.log((getName() + "/FutureRobotPosition"), shot.futureRobotPose());
     }
 }

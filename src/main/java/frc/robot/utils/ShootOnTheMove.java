@@ -12,7 +12,7 @@ public class ShootOnTheMove {
     private static final int MAX_ITERATIONS = 3; // 2-5 iterations should suffice
 
     /** The shot parameters at the virtual target. */
-    public record Shot(ShotParameters.Parameters parameters, Pose2d virtualTarget) {
+    public record Shot(ShotParameters.Parameters parameters, Pose2d futureRobotPose) {
     }
 
     /**
@@ -29,7 +29,7 @@ public class ShootOnTheMove {
             final Pose2d currentPose,
             final ChassisSpeeds chassisSpeeds,
             final Function<Pose2d, ShotParameters.Parameters> parametersFunction) {
-        Pose2d virtualTarget = currentPose;
+        Pose2d futureRobotPose = currentPose;
 
         ShotParameters.Parameters parameters = parametersFunction.apply(currentPose);
         double timeOfFlightSeconds = parameters.tofSeconds();
@@ -40,11 +40,11 @@ public class ShootOnTheMove {
                     chassisSpeeds.vyMetersPerSecond * timeOfFlightSeconds,
                     chassisSpeeds.omegaRadiansPerSecond * timeOfFlightSeconds);
 
-            virtualTarget = currentPose.exp(twist);
-            parameters = parametersFunction.apply(virtualTarget);
+            futureRobotPose = currentPose.exp(twist);
+            parameters = parametersFunction.apply(futureRobotPose);
             timeOfFlightSeconds = parameters.tofSeconds();
         }
 
-        return new Shot(parameters, virtualTarget);
+        return new Shot(parameters, futureRobotPose);
     }
 }
