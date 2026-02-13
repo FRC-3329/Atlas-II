@@ -16,7 +16,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -39,8 +38,6 @@ import com.pathplanner.lib.config.RobotConfig;
 import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
-
-import dev.doglog.DogLog;
 
 public class SwerveSubsystem extends SubsystemBase {
 	private File directory = new File(Filesystem.getDeployDirectory(), "swerve");
@@ -96,30 +93,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	public ChassisSpeeds getRobotVelocity() {
 		return swerveDrive.getRobotVelocity();
-	}
-
-	/**
-	 * Makes the drivetrain respond slower to control inputs. Useful for preventing
-	 * rapid movement.
-	 */
-	public void enableSlewRateLimiters() {
-		// TODO: tune these values to make it not feel super slugish while still making
-		// the robot slow to respond
-		swerveDrive.getSwerveController().addSlewRateLimiters(
-				new SlewRateLimiter(0.5), // x
-				new SlewRateLimiter(0.5), // y
-				new SlewRateLimiter(0.1)); // theta
-		DogLog.log((getName() + "/SlewRateLimiterEnabled"), true);
-	}
-
-	/**
-	 * Removes all rate limiters.
-	 */
-	public void disableSlewRateLimiters() {
-		swerveDrive.getSwerveController().xLimiter = null;
-		swerveDrive.getSwerveController().yLimiter = null;
-		swerveDrive.getSwerveController().angleLimiter = null;
-		DogLog.log((getName() + "/SlewRateLimiterEnabled"), false);
 	}
 
 	/**
