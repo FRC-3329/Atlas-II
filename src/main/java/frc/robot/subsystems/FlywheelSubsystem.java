@@ -26,7 +26,8 @@ import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
-
+import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -46,6 +47,9 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
+
+    private final MutAngularVelocity doglogVelocity = RPM.mutable(0.0);
+    private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
     /**
      * @param hubDistanceSupplier supplier for the distance to the hub
@@ -124,7 +128,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         right.getVelocity().setUpdateFrequency(50);
         hood.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         hood.getVelocity().setUpdateFrequency(50);
-        
+
         left.optimizeBusUtilization();
         right.optimizeBusUtilization();
         hood.optimizeBusUtilization();
@@ -146,18 +150,17 @@ public class FlywheelSubsystem extends SubsystemBase {
                 (getName() + "/RPMSetPoint"),
                 0.0,
                 RPM,
-                (rpm) -> {
-                    left.setControl(request.withVelocity(rpm));
-                    right.setControl(request.withVelocity(rpm));
+                (angularVelocity) -> {
+                    doglogVelocity.mut_replace(angularVelocity, RPM);
                 });
 
         // Change target hood angle from Doglog
         DogLog.tunable(
-                (getName() + "/HoodAngleSetPoint"),
+                (getName() + "/DegreesSetPoint"),
                 0.0,
                 Degrees,
                 (angle) -> {
-                    hood.setControl(hoodRequest.withPosition(angle));
+                    doglogAngle.mut_replace(angle, Degrees);
                 });
 
         // Set default command to idle
@@ -232,6 +235,19 @@ public class FlywheelSubsystem extends SubsystemBase {
         }).withName("FlywheelShootFixed");
     }
 
+    /**
+     * Shoot the flywheel at the angular velocity and hood angle specified by
+     * DogLog's angular velocity and angle setpoint. Disables the hood PID on
+     * command interruption.
+     * 
+     * @return the command to shoot based on DogLog values
+     */
+    public Command tunableShoot() {
+        return shoot(doglogVelocity, doglogAngle)
+                .finallyDo(() -> hood.set(0))
+                .withName("FlywheelTunableShoot");
+    }
+
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
         return sysIdRoutine.quasistatic(direction);
     }
@@ -259,10 +275,8 @@ public class FlywheelSubsystem extends SubsystemBase {
                 left.get());
 
         DogLog.log(
-                (getName() + "/RPM"),
-                left.getVelocity()
-                        .getValue()
-                        .in(RPM));
+                (getName() + "/Velocity"),
+                left.getVelocity().getValue());
 
         DogLog.log(
                 (getName() + "/HoodPosition"),
