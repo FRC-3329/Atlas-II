@@ -34,13 +34,13 @@ public final class FlywheelConstants {
     }
 
     public static final class Hood {
-        public static final int HOOD_ID = 0;
+        public static final int HOOD_ID = 6;
 
-        public static final double kP = 12.87; // V/rotation
+        public static final double kP = 80.0; // V/rotation
         public static final double kI = 0.0;
         public static final double kD = 0.05; // V*s/rotation
         public static final double kS = 0.0; // V
-        public static final double kV = 1.67; // V*s/rotation
+        public static final double kV = 2.2; // V*s/rotation
         public static final double kA = 0.01; // v*s^2/rotation
         public static final double kG = 0.0; // V
 

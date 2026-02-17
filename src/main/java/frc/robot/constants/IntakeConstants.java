@@ -42,7 +42,7 @@ public final class IntakeConstants {
     }
 
     public static final class Roller {
-        public static final int MOTOR_ID = 0;
+        public static final int MOTOR_ID = 11;
 
         public static final double INTAKE_VOLTAGE = 4.0; // ~33% output
         public static final double OUTTAKE_VOLTAGE = -4.0;

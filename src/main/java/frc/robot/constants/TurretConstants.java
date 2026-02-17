@@ -8,7 +8,7 @@ import edu.wpi.first.units.measure.Angle;
 
 // TODO: Update values
 public final class TurretConstants {
-    public static final int MOTOR_ID = 0;
+    public static final int MOTOR_ID = 4;
 
     public static final double kP = 0.0;
     public static final double kI = 0.0;
@@ -25,7 +25,7 @@ public final class TurretConstants {
     public static final Angle MAX_ANGLE = Degrees.of(0.0);
 
     public static final double CURRENT_LIMIT = 30.0; // Amps
-    public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
+    public static final InvertedValue INVERTED = InvertedValue.Clockwise_Positive;
 
     public static final double MANUAL_SPEED = 0.2; // Percent output for manual movement
 
