@@ -21,6 +21,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -40,6 +41,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final MotionMagicVoltage pivotPositionRequest = new MotionMagicVoltage(0);
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
+    private final MutAngle doglogangle = Degrees.mutable(0.0);
 
     private IntakeState currentState = IntakeState.UP;
     private boolean pivotPIDEnabled = false;
@@ -58,7 +60,7 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotSlot0.kV = IntakeConstants.Pivot.kV;
         pivotSlot0.kA = IntakeConstants.Pivot.kA;
         pivotSlot0.kG = IntakeConstants.Pivot.kG;
-        
+
         pivotSlot0.GravityType = GravityTypeValue.Arm_Cosine;
         pivotSlot0.GravityArmPositionOffset = IntakeConstants.Pivot.GRAVITY_ARM_POSITION_OFFSET;
 
@@ -96,17 +98,17 @@ public class IntakeSubsystem extends SubsystemBase {
         rollerConfig.voltageCompensation(IntakeConstants.Roller.VOLTAGE_COMPENSATION);
 
         rollerConfig.signals
-            .absoluteEncoderPositionAlwaysOn(false)
-            .primaryEncoderVelocityAlwaysOn(false)
-            .analogPositionAlwaysOn(false)
-            .analogVelocityAlwaysOn(false)
-            .externalOrAltEncoderPositionAlwaysOn(false)
-            .externalOrAltEncoderVelocityAlwaysOn(false)
-            .primaryEncoderPositionAlwaysOn(false)
-            .primaryEncoderVelocityAlwaysOn(false)
-            .iAccumulationAlwaysOn(false)
-            .appliedOutputPeriodMs(20)
-            .faultsPeriodMs(20);
+                .absoluteEncoderPositionAlwaysOn(false)
+                .primaryEncoderVelocityAlwaysOn(false)
+                .analogPositionAlwaysOn(false)
+                .analogVelocityAlwaysOn(false)
+                .externalOrAltEncoderPositionAlwaysOn(false)
+                .externalOrAltEncoderVelocityAlwaysOn(false)
+                .primaryEncoderPositionAlwaysOn(false)
+                .primaryEncoderVelocityAlwaysOn(false)
+                .iAccumulationAlwaysOn(false)
+                .appliedOutputPeriodMs(20)
+                .faultsPeriodMs(20);
 
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -116,7 +118,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 0.0,
                 Degrees,
                 (angle) -> {
-                    setPivotAngle(Degrees.of(angle));
+                    doglogangle.mut_replace(angle, Degrees);
                 });
 
         setDefaultCommand(
@@ -191,8 +193,8 @@ public class IntakeSubsystem extends SubsystemBase {
             currentState = IntakeState.DOWN;
         }).andThen(
                 // Wait until at target, then disable PID control
-                Commands.waitUntil(this::isPivotAtTarget).andThen(
-                        disablePivotPID()))
+                Commands.waitUntil(this::isPivotAtTarget)
+                        .andThen(disablePivotPIDCommand()))
                 .withName("IntakeLower");
     }
 
@@ -207,6 +209,18 @@ public class IntakeSubsystem extends SubsystemBase {
             setPivotAngle(IntakeConstants.Pivot.UP_ANGLE);
             currentState = IntakeState.UP;
         }).withName("IntakeRaise");
+    }
+
+    /**
+     * @return Command to move to the current DogLog angle. Disables PID when
+     *         interrupted.
+     */
+    public Command moveToDogLogAngle() {
+        return this
+                .runOnce(() -> setPivotAngle(doglogangle))
+                .andThen(this.idle())
+                .finallyDo(this::disablePivotPID)
+                .withName("IntakeMoveToDogLogAngle");
     }
 
     /**
@@ -253,11 +267,16 @@ public class IntakeSubsystem extends SubsystemBase {
      * 
      * @return Command to disable pivot PID
      */
-    public Command disablePivotPID() {
-        return this.runOnce(() -> {
-            pivotMotor.setControl(pivotDisableRequest);
-            pivotPIDEnabled = false;
-        }).withName("IntakeDisablePivotPID");
+    public Command disablePivotPIDCommand() {
+        return this.runOnce(this::disablePivotPID).withName("IntakeDisablePivotPID");
+    }
+
+    /**
+     * Disable's pivot PID control by setting zero percent duty cycle
+     */
+    private void disablePivotPID() {
+        pivotMotor.setControl(pivotDisableRequest);
+        pivotPIDEnabled = false;
     }
 
     @Override
