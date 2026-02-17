@@ -29,10 +29,9 @@ import edu.wpi.first.units.measure.Distance;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FlywheelConstants.Flywheel;
 import frc.robot.constants.FlywheelConstants.Hood;
-import frc.robot.commands.ZeroHoodCommand;
 
 public class FlywheelSubsystem extends SubsystemBase {
     private final TalonFX left, right, hood;
@@ -48,6 +47,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
 
+    private final Trigger spikeDetected;
+
     /**
      * @param hubDistanceSupplier supplier for the distance to the hub
      */
@@ -55,7 +56,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         this.left = new TalonFX(Flywheel.LEFT_ID);
         this.right = new TalonFX(Flywheel.RIGHT_ID);
         this.hood = new TalonFX(Hood.HOOD_ID);
-
+        this.spikeDetected = new Trigger(() -> getHoodCurrent() > Hood.ZEROING_CURRENT_THRESHOLD);
         this.hubDistanceSupplier = hubDistanceSupplier;
 
         // Flywheel config
@@ -248,7 +249,17 @@ public class FlywheelSubsystem extends SubsystemBase {
      * @return Command that zeros the hood position
      */
     public Command zeroHood() {
-        return new ZeroHoodCommand(this);
+        return this
+                .run(() -> setHoodVoltage(Hood.ZEROING_VOLTAGE))
+                .until(spikeDetected)
+                .finallyDo(() -> {
+                    stopHood();
+                    zeroHoodPosition();
+                    DogLog.timestamp(getName() + "/HoodZerod");
+                })
+                // TODO: Tune
+                .withTimeout(7.0)
+                .withName("ZeroHoodFlywheelCommand");
     }
 
     /** Check if the flywheel is at the target speed */
