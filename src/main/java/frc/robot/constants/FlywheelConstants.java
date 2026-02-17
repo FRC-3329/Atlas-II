@@ -32,7 +32,7 @@ public final class FlywheelConstants {
         public static final double kV = 1.67; // V*s/rotation
         public static final double kA = 0.01; // v*s^2/rotation
         public static final double kG = 0.0; // V
-         
+
         // TODO: Check with CAD
         public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0; // rotations
 
@@ -42,5 +42,9 @@ public final class FlywheelConstants {
 
         public static final double CURRENT_LIMIT = 25.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
+
+        public static final double ZEROING_VOLTAGE = -2.0; // Volts
+        public static final double ZEROING_CURRENT_THRESHOLD = 15.0; // Amps
+        public static final double ZEROING_CURRENT_SPIKE_DURATION = 0.1; // Seconds
     }
 }

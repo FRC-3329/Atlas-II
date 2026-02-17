@@ -32,6 +32,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.constants.FlywheelConstants.Flywheel;
 import frc.robot.constants.FlywheelConstants.Hood;
+import frc.robot.commands.ZeroHoodCommand;
 
 public class FlywheelSubsystem extends SubsystemBase {
     private final TalonFX left, right, hood;
@@ -124,7 +125,8 @@ public class FlywheelSubsystem extends SubsystemBase {
         right.getVelocity().setUpdateFrequency(50);
         hood.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         hood.getVelocity().setUpdateFrequency(50);
-        
+        hood.getSupplyCurrent().setUpdateFrequency(50); // 50 Hz for current monitoring
+
         left.optimizeBusUtilization();
         right.optimizeBusUtilization();
         hood.optimizeBusUtilization();
@@ -240,12 +242,53 @@ public class FlywheelSubsystem extends SubsystemBase {
         return sysIdRoutine.dynamic(direction);
     }
 
+    /**
+     * Command to zero the hood by detecting current spike
+     * 
+     * @return Command that zeros the hood position
+     */
+    public Command zeroHood() {
+        return new ZeroHoodCommand(this);
+    }
+
     /** Check if the flywheel is at the target speed */
     public boolean isAtSpeed() {
         boolean leftAtSpeed = left.getMotionMagicAtTarget().getValue();
         boolean rightAtSpeed = right.getMotionMagicAtTarget().getValue();
 
         return leftAtSpeed && rightAtSpeed;
+    }
+
+    /**
+     * Get the hood motor's supply current
+     * 
+     * @return Current in amps
+     */
+    public double getHoodCurrent() {
+        return hood.getSupplyCurrent().getValueAsDouble();
+    }
+
+    /**
+     * Set the hood motor voltage directly
+     * 
+     * @param voltage Voltage to apply to hood motor
+     */
+    public void setHoodVoltage(double voltage) {
+        hood.setVoltage(voltage);
+    }
+
+    /**
+     * Set the hood position to zero
+     */
+    public void zeroHoodPosition() {
+        hood.setPosition(0.0);
+    }
+
+    /**
+     * Stop the hood motor
+     */
+    public void stopHood() {
+        hood.stopMotor();
     }
 
     @Override
