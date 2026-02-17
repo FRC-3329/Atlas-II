@@ -1,8 +1,19 @@
 package frc.robot.constants;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
+
 import com.ctre.phoenix6.signals.InvertedValue;
 
+import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.AngularVelocity;
+
 public final class FlywheelConstants {
+    // Static shooting parameters when not using positional information
+    // TODO: Update values
+    public static final AngularVelocity STATIC_RPM = RPM.of(3000.0);
+    public static final Angle STATIC_HOOD_ANGLE = Degrees.of(45.0);
+
     public static final class Flywheel {
         public static final int LEFT_ID = 2;
         public static final int RIGHT_ID = 1;
