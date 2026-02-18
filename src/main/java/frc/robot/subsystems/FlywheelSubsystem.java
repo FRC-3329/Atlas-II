@@ -23,7 +23,6 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -53,11 +52,11 @@ public class FlywheelSubsystem extends SubsystemBase {
      * @param hubDistanceSupplier supplier for the shot parameters for the flywheel
      */
     public FlywheelSubsystem(Supplier<ShotParameters.Parameters> shotParametersSupplier) {
+        this.shotParametersSupplier = shotParametersSupplier;
         this.left = new TalonFX(Flywheel.LEFT_ID);
         this.right = new TalonFX(Flywheel.RIGHT_ID);
         this.hood = new TalonFX(Hood.HOOD_ID);
         this.spikeDetected = new Trigger(() -> getHoodCurrent() > Hood.ZEROING_CURRENT_THRESHOLD);
-        this.hubDistanceSupplier = hubDistanceSupplier;
 
         // Flywheel config
         TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
