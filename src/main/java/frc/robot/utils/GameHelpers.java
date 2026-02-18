@@ -239,6 +239,18 @@ public class GameHelpers extends SubsystemBase {
         return robotPose.getY() > hubPosition.getY();
     }
 
+    /**
+     * Checks if the robot is within a valid shooting distance from the hub.
+     * 
+     * @return true if the robot is within the valid shooting distance range
+     */
+    public boolean isValidShotDistance() {
+        double distanceToHub = getHubDistanceMeters();
+
+        return distanceToHub >= Constants.MIN_SHOT_DISTANCE 
+            && distanceToHub <= Constants.MAX_SHOT_DISTANCE;
+    }
+
     @Override
     public void periodic() {
         // calculate proper target so we don't fire at the hub if we are not in our zone

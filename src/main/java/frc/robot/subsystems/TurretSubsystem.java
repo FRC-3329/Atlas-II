@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
+import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -34,6 +35,7 @@ public class TurretSubsystem extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine;
     private final Supplier<Pose2d> robotPoseSupplier;
     private final Supplier<Rotation2d> angleGoalSupplier;
+    private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
     private boolean autoTrackingEnabled = false;
 
@@ -104,7 +106,7 @@ public class TurretSubsystem extends SubsystemBase {
                 0.0,
                 Degrees,
                 (angle) -> {
-                    setTargetAngle(Degrees.of(angle));
+                    doglogAngle.mut_replace(angle, Degrees);
                 });
 
         // Set default command to idle
@@ -138,8 +140,8 @@ public class TurretSubsystem extends SubsystemBase {
         double targetRotations = angle.in(Rotations);
         targetRotations = MathUtil.clamp(
                 targetRotations,
-                TurretConstants.MIN_ANGLE,
-                TurretConstants.MAX_ANGLE);
+                TurretConstants.MIN_ANGLE.in(Rotations),
+                TurretConstants.MAX_ANGLE.in(Rotations));
 
         motor.setControl(positionRequest.withPosition(targetRotations));
     }
@@ -278,6 +280,13 @@ public class TurretSubsystem extends SubsystemBase {
         return this.run(() -> {
             setTargetAngle(angle);
         }).withName("TurretMoveToAngle");
+    }
+
+    /**
+     * @return Command to move the turret to the current DogLog angle setpoint
+     */
+    public Command moveToDogLogAngle() {
+        return moveToAngle(doglogAngle).withName("TurretMoveToDogLogAngle");
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

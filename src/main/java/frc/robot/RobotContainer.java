@@ -1,6 +1,7 @@
 package frc.robot;
 
 import frc.robot.commands.OrientToHubCommand;
+import frc.robot.constants.FlywheelConstants;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
@@ -73,7 +74,9 @@ public class RobotContainer {
 
         leds.setDefaultCommand(
                 leds.run(() -> {
-                    leds.set(turret.isAutoTrackingEnabled() && turret.isOnTarget());
+                    leds.set(turret.isAutoTrackingEnabled() 
+                        && turret.isOnTarget() 
+                        && gameHelpers.isValidShotDistance());
                 }).withName("LEDTurretFeedback"));
 
         autoChooser = AutoBuilder.buildAutoChooser();
@@ -203,18 +206,33 @@ public class RobotContainer {
      * 2. In parallel, wait until the flywheel is at speed, then run the indexer and
      * intake
      * 
+     * Uses either distance-based shooting (dynamic) or static shooting based on
+     * whether turret auto tracking is enabled. If turret tracking is disabled,
+     * positional information cannot be trusted, so static shooting is used.
+     * 
      * @return Command to shoot fuel
      */
     public Command shoot() {
-        return Commands.parallel(
-                // Continuously run the flywheel
+        // Dynamic shooting: uses distance to hub
+        Command dynamicShoot = Commands.parallel(
                 flywheel.shoot(),
-                // Wait for flywheel to reach speed, then feed
                 Commands.sequence(
                         Commands.waitUntil(flywheel::isAtSpeed),
                         Commands.parallel(
                                 indexer.feed(),
-                                intake.intakeForward())))
+                                intake.intakeForward())));
+        // Static shooting: uses fixed RPM and hood angle
+        Command staticShoot = Commands.parallel(
+                flywheel.shoot(FlywheelConstants.STATIC_RPM, FlywheelConstants.STATIC_HOOD_ANGLE),
+                Commands.sequence(
+                        Commands.waitUntil(flywheel::isAtSpeed),
+                        Commands.parallel(
+                                indexer.feed(),
+                                intake.intakeForward())));
+        return Commands.either(
+                dynamicShoot,
+                staticShoot,
+                turret::isAutoTrackingEnabled)
                 .withName("Shoot");
     }
 
