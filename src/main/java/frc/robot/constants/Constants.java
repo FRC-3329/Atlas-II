@@ -10,8 +10,9 @@ import edu.wpi.first.units.measure.Time;
 public class Constants {
     /** Location of hub on the field */
     public static final Translation2d HUB_LOCATION = new Translation2d(
-            0,
-            0);
+            4.624,
+            4.035);
+
     /** 20ms or 50hz */
     public static final Time LOOP_TIME = Seconds.of(0.02);
     /** Max speed of robot in meters per second */

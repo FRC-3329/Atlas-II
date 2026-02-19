@@ -2,7 +2,6 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Meters;
 
 import java.util.function.Supplier;
 
@@ -22,10 +21,8 @@ import static edu.wpi.first.units.Units.Volts;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 import dev.doglog.DogLog;
-import edu.wpi.first.math.interpolation.InterpolatingDoubleTreeMap;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
-import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -33,6 +30,7 @@ import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FlywheelConstants.Flywheel;
 import frc.robot.constants.FlywheelConstants.Hood;
+import frc.robot.utils.ShotParameters;
 
 public class FlywheelSubsystem extends SubsystemBase {
     private final TalonFX left, right, hood;
@@ -40,10 +38,7 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final MotionMagicVelocityVoltage request = new MotionMagicVelocityVoltage(0);
     private final MotionMagicVoltage hoodRequest = new MotionMagicVoltage(0);
 
-    private final InterpolatingDoubleTreeMap flywheelMap;
-    private final InterpolatingDoubleTreeMap hoodMap;
-
-    private final Supplier<Distance> hubDistanceSupplier;
+    private final Supplier<ShotParameters.Parameters> shotParametersSupplier;
 
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
@@ -54,14 +49,14 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
     /**
-     * @param hubDistanceSupplier supplier for the distance to the hub
+     * @param hubDistanceSupplier supplier for the shot parameters for the flywheel
      */
-    public FlywheelSubsystem(Supplier<Distance> hubDistanceSupplier) {
+    public FlywheelSubsystem(Supplier<ShotParameters.Parameters> shotParametersSupplier) {
+        this.shotParametersSupplier = shotParametersSupplier;
         this.left = new TalonFX(Flywheel.LEFT_ID);
         this.right = new TalonFX(Flywheel.RIGHT_ID);
         this.hood = new TalonFX(Hood.HOOD_ID);
         this.spikeDetected = new Trigger(() -> getHoodCurrent() > Hood.ZEROING_CURRENT_THRESHOLD);
-        this.hubDistanceSupplier = hubDistanceSupplier;
 
         // Flywheel config
         TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
@@ -136,18 +131,6 @@ public class FlywheelSubsystem extends SubsystemBase {
         right.optimizeBusUtilization();
         hood.optimizeBusUtilization();
 
-        // Convert distance from hub to RPM
-        flywheelMap = new InterpolatingDoubleTreeMap();
-        // TODO: Fill proper values
-        flywheelMap.put(1.0, 1000.0);
-        flywheelMap.put(2.0, 2000.0);
-
-        // Convert distance from hub to hood position
-        hoodMap = new InterpolatingDoubleTreeMap();
-        // TODO: Fill proper values
-        hoodMap.put(1.0, 0.0);
-        hoodMap.put(2.0, 10.0);
-
         // Change target RPM of motor from Doglog
         DogLog.tunable(
                 (getName() + "/RPMSetPoint"),
@@ -208,19 +191,10 @@ public class FlywheelSubsystem extends SubsystemBase {
     /** Shoot the flywheel at the appropriate speed based on distance to the hub */
     public Command shoot() {
         return this.run(() -> {
-            // Get distance to hub from supplier
-            Distance dist = hubDistanceSupplier.get();
-
-            double rps = flywheelMap.get(dist.in(Meters));
-            double hoodPos = hoodMap.get(dist.in(Meters));
-
-            left.setControl(request.withVelocity(rps));
-            right.setControl(request.withVelocity(rps));
-            hood.setControl(hoodRequest.withPosition(hoodPos));
-
-            DogLog.log(
-                    (getName() + "/DistanceToHub"),
-                    dist);
+            ShotParameters.Parameters params = shotParametersSupplier.get();
+            left.setControl(request.withVelocity(params.flywheelRPS()));
+            right.setControl(request.withVelocity(params.flywheelRPS()));
+            hood.setControl(hoodRequest.withPosition(params.hoodRotations()));
         }).withName("FlywheelShoot");
     }
 
