@@ -39,13 +39,13 @@ public final class TurretConstants {
      * The Y offset in meters from hub center to the top free space when aiming from
      * opponent zone. Positive Y is towards the top of the field.
      */
-    public static final double TOP_FREE_SPACE_Y_OFFSET = 0.5; // meters
+    public static final double TOP_FREE_SPACE_Y_OFFSET = 1.5; // meters
     /**
      * The Y offset in meters from hub center to the bottom free space when aiming
      * from
      * opponent zone. Positive value for offset downward.
      */
-    public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 0.5; // meters
+    public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 1.5; // meters
 
     public static final boolean ENABLE_AUTO_AIM = false;
 

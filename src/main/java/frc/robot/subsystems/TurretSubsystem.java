@@ -4,6 +4,8 @@ import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
+import java.util.function.Supplier;
+
 import com.ctre.phoenix6.SignalLogger;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
@@ -14,8 +16,8 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
@@ -24,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.TurretConstants;
-import frc.robot.utils.GameHelpers;
 
 public class TurretSubsystem extends SubsystemBase {
     private final TalonFX motor;
@@ -32,15 +33,22 @@ public class TurretSubsystem extends SubsystemBase {
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
-    private final SwerveSubsystem swerveSubsystem;
-    private final GameHelpers gameHelpers;
+    private final Supplier<Pose2d> robotPoseSupplier;
+    private final Supplier<Rotation2d> angleGoalSupplier;
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
     private boolean autoTrackingEnabled = false;
 
-    public TurretSubsystem(SwerveSubsystem swerveSubsystem, GameHelpers gameHelpers) {
-        this.swerveSubsystem = swerveSubsystem;
-        this.gameHelpers = gameHelpers;
+    /**
+     * @param robotPoseSupplier A supplier to provide the robot's current pose. The
+     *                          rotation value is used to ensure the turret is
+     *                          facing the correct direction.
+     * @param angleGoalSupplier A supplier to provide the required angle from the
+     *                          field's X axis that the turret should be facing.
+     */
+    public TurretSubsystem(Supplier<Pose2d> robotPoseSupplier, Supplier<Rotation2d> angleGoalSupplier) {
+        this.robotPoseSupplier = robotPoseSupplier;
+        this.angleGoalSupplier = angleGoalSupplier;
 
         motor = new TalonFX(TurretConstants.MOTOR_ID);
 
@@ -222,34 +230,10 @@ public class TurretSubsystem extends SubsystemBase {
             enableAutoTracking();
         }).andThen(this.run(() -> {
             // Determine the field-relative angle to aim at based on robot position
-            Translation2d targetPosition;
-            Translation2d hubPosition = gameHelpers.calculateHubPosition();
-
-            if (gameHelpers.isInOurZone()) {
-                // In our alliance zone - aim directly at hub center
-                targetPosition = hubPosition;
-                DogLog.log((getName() + "/TargetZone"), "OurZone");
-            } else if (gameHelpers.isAboveHub()) {
-                // In opponent zone and above hub - aim at top free space
-                targetPosition = new Translation2d(
-                        hubPosition.getX(),
-                        hubPosition.getY() + TurretConstants.TOP_FREE_SPACE_Y_OFFSET);
-
-                DogLog.log((getName() + "/TargetZone"), "OpponentZoneTop");
-            } else {
-                // In opponent zone and below hub - aim at bottom free space
-                targetPosition = new Translation2d(
-                        hubPosition.getX(),
-                        hubPosition.getY() - TurretConstants.BOTTOM_FREE_SPACE_Y_OFFSET);
-
-                DogLog.log((getName() + "/TargetZone"), "OpponentZoneBottom");
-            }
-
-            Translation2d robotTranslation = swerveSubsystem.getSwerveDrive().getPose().getTranslation();
-            Rotation2d targetFieldAngle = targetPosition.minus(robotTranslation).getAngle();
+            Rotation2d targetFieldAngle = angleGoalSupplier.get();
 
             // Convert field-relative angle to robot-relative angle
-            Rotation2d robotHeading = swerveSubsystem.getSwerveDrive().getPose().getRotation();
+            Rotation2d robotHeading = robotPoseSupplier.get().getRotation();
             Rotation2d turretAngle = targetFieldAngle.minus(robotHeading);
 
             setTargetAngle(Degrees.of(turretAngle.getDegrees()));

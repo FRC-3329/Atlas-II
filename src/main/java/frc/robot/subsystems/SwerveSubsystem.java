@@ -87,6 +87,14 @@ public class SwerveSubsystem extends SubsystemBase {
 		return swerveDrive;
 	}
 
+	public Pose2d getPose() {
+		return swerveDrive.getPose();
+	}
+
+	public ChassisSpeeds getRobotVelocity() {
+		return swerveDrive.getRobotVelocity();
+	}
+
 	/**
 	 * This lets us use cameras (like PV or QN) to correct our position estimate by
 	 * looking at AprilTags.
