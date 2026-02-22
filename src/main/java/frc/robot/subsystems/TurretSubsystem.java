@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.constants.TurretConstants;
+import frc.robot.utils.GameHelpers;
 
 public class TurretSubsystem extends SubsystemBase {
     private final TalonFX motor;
@@ -35,6 +36,7 @@ public class TurretSubsystem extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine;
     private final Supplier<Pose2d> robotPoseSupplier;
     private final Supplier<Rotation2d> angleGoalSupplier;
+    private final GameHelpers gameHelpers;
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
     private boolean autoTrackingEnabled = false;
@@ -45,10 +47,12 @@ public class TurretSubsystem extends SubsystemBase {
      *                          facing the correct direction.
      * @param angleGoalSupplier A supplier to provide the required angle from the
      *                          field's X axis that the turret should be facing.
+     * @param gameHelpers       The game helpers instance for field position calculations
      */
-    public TurretSubsystem(Supplier<Pose2d> robotPoseSupplier, Supplier<Rotation2d> angleGoalSupplier) {
+    public TurretSubsystem(Supplier<Pose2d> robotPoseSupplier, Supplier<Rotation2d> angleGoalSupplier, GameHelpers gameHelpers) {
         this.robotPoseSupplier = robotPoseSupplier;
         this.angleGoalSupplier = angleGoalSupplier;
+        this.gameHelpers = gameHelpers;
 
         motor = new TalonFX(TurretConstants.MOTOR_ID);
 
