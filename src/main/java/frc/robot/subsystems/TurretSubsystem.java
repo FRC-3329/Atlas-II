@@ -260,32 +260,30 @@ public class TurretSubsystem extends SubsystemBase {
         return this.run(() -> {
             motor.set(0);
             DogLog.log((getName() + "/StatorCurrent"), motor.getStatorCurrent().getValue());
-        }).finallyDo(() -> {
-            disableAutoTracking();
         }).withName("TurretStopAutoTracking");
     }
 
     /**
-     * @return Command to move left
+     * @return Command to move left (increases angle - counter-clockwise)
      */
     public Command moveLeft() {
         return this.run(() -> {
-            motor.set(-TurretConstants.MANUAL_SPEED);
+            motor.set(TurretConstants.MANUAL_SPEED);
         }).onlyWhile(() -> {
-            // Only allow moving left if angle is above minimum
-            return getAbsoluteAngle().in(Degrees) > TurretConstants.MIN_ANGLE.in(Degrees);
+            // Only allow moving left if angle is below maximum
+            return getAbsoluteAngle().in(Degrees) < TurretConstants.MAX_ANGLE.in(Degrees);
         }).withName("TurretMoveLeft");
     }
 
     /**
-     * @return Command to move right
+     * @return Command to move right (decreases angle - clockwise)
      */
     public Command moveRight() {
         return this.run(() -> {
-            motor.set(TurretConstants.MANUAL_SPEED);
+            motor.set(-TurretConstants.MANUAL_SPEED);
         }).onlyWhile(() -> {
-            // Only allow moving right if angle is below maximum
-            return getAbsoluteAngle().in(Degrees) < TurretConstants.MAX_ANGLE.in(Degrees);
+            // Only allow moving right if angle is above minimum
+            return getAbsoluteAngle().in(Degrees) > TurretConstants.MIN_ANGLE.in(Degrees);
         }).withName("TurretMoveRight");
     }
 
