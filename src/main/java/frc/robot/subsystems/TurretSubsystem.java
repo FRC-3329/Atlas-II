@@ -77,6 +77,7 @@ public class TurretSubsystem extends SubsystemBase {
 
         motor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         motor.getVelocity().setUpdateFrequency(50);
+        motor.getStatorCurrent().setUpdateFrequency(50); // 50 Hz for stator current monitoring
         motor.optimizeBusUtilization();
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
@@ -259,16 +260,20 @@ public class TurretSubsystem extends SubsystemBase {
             DogLog.log((getName() + "/CalculatedTurretAngle"), turretAngle.getDegrees(), Degrees);
             DogLog.log((getName() + "/InOurZone"), gameHelpers.isInOurZone());
             DogLog.log((getName() + "/AboveHub"), gameHelpers.isAboveHub());
-        })).withName("TurretAutoTrack");
+        })).finallyDo(() -> {
+            disableAutoTracking();
+        }).withName("TurretAutoTrack");
     }
 
     /**
      * @return Command to stop auto-tracking
      */
     public Command stopAutoTracking() {
-        return this.runOnce(() -> {
-            disableAutoTracking();
+        return this.run(() -> {
             motor.set(0);
+            DogLog.log((getName() + "/StatorCurrent"), motor.getStatorCurrent().getValue());
+        }).finallyDo(() -> {
+            disableAutoTracking();
         }).withName("TurretStopAutoTracking");
     }
 
@@ -278,6 +283,9 @@ public class TurretSubsystem extends SubsystemBase {
     public Command moveLeft() {
         return this.run(() -> {
             motor.set(-TurretConstants.MANUAL_SPEED);
+        }).onlyWhile(() -> {
+            // Only allow moving left if angle is above minimum
+            return getAbsoluteAngle().in(Degrees) > TurretConstants.MIN_ANGLE.in(Degrees);
         }).withName("TurretMoveLeft");
     }
 
@@ -287,6 +295,9 @@ public class TurretSubsystem extends SubsystemBase {
     public Command moveRight() {
         return this.run(() -> {
             motor.set(TurretConstants.MANUAL_SPEED);
+        }).onlyWhile(() -> {
+            // Only allow moving right if angle is below maximum
+            return getAbsoluteAngle().in(Degrees) < TurretConstants.MAX_ANGLE.in(Degrees);
         }).withName("TurretMoveRight");
     }
 
@@ -323,7 +334,7 @@ public class TurretSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/OnTarget"), isOnTarget());
         DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
         DogLog.log((getName() + "/MotorOutput"), motor.get());
-        DogLog.log((getName() + "/MotorCurrent"), motor.getSupplyCurrent().getValue());
+        DogLog.log((getName() + "/MotorCurrent"), motor.getStatorCurrent().getValue());
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
             DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
