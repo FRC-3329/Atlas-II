@@ -249,7 +249,6 @@ public class FlywheelSubsystem extends SubsystemBase {
                 .finallyDo(() -> {
                     stopHood();
                     zeroHoodPosition();
-                    DogLog.timestamp(getName() + "/HoodZerod");
                 })
                 // TODO: Tune
                 .withTimeout(7.0)
