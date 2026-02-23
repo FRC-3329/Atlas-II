@@ -13,6 +13,7 @@ import frc.robot.utils.GameHelpers;
 
 import swervelib.SwerveInputStream;
 
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator.NameMatcher;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
@@ -74,9 +75,9 @@ public class RobotContainer {
 
         leds.setDefaultCommand(
                 leds.run(() -> {
-                    leds.set(turret.isAutoTrackingEnabled() 
-                        && turret.isOnTarget() 
-                        && gameHelpers.isValidShotDistance());
+                    leds.set(turret.isAutoTrackingEnabled()
+                            && turret.isOnTarget()
+                            && gameHelpers.isValidShotDistance());
                 }).withName("LEDTurretFeedback"));
 
         autoChooser = AutoBuilder.buildAutoChooser();
@@ -113,6 +114,7 @@ public class RobotContainer {
                         intake.intakeForward())
                         .withName("IntakeGamePiece"));
         NamedCommands.registerCommand("RaiseIntake", intake.raise());
+        NamedCommands.registerCommand("LowerIntake", intake.lower());
         NamedCommands.registerCommand("EjectGamePiece",
                 Commands.parallel(
                         intake.intakeBackward(),
@@ -129,13 +131,10 @@ public class RobotContainer {
         //// === TRIGGERS === ////
         // Left Trigger: Intake
         driverController.leftTrigger(0.5)
-                .whileTrue(Commands.parallel(
-                        intake.lower(),
-                        intake.intakeForward())
-                        .withName("IntakeGamePiece"));
+                .whileTrue(intake.intakeForward());
         // Right Trigger: Shoot
         driverController.rightTrigger(0.5)
-                .whileTrue(shoot().withName("Shoot"));
+                .whileTrue(shoot());
 
         //// === BUMPERS === ////
         // Left Bumper: Align robot to hub
@@ -223,7 +222,7 @@ public class RobotContainer {
                                 intake.intakeForward())));
         // Static shooting: uses fixed RPM and hood angle
         Command staticShoot = Commands.parallel(
-                flywheel.shoot(FlywheelConstants.STATIC_RPM, FlywheelConstants.STATIC_HOOD_ANGLE),
+                flywheel.tunableShoot(),
                 Commands.sequence(
                         Commands.waitUntil(flywheel::isAtSpeed),
                         Commands.parallel(

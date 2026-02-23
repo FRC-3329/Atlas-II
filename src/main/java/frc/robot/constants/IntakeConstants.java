@@ -11,7 +11,7 @@ import edu.wpi.first.units.measure.Angle;
 // TODO: Update values
 public final class IntakeConstants {
     public static final class Pivot {
-        public static final int MOTOR_ID = 0;
+        public static final int MOTOR_ID = 7;
 
         public static final double kP = 0.0;
         public static final double kI = 0.0;
@@ -33,7 +33,7 @@ public final class IntakeConstants {
         /** Up position - perpendicular to ground */
         public static final Angle UP_ANGLE = Degrees.of(90.0);
 
-        public static final int ABSOLUTE_ENCODER_PORT = 0;
+        public static final int ABSOLUTE_ENCODER_PORT = 9;
         /** Offset to zero the absolute encoder */
         public static final Angle ABSOLUTE_ENCODER_OFFSET = Rotations.of(0.0);
 
@@ -44,13 +44,13 @@ public final class IntakeConstants {
     public static final class Roller {
         public static final int MOTOR_ID = 11;
 
-        public static final double INTAKE_VOLTAGE = 4.0; // ~33% output
+        public static final double INTAKE_VOLTAGE = 6.0; // 50% output
         public static final double OUTTAKE_VOLTAGE = -4.0;
 
         public static final double VOLTAGE_COMPENSATION = 12.0;
 
         public static final int CURRENT_LIMIT = 30; // Amps
-        public static final boolean INVERTED = false;
+        public static final boolean INVERTED = true;
         public static final IdleMode IDLE_MODE = IdleMode.kBrake;
     }
 }

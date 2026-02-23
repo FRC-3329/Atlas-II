@@ -8,6 +8,6 @@ public final class IndexerConstants {
     public static final double FEED_VOLTAGE = 3.0;
 
     public static final int CURRENT_LIMIT = 40; // Amps
-    public static final boolean INVERTED = false;
+    public static final boolean INVERTED = true;
     public static final IdleMode IDLE_MODE = IdleMode.kBrake;
 }
