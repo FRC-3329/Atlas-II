@@ -85,6 +85,7 @@ public class TurretSubsystem extends SubsystemBase {
 
         motor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         motor.getVelocity().setUpdateFrequency(50);
+        motor.getStatorCurrent().setUpdateFrequency(50); // 50 Hz for stator current monitoring
         motor.optimizeBusUtilization();
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
@@ -241,34 +242,41 @@ public class TurretSubsystem extends SubsystemBase {
             DogLog.log((getName() + "/TargetFieldAngle"), targetFieldAngle.getDegrees(), Degrees);
             DogLog.log((getName() + "/RobotHeading"), robotHeading.getDegrees(), Degrees);
             DogLog.log((getName() + "/CalculatedTurretAngle"), turretAngle.getDegrees(), Degrees);
-        })).withName("TurretAutoTrack");
+        })).finallyDo(() -> {
+            disableAutoTracking();
+        }).withName("TurretAutoTrack");
     }
 
     /**
      * @return Command to stop auto-tracking
      */
     public Command stopAutoTracking() {
-        return this.runOnce(() -> {
-            disableAutoTracking();
+        return this.run(() -> {
             motor.set(0);
         }).withName("TurretStopAutoTracking");
     }
 
     /**
-     * @return Command to move left
+     * @return Command to move left (increases angle counter-clockwise)
      */
     public Command moveLeft() {
         return this.run(() -> {
-            motor.set(-TurretConstants.MANUAL_SPEED);
+            motor.set(TurretConstants.MANUAL_SPEED);
+        }).onlyWhile(() -> {
+            // Only allow moving left if angle is below maximum
+            return getAbsoluteAngle().lt(TurretConstants.MAX_ANGLE);
         }).withName("TurretMoveLeft");
     }
 
     /**
-     * @return Command to move right
+     * @return Command to move right (decreases angle clockwise)
      */
     public Command moveRight() {
         return this.run(() -> {
-            motor.set(TurretConstants.MANUAL_SPEED);
+            motor.set(-TurretConstants.MANUAL_SPEED);
+        }).onlyWhile(() -> {
+            // Only allow moving right if angle is above minimum
+            return getAbsoluteAngle().gt(TurretConstants.MIN_ANGLE);
         }).withName("TurretMoveRight");
     }
 
@@ -305,7 +313,7 @@ public class TurretSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/OnTarget"), isOnTarget());
         DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
         DogLog.log((getName() + "/MotorOutput"), motor.get());
-        DogLog.log((getName() + "/MotorCurrent"), motor.getSupplyCurrent().getValue());
+        DogLog.log((getName() + "/MotorCurrent"), motor.getStatorCurrent().getValue());
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
             DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
