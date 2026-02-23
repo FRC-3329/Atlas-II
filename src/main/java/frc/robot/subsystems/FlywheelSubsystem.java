@@ -56,7 +56,8 @@ public class FlywheelSubsystem extends SubsystemBase {
         this.left = new TalonFX(Flywheel.LEFT_ID);
         this.right = new TalonFX(Flywheel.RIGHT_ID);
         this.hood = new TalonFX(Hood.HOOD_ID);
-        this.spikeDetected = new Trigger(() -> getHoodCurrent() > Hood.ZEROING_CURRENT_THRESHOLD);
+        this.spikeDetected = new Trigger(() -> getHoodCurrent() > Hood.ZEROING_CURRENT_THRESHOLD)
+                .debounce(Hood.STALL_DEBOUNCE_TIME);
 
         // Flywheel config
         TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
@@ -125,7 +126,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         right.getVelocity().setUpdateFrequency(50);
         hood.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         hood.getVelocity().setUpdateFrequency(50);
-        hood.getSupplyCurrent().setUpdateFrequency(50); // 50 Hz for current monitoring
+        hood.getStatorCurrent().setUpdateFrequency(50); // 50 Hz for stator current monitoring
 
         left.optimizeBusUtilization();
         right.optimizeBusUtilization();
@@ -240,7 +241,10 @@ public class FlywheelSubsystem extends SubsystemBase {
      */
     public Command zeroHood() {
         return this
-                .run(() -> setHoodVoltage(Hood.ZEROING_VOLTAGE))
+                .run(() -> {
+                    setHoodVoltage(Hood.ZEROING_VOLTAGE);
+                    DogLog.log((getName() + "/HoodStatorCurrent"), getHoodCurrent());
+                })
                 .until(spikeDetected)
                 .finallyDo(() -> {
                     stopHood();
@@ -261,12 +265,12 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     /**
-     * Get the hood motor's supply current
+     * Get the hood motor's stator current
      * 
      * @return Current in amps
      */
     public double getHoodCurrent() {
-        return hood.getSupplyCurrent().getValueAsDouble();
+        return hood.getStatorCurrent().getValueAsDouble();
     }
 
     /**
@@ -309,5 +313,9 @@ public class FlywheelSubsystem extends SubsystemBase {
         DogLog.log(
                 (getName() + "/HoodPosition"),
                 hood.getPosition().getValue());
+
+        DogLog.log(
+                (getName() + "/HoodStatorCurrent"),
+                getHoodCurrent());
     }
 }

@@ -56,5 +56,6 @@ public final class FlywheelConstants {
 
         public static final double ZEROING_VOLTAGE = -2.0; // Volts
         public static final double ZEROING_CURRENT_THRESHOLD = 15.0; // Amps
+        public static final double STALL_DEBOUNCE_TIME = 0.2; // Seconds to debounce stall detection
     }
 }

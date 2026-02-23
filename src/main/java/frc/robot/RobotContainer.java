@@ -51,7 +51,7 @@ public class RobotContainer {
     public RobotContainer() {
         gameHelpers = new GameHelpers(drivebase::getPose, drivebase::getRobotVelocity);
         flywheel = new FlywheelSubsystem(gameHelpers::getShotParameters);
-        turret = new TurretSubsystem(drivebase::getPose, gameHelpers::getVirtualTargetFieldAngle, gameHelpers);
+        turret = new TurretSubsystem(drivebase::getPose, gameHelpers::getVirtualTargetFieldAngle);
 
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
 
