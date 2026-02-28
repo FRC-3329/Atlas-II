@@ -23,6 +23,7 @@ import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -74,20 +75,15 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotConfig.MotorOutput.Inverted = IntakeConstants.Pivot.INVERTED;
         pivotConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // 80:1 gearbox into 43:24 belting = 143.333:1
-        pivotConfig.Feedback.SensorToMechanismRatio = 430.0 / 3.0;
+        pivotConfig.Feedback.SensorToMechanismRatio = 4.0 * 5.0 * 43.0 / 24.0;
 
-        pivotMotor.getConfigurator().apply(pivotConfig);
+        pivotMotor.getConfigurator().apply(pivotConfig, 1);
 
         pivotMotor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         pivotMotor.getVelocity().setUpdateFrequency(50);
         pivotMotor.optimizeBusUtilization();
 
         absoluteEncoder = new DutyCycleEncoder(IntakeConstants.Pivot.ABSOLUTE_ENCODER_PORT);
-
-        Angle absoluteAngle = getAbsoluteAngle();
-        pivotMotor.setPosition(absoluteAngle.in(Rotations));
-
         rollerMotor = new SparkMax(IntakeConstants.Roller.MOTOR_ID, MotorType.kBrushless);
 
         // Configure roller motor
@@ -126,6 +122,29 @@ public class IntakeSubsystem extends SubsystemBase {
                     rollerMotor.setVoltage(0);
                 }).andThen(
                         this.idle()));
+
+        pivotMotor.setPosition(IntakeConstants.Pivot.STARTING_ANGLE);
+
+        SmartDashboard.putData("SetPivotUpStartingAngle", setPivotStartingCommand());
+        SmartDashboard.putData("SetPivotDowngAngle", setPivotDownAngleCommand());
+    }
+
+    public Command setPivotStartingCommand() {
+        return this.runOnce(() -> {
+            currentState = IntakeState.UP;
+            pivotMotor.setPosition(IntakeConstants.Pivot.STARTING_ANGLE);
+        })
+                .ignoringDisable(true)
+                .withName("Set Pivot Angle Up");
+    }
+
+    public Command setPivotDownAngleCommand() {
+        return this.runOnce(() -> {
+            currentState = IntakeState.DOWN;
+            pivotMotor.setPosition(IntakeConstants.Pivot.DOWN_ANGLE);
+        })
+                .ignoringDisable(true)
+                .withName("Set Pivot Angle Down");
     }
 
     /**

@@ -10,7 +10,6 @@ import edu.wpi.first.units.measure.AngularVelocity;
 
 public final class FlywheelConstants {
     // Static shooting parameters when not using positional information
-    // TODO: Update values
     public static final AngularVelocity STATIC_RPM = RPM.of(3000.0);
     public static final Angle STATIC_HOOD_ANGLE = Degrees.of(45.0);
 
@@ -18,7 +17,7 @@ public final class FlywheelConstants {
         public static final int LEFT_ID = 2;
         public static final int RIGHT_ID = 1;
 
-        public static final double kP = 0.10937;
+        public static final double kP = 0.5;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
         public static final double kS = 0.11085;
@@ -54,8 +53,8 @@ public final class FlywheelConstants {
         public static final double CURRENT_LIMIT = 25.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
 
-        public static final double ZEROING_VOLTAGE = -2.0; // Volts
-        public static final double ZEROING_CURRENT_THRESHOLD = 15.0; // Amps
-        public static final double STALL_DEBOUNCE_TIME = 0.2; // Seconds to debounce stall detection
+        public static final double ZEROING_VOLTAGE = -0.5; // Volts
+        public static final double ZEROING_CURRENT_THRESHOLD = 5.0; // Amps
+        public static final double STALL_DEBOUNCE_TIME = 0.1; // Seconds to debounce stall detection
     }
 }

@@ -109,10 +109,7 @@ public class RobotContainer {
 
     private void configurePathPlannerCommands() {
         NamedCommands.registerCommand("IntakeGamePiece",
-                Commands.parallel(
-                        intake.lower(),
-                        intake.intakeForward())
-                        .withName("IntakeGamePiece"));
+                intake.intakeForward());
         NamedCommands.registerCommand("RaiseIntake", intake.raise());
         NamedCommands.registerCommand("LowerIntake", intake.lower());
         NamedCommands.registerCommand("EjectGamePiece",

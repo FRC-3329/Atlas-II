@@ -81,7 +81,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
         // 1:2 belting = 0.5 (2x speedup)
-        flywheelConfig.Feedback.SensorToMechanismRatio = 0.5;
+        // flywheelConfig.Feedback.SensorToMechanismRatio = 0.5;
 
         left.getConfigurator().apply(flywheelConfig);
 
@@ -135,7 +135,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         // Change target RPM of motor from Doglog
         DogLog.tunable(
                 (getName() + "/RPMSetPoint"),
-                0.0,
+                750.0,
                 RPM,
                 (angularVelocity) -> {
                     doglogVelocity.mut_replace(angularVelocity, RPM);
@@ -144,7 +144,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         // Change target hood angle from Doglog
         DogLog.tunable(
                 (getName() + "/DegreesSetPoint"),
-                0.0,
+                20.0,
                 Degrees,
                 (angle) -> {
                     doglogAngle.mut_replace(angle, Degrees);
@@ -285,7 +285,9 @@ public class FlywheelSubsystem extends SubsystemBase {
      * Set the hood position to zero
      */
     public void zeroHoodPosition() {
-        hood.setPosition(0.0);
+        // hood.setPosition(0.0);
+        // lol??
+        hood.setPosition(Degrees.of(-2.36));
     }
 
     /**

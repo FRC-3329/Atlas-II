@@ -78,8 +78,8 @@ public class TurretSubsystem extends SubsystemBase {
         config.MotorOutput.Inverted = TurretConstants.INVERTED;
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // 3:1 gearbox into 100:1 main gear = 300:1
-        config.Feedback.SensorToMechanismRatio = 300.0;
+        // 3:1 gearbox into 100:10 main gear = 300:1
+        config.Feedback.SensorToMechanismRatio = 30.0;
 
         motor.getConfigurator().apply(config);
 
@@ -316,7 +316,7 @@ public class TurretSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/MotorCurrent"), motor.getStatorCurrent().getValue());
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
-            DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
+            DogLog.forceNt.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
         }
     }
 }

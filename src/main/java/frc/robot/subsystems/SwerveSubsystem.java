@@ -25,12 +25,15 @@ import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Filesystem;
 
 import swervelib.parser.SwerveParser;
 import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
 import swervelib.math.SwerveMath;
+
+import com.fasterxml.jackson.databind.EnumNamingStrategies.SnakeCaseStrategy;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.commands.PathPlannerAuto;
 import com.pathplanner.lib.config.PIDConstants;
@@ -71,6 +74,9 @@ public class SwerveSubsystem extends SubsystemBase {
 		 */
 		swerveDrive.replaceSwerveModuleFeedforward(
 				new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775));
+
+		swerveDrive.setHeadingCorrection(true);
+		SmartDashboard.putData("ZeroGyro", zeroGyro().withName("Zero Gyro"));
 
 		setupPathPlanner();
 	}
