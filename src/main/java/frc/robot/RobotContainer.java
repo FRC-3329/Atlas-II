@@ -1,5 +1,6 @@
 package frc.robot;
 
+import frc.robot.commands.AutoDriveUnderTrenchCommand;
 import frc.robot.commands.OrientToHubCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
@@ -135,7 +136,9 @@ public class RobotContainer {
         // Left Bumper: Align robot to hub
         driverController.leftBumper()
                 .whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
-        // Right Bumper: Auto drive under trench (Not yet implemented)
+        // Right Bumper: Auto drive under trench
+        driverController.rightBumper()
+                .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
 
         //// === FACE BUTTONS === ////
         // A Button: Out take
@@ -147,7 +150,8 @@ public class RobotContainer {
         // B Button: N/A
         // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
-                .whileTrue(drivebase.lockWheels());
+                // .whileTrue(drivebase.lockWheels());
+                .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
         // Y Button: Auto drive to outpost (Not yet implemented)
 
         //// === D-PAD === ////
