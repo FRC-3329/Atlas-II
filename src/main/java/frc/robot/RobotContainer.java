@@ -150,8 +150,8 @@ public class RobotContainer {
         // B Button: N/A
         // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
-                // .whileTrue(drivebase.lockWheels());
-                .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
+                .whileTrue(drivebase.lockWheels());
+                // .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
         // Y Button: Auto drive to outpost (Not yet implemented)
 
         //// === D-PAD === ////
