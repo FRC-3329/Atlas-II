@@ -177,7 +177,6 @@ public class RobotContainer {
         driverController.back()
                 .onTrue(turret.stopAutoTracking());
 
-        //// === PHASE SHIFT FEEDBACK === ////
         // Vibrate controllers ~4 seconds before a phase shift
         new Trigger(gameHelpers::isPhaseShiftImminent)
                 .onTrue(rumbleControllers(1.0, 1.0));
