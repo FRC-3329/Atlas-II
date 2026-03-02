@@ -8,7 +8,6 @@ import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Angle;
 
-// TODO: Update values
 public final class IntakeConstants {
     public static final class Pivot {
         public static final int MOTOR_ID = 7;
@@ -21,7 +20,6 @@ public final class IntakeConstants {
         public static final double kA = 0.00;
         public static final double kG = 0.24;
         
-        // TODO: Check with CAD
         public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0; // rotations
 
         public static final double CRUISE_VELOCITY = 2.0; // rotations per second
