@@ -2,6 +2,7 @@ package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.Second;
 import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
@@ -38,6 +39,7 @@ public class TurretSubsystem extends SubsystemBase {
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
     private boolean autoTrackingEnabled = false;
+    private int absoluteCount = 0;
 
     /**
      * @param robotPoseSupplier A supplier to provide the robot's current pose. The
@@ -50,12 +52,12 @@ public class TurretSubsystem extends SubsystemBase {
         this.robotPoseSupplier = robotPoseSupplier;
         this.angleGoalSupplier = angleGoalSupplier;
 
-        motor = new TalonFX(TurretConstants.MOTOR_ID);
-
         absoluteEncoder = new AnalogPotentiometer(
                 TurretConstants.ABSOLUTE_ENCODER_CHANNEL,
                 TurretConstants.ABSOLUTE_ENCODER_FULL_RANGE,
                 TurretConstants.ABSOLUTE_ENCODER_OFFSET);
+            
+        motor = new TalonFX(TurretConstants.MOTOR_ID);
 
         // Configure motor
         TalonFXConfiguration config = new TalonFXConfiguration();
@@ -81,18 +83,17 @@ public class TurretSubsystem extends SubsystemBase {
         // 3:1 gearbox into 100:10 main gear = 300:1
         config.Feedback.SensorToMechanismRatio = 30.0;
 
-        motor.getConfigurator().apply(config);
+        motor.getConfigurator().apply(config, 0.2);
 
         motor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         motor.getVelocity().setUpdateFrequency(50);
         motor.getStatorCurrent().setUpdateFrequency(50); // 50 Hz for stator current monitoring
-        motor.optimizeBusUtilization();
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
             double absoluteAngleDegrees = absoluteEncoder.get();
             double absoluteAngleRotations = Units.degreesToRotations(absoluteAngleDegrees);
 
-            motor.setPosition(absoluteAngleRotations);
+            motor.setPosition(absoluteAngleRotations, 1);
 
             DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
             DogLog.log((getName() + "/InitialAbsoluteAngle"), absoluteAngleDegrees, Degrees);
@@ -120,8 +121,8 @@ public class TurretSubsystem extends SubsystemBase {
         // SysID config for characterization
         sysIdRoutine = new SysIdRoutine(
                 new SysIdRoutine.Config(
-                        null,
-                        Volts.of(4),
+                        Volts.of(0.5).per(Second),
+                        Volts.of(1.5),
                         null,
                         (state) -> {
                             SignalLogger.writeString("turret-state", state.toString());
@@ -132,6 +133,8 @@ public class TurretSubsystem extends SubsystemBase {
                         },
                         null,
                         this));
+
+        motor.optimizeBusUtilization();
     }
 
     /**
@@ -229,11 +232,16 @@ public class TurretSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             enableAutoTracking();
         }).andThen(this.run(() -> {
+            if (absoluteCount++ > 100) {
+                motor.setPosition(getAbsoluteAngle());
+                absoluteCount = 0;
+            }
+
             // Determine the field-relative angle to aim at based on robot position
             Rotation2d targetFieldAngle = angleGoalSupplier.get();
 
             // Convert field-relative angle to robot-relative angle
-            Rotation2d robotHeading = robotPoseSupplier.get().getRotation();
+            Rotation2d robotHeading = robotPoseSupplier.get().getRotation().plus(Rotation2d.k180deg);
             Rotation2d turretAngle = targetFieldAngle.minus(robotHeading);
 
             setTargetAngle(Degrees.of(turretAngle.getDegrees()));
@@ -294,7 +302,8 @@ public class TurretSubsystem extends SubsystemBase {
      * @return Command to move the turret to the current DogLog angle setpoint
      */
     public Command moveToDogLogAngle() {
-        return moveToAngle(doglogAngle).withName("TurretMoveToDogLogAngle");
+        return moveToAngle(doglogAngle).finallyDo(() -> motor.stopMotor())
+        .withName("TurretMoveToDogLogAngle");
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

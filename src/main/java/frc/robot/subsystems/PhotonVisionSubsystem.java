@@ -24,6 +24,7 @@ import edu.wpi.first.networktables.StructPublisher;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
 public class PhotonVisionSubsystem extends SubsystemBase {
 	private final String cameraName;
@@ -54,6 +55,11 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 		photonEstimator = new PhotonPoseEstimator(
 				PVConstants.kTagLayout,
 				robotToCamera);
+
+		camera.setFPSLimit(2);
+		RobotModeTriggers.disabled()
+				.onTrue(runOnce(() -> camera.setFPSLimit(2)).ignoringDisable(true))
+				.onFalse(runOnce(() -> camera.setFPSLimit(0)));
 	}
 
 	/**
@@ -141,7 +147,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 			visionEst = photonEstimator.estimateCoprocMultiTagPose(change);
 
 			if (visionEst.isEmpty()) {
-				visionEst = photonEstimator.estimateLowestAmbiguityPose(change);
+				// visionEst = photonEstimator.estimateLowestAmbiguityPose(change);
 			}
 
 			updateEstimationStdDevs(visionEst, change.getTargets());

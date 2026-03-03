@@ -39,6 +39,8 @@ public final class IntakeConstants {
 
         public static final double CURRENT_LIMIT = 40.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
+
+        public static final Angle KICK_ANGLE = Degrees.of(40.0);
     }
 
     public static final class Roller {

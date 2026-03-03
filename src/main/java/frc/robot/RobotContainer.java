@@ -3,10 +3,12 @@ package frc.robot;
 import frc.robot.commands.AutoDriveUnderTrenchCommand;
 import frc.robot.commands.OrientToHubCommand;
 import frc.robot.constants.OperatorConstants;
+import frc.robot.constants.PVConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LEDsSubsystem;
+import frc.robot.subsystems.PhotonVisionSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
 import frc.robot.utils.GameHelpers;
@@ -30,6 +32,14 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
+    private final PhotonVisionSubsystem blueCam = new PhotonVisionSubsystem("blue_cam",
+            PVConstants.BLUE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem orangeCam = new PhotonVisionSubsystem("orange_cam",
+            PVConstants.ORANGE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem yellowCam = new PhotonVisionSubsystem("yellow_cam",
+            PVConstants.YELLOW_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem redCam = new PhotonVisionSubsystem("red_cam",
+            PVConstants.RED_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     private final GameHelpers gameHelpers;
     private final FlywheelSubsystem flywheel;
     private final IndexerSubsystem indexer = new IndexerSubsystem();
@@ -84,6 +94,11 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Chooser", autoChooser);
         autoChooser.setDefaultOption("None", Commands.none());
 
+        autoChooser.addOption("Shoot in Place", Commands.parallel(
+                flywheel.zeroHood().alongWith(intake.lower())
+                        .andThen(flywheel.shoot().withTimeout(6.0)),
+                turret.autoTrack()));
+
         configurePathPlannerCommands();
         configureBindings();
     }
@@ -115,7 +130,7 @@ public class RobotContainer {
         NamedCommands.registerCommand("EjectGamePiece",
                 Commands.parallel(
                         intake.intakeBackward(),
-                        indexer.feed())
+                        indexer.feedBackwards())
                         .withName("EjectGamePiece"));
         NamedCommands.registerCommand("Shoot", shoot());
         NamedCommands.registerCommand("ShootWithAutoTrack",
@@ -144,15 +159,12 @@ public class RobotContainer {
         //// === FACE BUTTONS === ////
         // A Button: Out take
         driverController.a()
-                .whileTrue(Commands.parallel(
-                        intake.intakeBackward(),
-                        indexer.feed())
-                        .withName("OutTake"));
+                .whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward())
+                        .withName("IntakeIndexerBackwards"));
         // B Button: N/A
         // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
-                .whileTrue(drivebase.lockWheels());
-                // .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
+                .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
         // Y Button: Auto drive to outpost (Not yet implemented)
 
         //// === D-PAD === ////
@@ -172,7 +184,7 @@ public class RobotContainer {
         //// === MENU BUTTONS === ////
         // Start: Start auto turret tracking
         driverController.start()
-                .whileTrue(turret.autoTrack());
+                .onTrue(turret.autoTrack());
         // Back: Stop auto turret tracking
         driverController.back()
                 .onTrue(turret.stopAutoTracking());
@@ -216,27 +228,10 @@ public class RobotContainer {
      * @return Command to shoot fuel
      */
     public Command shoot() {
-        // Dynamic shooting: uses distance to hub
-        Command dynamicShoot = Commands.parallel(
-                flywheel.shoot(),
-                Commands.sequence(
-                        Commands.waitUntil(flywheel::isAtSpeed),
-                        Commands.parallel(
-                                indexer.feed(),
-                                intake.intakeForward())));
-        // Static shooting: uses fixed RPM and hood angle
-        Command staticShoot = Commands.parallel(
-                flywheel.tunableShoot(),
-                Commands.sequence(
-                        Commands.waitUntil(flywheel::isAtSpeed),
-                        Commands.parallel(
-                                indexer.feed(),
-                                intake.intakeForward())));
-        return Commands.either(
-                dynamicShoot,
-                staticShoot,
-                turret::isAutoTrackingEnabled)
-                .withName("Shoot");
+        return Commands.parallel(
+                Commands.either(flywheel.shoot(), flywheel.tunableShoot(), turret::isAutoTrackingEnabled),
+                Commands.waitUntil(flywheel::isAtSpeed).withTimeout(0.4)
+                        .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));
     }
 
     /**

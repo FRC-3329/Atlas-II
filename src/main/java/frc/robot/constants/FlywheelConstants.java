@@ -9,7 +9,6 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 
 public final class FlywheelConstants {
-    // Static shooting parameters when not using positional information
     public static final AngularVelocity STATIC_RPM = RPM.of(3000.0);
     public static final Angle STATIC_HOOD_ANGLE = Degrees.of(45.0);
 
