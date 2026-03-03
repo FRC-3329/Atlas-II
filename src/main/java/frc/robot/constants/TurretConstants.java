@@ -6,19 +6,18 @@ import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.units.measure.Angle;
 
-// TODO: Update values
 public final class TurretConstants {
     public static final int MOTOR_ID = 4;
 
-    public static final double kP = 0.0;
+    public static final double kP = 79.6;
     public static final double kI = 0.0;
-    public static final double kD = 0.0;
-    public static final double kS = 0.0;
-    public static final double kV = 0.0;
-    public static final double kA = 0.0;
+    public static final double kD = 3.8253;
+    public static final double kS = 0.10193;
+    public static final double kV = 3.5;
+    public static final double kA = 0.12559;
 
-    public static final double CRUISE_VELOCITY = 0.0; // rotations per second
-    public static final double ACCELERATION = 0.0; // rotations per second squared
+    public static final double CRUISE_VELOCITY = 10.0; // rotations per second
+    public static final double ACCELERATION = 3.0; // rotations per second squared
     public static final double JERK = 0.0; // rotations per second cubed
 
     public static final Angle MIN_ANGLE = Degrees.of(-60.0);
@@ -34,20 +33,10 @@ public final class TurretConstants {
     public static final double ABSOLUTE_ENCODER_OFFSET = -180.0; // Offset in degrees
     public static final boolean USE_ABSOLUTE_ENCODER = true;
 
-    /**
-     * The Y offset in meters from hub center to the top free space when aiming from
-     * opponent zone. Positive Y is towards the top of the field.
-     */
     public static final double TOP_FREE_SPACE_Y_OFFSET = 1.5; // meters
-    /**
-     * The Y offset in meters from hub center to the bottom free space when aiming
-     * from
-     * opponent zone. Positive value for offset downward.
-     */
     public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 1.5; // meters
 
     public static final boolean ENABLE_AUTO_AIM = false;
 
-    /** Tolerance in degrees for LED feedback when turret is on target. */
     public static final double LED_TOLERANCE_DEGREES = 2.0;
 }

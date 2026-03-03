@@ -1,6 +1,8 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Degrees;
 
 import java.util.function.Supplier;
@@ -196,6 +198,9 @@ public class FlywheelSubsystem extends SubsystemBase {
             left.setControl(request.withVelocity(params.flywheelRPS()));
             right.setControl(request.withVelocity(params.flywheelRPS()));
             hood.setControl(hoodRequest.withPosition(params.hoodRotations()));
+
+            DogLog.log(getName() + "/AngularVelocitySetPoint", params.flywheelRPS(), RotationsPerSecond);
+            DogLog.log(getName() + "/AngularSetPoint", params.hoodRotations(), Rotations);
         }).withName("FlywheelShoot");
     }
 

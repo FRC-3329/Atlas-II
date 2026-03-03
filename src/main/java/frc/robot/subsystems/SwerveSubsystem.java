@@ -71,10 +71,10 @@ public class SwerveSubsystem extends SubsystemBase {
 		 * kV = voltage per unit velocity (2.68855V per m/s)
 		 * kA = voltage per unit acceleration (0.2266775V per m/s^2)
 		 */
-		swerveDrive.replaceSwerveModuleFeedforward(
-				new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775));
+		// swerveDrive.replaceSwerveModuleFeedforward(
+		// new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775));
 
-		swerveDrive.setHeadingCorrection(true);
+		// swerveDrive.setHeadingCorrection(true);
 		SmartDashboard.putData("ZeroGyro", zeroGyro().withName("Zero Gyro"));
 
 		setupPathPlanner();
@@ -246,7 +246,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		RobotConfig config;
 		try {
 			config = RobotConfig.fromGUISettings();
-			final boolean enableFeedforward = true;
+			final boolean enableFeedforward = false;
 
 			AutoBuilder.configure(
 					swerveDrive::getPose, // Supplier for current robot pose
