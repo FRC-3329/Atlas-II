@@ -251,6 +251,38 @@ public class GameHelpers extends SubsystemBase {
             && distanceToHub <= Constants.MAX_SHOT_DISTANCE;
     }
 
+    /**
+     * Teleop match time counts down from ~135 to 0.
+     * Phase shift boundaries are at 130, 105, 80, 55, and 30 seconds.
+     * 
+     * @return seconds remaining in the current shift
+     */
+    public int timeLeftInShiftSeconds() {
+        double currentMatchTime = DriverStation.getMatchTime();
+
+        if (currentMatchTime >= 130) {
+            return (int) (currentMatchTime - 130);
+        } else if (currentMatchTime >= 105) {
+            return (int) (currentMatchTime - 105);
+        } else if (currentMatchTime >= 80) {
+            return (int) (currentMatchTime - 80);
+        } else if (currentMatchTime >= 55) {
+            return (int) (currentMatchTime - 55);
+        } else if (currentMatchTime >= 30) {
+            return (int) (currentMatchTime - 30);
+        } else {
+            return (int) currentMatchTime;
+        }
+    }
+
+    /**
+     * @return true if a phase shift is about to happen within the next 4 seconds
+     */
+    public boolean isPhaseShiftImminent() {
+        int timeLeft = timeLeftInShiftSeconds();
+        return timeLeft <= 4 && timeLeft > 0;
+    }
+
     @Override
     public void periodic() {
         // calculate proper target so we don't fire at the hub if we are not in our zone
@@ -312,5 +344,8 @@ public class GameHelpers extends SubsystemBase {
         DogLog.log((getName() + "/VirtualTargetPosition"),
                 new Pose2d(virtualTargetTranslation, virtualTargetFieldAngle));
         DogLog.log((getName() + "/FutureRobotPosition"), shot.futureRobotPose());
+        DogLog.forceNt.log((getName() + "/ShiftTimeLeft"), timeLeftInShiftSeconds());
+        DogLog.forceNt.log((getName() + "/IsAllianceGoalActive"), isAllianceGoalActive());
+        DogLog.forceNt.log((getName() + "/PhaseShiftImminent"), isPhaseShiftImminent());
     }
 }

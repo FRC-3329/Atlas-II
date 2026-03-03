@@ -25,6 +25,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class RobotContainer {
     // Subsystems
@@ -175,6 +176,10 @@ public class RobotContainer {
         // Back: Stop auto turret tracking
         driverController.back()
                 .onTrue(turret.stopAutoTracking());
+
+        // Vibrate controllers ~4 seconds before a phase shift
+        new Trigger(gameHelpers::isPhaseShiftImminent)
+                .onTrue(rumbleControllers(1.0, 1.0));
     }
 
     public void setMotorBrake(boolean brake) {
