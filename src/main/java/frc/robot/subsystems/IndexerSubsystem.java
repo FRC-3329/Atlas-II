@@ -74,6 +74,10 @@ public class IndexerSubsystem extends SubsystemBase {
                 feedBackwards().withTimeout(IndexerConstants.SMART_REVERSAL_TIME)).withName("IndexerSmartFeed");
     }
 
+    public Command stop() {
+        return this.runOnce(() -> motor.stopMotor());
+    }
+
     @Override
     public void periodic() {
         DogLog.log(getName() + "/Current", motor.getOutputCurrent(), Amps);

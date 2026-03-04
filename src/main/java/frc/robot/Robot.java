@@ -49,10 +49,6 @@ public class Robot extends TimedRobot {
         if (m_autonomousCommand != null) {
             CommandScheduler.getInstance().schedule(m_autonomousCommand);
         }
-
-        if (TurretConstants.ENABLE_AUTO_AIM) {
-            CommandScheduler.getInstance().schedule(m_robotContainer.getTurretAutoTrack());
-        }
     }
 
     @Override
@@ -65,7 +61,7 @@ public class Robot extends TimedRobot {
             m_autonomousCommand.cancel();
         }
 
-        if (TurretConstants.ENABLE_AUTO_AIM) {
+        if (DriverStation.isFMSAttached() || TurretConstants.ENABLE_AUTO_AIM) {
             CommandScheduler.getInstance().schedule(m_robotContainer.getTurretAutoTrack());
         }
     }

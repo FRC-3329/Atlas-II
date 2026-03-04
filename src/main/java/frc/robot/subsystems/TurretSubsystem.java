@@ -56,7 +56,7 @@ public class TurretSubsystem extends SubsystemBase {
                 TurretConstants.ABSOLUTE_ENCODER_CHANNEL,
                 TurretConstants.ABSOLUTE_ENCODER_FULL_RANGE,
                 TurretConstants.ABSOLUTE_ENCODER_OFFSET);
-            
+
         motor = new TalonFX(TurretConstants.MOTOR_ID);
 
         // Configure motor
@@ -259,7 +259,7 @@ public class TurretSubsystem extends SubsystemBase {
      * @return Command to stop auto-tracking
      */
     public Command stopAutoTracking() {
-        return this.run(() -> {
+        return this.runOnce(() -> {
             motor.set(0);
         }).withName("TurretStopAutoTracking");
     }
@@ -303,7 +303,7 @@ public class TurretSubsystem extends SubsystemBase {
      */
     public Command moveToDogLogAngle() {
         return moveToAngle(doglogAngle).finallyDo(() -> motor.stopMotor())
-        .withName("TurretMoveToDogLogAngle");
+                .withName("TurretMoveToDogLogAngle");
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {

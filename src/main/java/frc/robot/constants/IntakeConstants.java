@@ -47,7 +47,7 @@ public final class IntakeConstants {
         public static final int MOTOR_ID = 11;
 
         public static final double INTAKE_VOLTAGE = 9.0; // 75% output
-        public static final double OUTTAKE_VOLTAGE = -4.0;
+        public static final double OUTTAKE_VOLTAGE = -9.0;
 
         public static final double VOLTAGE_COMPENSATION = 12.0;
 

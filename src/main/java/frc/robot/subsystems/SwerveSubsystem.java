@@ -14,7 +14,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.controller.SimpleMotorFeedforward;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -72,7 +71,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		 * kA = voltage per unit acceleration (0.2266775V per m/s^2)
 		 */
 		// swerveDrive.replaceSwerveModuleFeedforward(
-		// new SimpleMotorFeedforward(0.0846525, 2.68855, 0.2266775));
+		// 		new SimpleMotorFeedforward(0.23744, 0.23744, 0.50467));
 
 		// swerveDrive.setHeadingCorrection(true);
 		SmartDashboard.putData("ZeroGyro", zeroGyro().withName("Zero Gyro"));
@@ -238,7 +237,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		return SwerveDriveTest.generateSysIdCommand(
 				SwerveDriveTest.setDriveSysIdRoutine(
 						new SysIdRoutine.Config(), this, swerveDrive,
-						12, true),
+						12, false),
 				3, 4, 1.5);
 	}
 
@@ -246,7 +245,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		RobotConfig config;
 		try {
 			config = RobotConfig.fromGUISettings();
-			final boolean enableFeedforward = false;
+			final boolean enableFeedforward = true;
 
 			AutoBuilder.configure(
 					swerveDrive::getPose, // Supplier for current robot pose
@@ -263,8 +262,8 @@ public class SwerveSubsystem extends SubsystemBase {
 						}
 					},
 					new PPHolonomicDriveController(
-							new PIDConstants(3.0, 0.0, 0.1), // Translation
-							new PIDConstants(3.0, 0.0, 0.1) // Rotation
+							new PIDConstants(4.5, 0.0, 0.2), // Translation
+							new PIDConstants(4.5, 0.0, 0.2) // Rotation
 					),
 					config,
 					() -> {

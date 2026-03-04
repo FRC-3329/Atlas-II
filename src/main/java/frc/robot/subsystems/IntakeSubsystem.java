@@ -126,7 +126,7 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotor.setPosition(IntakeConstants.Pivot.STARTING_ANGLE);
 
         SmartDashboard.putData("SetPivotUpStartingAngle", setPivotStartingCommand());
-        SmartDashboard.putData("SetPivotDowngAngle", setPivotDownAngleCommand());
+        SmartDashboard.putData("SetPivotDownAngle", setPivotDownAngleCommand());
     }
 
     public Command setPivotStartingCommand() {
@@ -296,6 +296,13 @@ public class IntakeSubsystem extends SubsystemBase {
     private void disablePivotPID() {
         pivotMotor.setControl(pivotDisableRequest);
         pivotPIDEnabled = false;
+    }
+
+    public Command stop() {
+        return this.runOnce(() -> {
+            pivotMotor.stopMotor();
+            rollerMotor.stopMotor();
+        });
     }
 
     @Override

@@ -27,6 +27,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
@@ -177,6 +178,8 @@ public class FlywheelSubsystem extends SubsystemBase {
                         },
                         null,
                         this));
+
+        SmartDashboard.putData("ZeroHood", zeroHood());
     }
 
     /**
@@ -216,6 +219,13 @@ public class FlywheelSubsystem extends SubsystemBase {
             right.setControl(request.withVelocity(rpm));
             hood.setControl(hoodRequest.withPosition(angle));
         }).withName("FlywheelShootFixed");
+    }
+
+    public Command stop() {
+        return this.runOnce(() -> {
+            left.stopMotor();
+            right.stopMotor();
+        });
     }
 
     /**

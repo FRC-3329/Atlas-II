@@ -3,6 +3,8 @@ package frc.robot.utils;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.Meters;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Rotations;
+import static edu.wpi.first.units.Units.RotationsPerSecond;
 import static edu.wpi.first.units.Units.Seconds;
 
 import edu.wpi.first.math.MathUtil;
@@ -18,9 +20,11 @@ import edu.wpi.first.units.measure.Time;
 // https://github.com/TechnoTitans/TitanWare2024/blob/master/src/main/java/frc/robot/subsystems/superstructure/ShootOnTheMove.java
 public class ShotParameters {
     /** The parameters we characterize for each distance key in the map */
-    public record Parameters(double flywheelRPS, double hoodRotations, double tofSeconds) implements Interpolatable<Parameters> {
+    public record Parameters(double flywheelRPS, double hoodRotations, double tofSeconds)
+            implements Interpolatable<Parameters> {
+
         public Parameters(AngularVelocity flywheelAngularVelocity, Angle hoodAngle, Time tof) {
-            this(flywheelAngularVelocity.in(RPM), hoodAngle.in(Degrees), tof.in(Seconds));
+            this(flywheelAngularVelocity.in(RotationsPerSecond), hoodAngle.in(Rotations), tof.in(Seconds));
         }
 
         @Override
@@ -58,6 +62,7 @@ public class ShotParameters {
         map.put(4.25, new Parameters(RPM.of(1850), Degrees.of(15), Seconds.of(1.11)));
         map.put(1.96, new Parameters(RPM.of(1400), Degrees.of(5), Seconds.of(0.86)));
         map.put(3.9, new Parameters(RPM.of(1650), Degrees.of(10), Seconds.of(1.05)));
+        map.put(2.79, new Parameters(RPM.of(1525), Degrees.of(7.5), Seconds.of(0.97)));
     }
 
 }

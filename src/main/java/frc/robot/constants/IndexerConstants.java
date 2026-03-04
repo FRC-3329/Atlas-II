@@ -11,6 +11,6 @@ public final class IndexerConstants {
     public static final boolean INVERTED = true;
     public static final IdleMode IDLE_MODE = IdleMode.kBrake;
 
-    public static final double CURRENT_STALL_TIME = 0.3; // seconds
+    public static final double CURRENT_STALL_TIME = 0.5; // seconds
     public static final double SMART_REVERSAL_TIME = 0.2; // seconds
 }

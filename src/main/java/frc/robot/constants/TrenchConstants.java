@@ -12,8 +12,8 @@ public final class TrenchConstants {
     public static final String PATH_C = "Trench C";
     public static final String PATH_D = "Trench D";
 
-    public static final double MAX_VELOCITY = 2.0; // m/s
-    public static final double MAX_ACCELERATION = 1.5; // m/s^2
+    public static final double MAX_VELOCITY = 1.0; // m/s
+    public static final double MAX_ACCELERATION = 0.5; // m/s^2
     public static final double MAX_ANGULAR_VELOCITY = 540.0; // deg/s
     public static final double MAX_ANGULAR_ACCELERATION = 720.0; // deg/s^2
 }

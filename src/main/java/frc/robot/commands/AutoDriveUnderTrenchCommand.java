@@ -30,7 +30,7 @@ public class AutoDriveUnderTrenchCommand extends Command {
     private final PathConstraints pathfindingConstraints;
 
     private Command drivingCommand;
-    private Command zeroHoodCommand;
+    // private Command zeroHoodCommand;
 
     /**
      * @param swerveSubsystem   the swerve drive subsystem
@@ -57,7 +57,7 @@ public class AutoDriveUnderTrenchCommand extends Command {
             DogLog.log("ADUT/Status", "Unable to determine path (no alliance data)");
 
             drivingCommand = Commands.none();
-            zeroHoodCommand = Commands.none();
+            // zeroHoodCommand = Commands.none();
         } else {
             try {
                 PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
@@ -82,33 +82,33 @@ public class AutoDriveUnderTrenchCommand extends Command {
                         AutoBuilder.pathfindToPose(startPose, pathfindingConstraints),
                         AutoBuilder.followPath(path));
 
-                zeroHoodCommand = flywheelSubsystem.zeroHood();
+                // zeroHoodCommand = flywheelSubsystem.zeroHood();
             } catch (Exception e) {
                 DogLog.log("ADUT/Status", "Failed to load path " + pathName + ": " + e.getMessage());
                 DriverStation.reportError("ADUT: Failed to load path " + pathName, e.getStackTrace());
 
                 drivingCommand = Commands.none();
-                zeroHoodCommand = Commands.none();
+                // zeroHoodCommand = Commands.none();
             }
         }
 
         drivingCommand.initialize();
-        zeroHoodCommand.initialize();
+        // zeroHoodCommand.initialize();
     }
 
     @Override
     public void execute() {
         drivingCommand.execute();
 
-        if (!zeroHoodCommand.isFinished()) {
-            zeroHoodCommand.execute();
-        }
+        // if (!zeroHoodCommand.isFinished()) {
+        // zeroHoodCommand.execute();
+        // } this needs to end the zero hood command once it is finished
     }
 
     @Override
     public void end(boolean interrupted) {
         drivingCommand.end(interrupted);
-        zeroHoodCommand.end(interrupted);
+        // zeroHoodCommand.end(interrupted);
 
         swerveSubsystem.getSwerveDrive().field.getObject("TrenchPath").setPoses();
     }
@@ -134,7 +134,7 @@ public class AutoDriveUnderTrenchCommand extends Command {
         if (isRed) {
             Translation2d flippedRobotPos = FlippingUtil.flipFieldPosition(
                     new Translation2d(robotX, robotY));
-            
+
             robotX = flippedRobotPos.getX();
             robotY = flippedRobotPos.getY();
         }
