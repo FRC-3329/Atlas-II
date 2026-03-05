@@ -12,6 +12,7 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,10 +20,6 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
-import edu.wpi.first.networktables.NetworkTableInstance;
-import edu.wpi.first.networktables.StructPublisher;
-import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
@@ -31,9 +28,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 	private final PhotonCamera camera;
 	private final PhotonPoseEstimator photonEstimator;
 	private final EstimateConsumer estConsumer;
-	private final Alert cameraDisconnectedAlert;
-
-	private final StructPublisher<Pose2d> publisherRaw;
+	private final String logName;
 
 	private Matrix<N3, N1> curStdDevs;
 
@@ -47,18 +42,14 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 		this.estConsumer = estConsumer;
 
 		camera = new PhotonCamera(cameraName);
-		cameraDisconnectedAlert = new Alert("photonvision", cameraName + " Not Connected :(", AlertType.kError);
-		publisherRaw = NetworkTableInstance
-				.getDefault()
-				.getStructTopic("photonvision/" + cameraName + "/WorldPoseRaw", Pose2d.struct)
-				.publish();
+		logName = "PV/" + cameraName + "/";
 		photonEstimator = new PhotonPoseEstimator(
 				PVConstants.kTagLayout,
 				robotToCamera);
 
 		camera.setFPSLimit(2);
 		RobotModeTriggers.disabled()
-				.onTrue(runOnce(() -> camera.setFPSLimit(2)).ignoringDisable(true))
+				.onTrue(runOnce(() -> camera.setFPSLimit(4)).ignoringDisable(true))
 				.onFalse(runOnce(() -> camera.setFPSLimit(0)));
 	}
 
@@ -139,7 +130,11 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		cameraDisconnectedAlert.set(!camera.isConnected());
+		if (camera.isConnected()) {
+			DogLog.clearFault(cameraName);
+		} else {
+			DogLog.logFault(cameraName);
+		}
 
 		Optional<EstimatedRobotPose> visionEst = Optional.empty();
 		for (PhotonPipelineResult change : camera.getAllUnreadResults()) {
@@ -154,7 +149,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 			visionEst.ifPresent(est -> {
 				Pose2d pose2d = est.estimatedPose.toPose2d();
-				publisherRaw.accept(pose2d);
+				DogLog.log(logName + "pose", pose2d);
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs();
 				estConsumer.accept(
 						est.estimatedPose, est.timestampSeconds, estStdDevs);

@@ -4,6 +4,8 @@ import com.pathplanner.lib.commands.FollowPathCommand;
 import com.pathplanner.lib.pathfinding.LocalADStar;
 import com.pathplanner.lib.pathfinding.Pathfinding;
 
+import dev.doglog.DogLog;
+import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.TimedRobot;
@@ -28,6 +30,7 @@ public class Robot extends TimedRobot {
     public void robotInit() {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
+        DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
         Pathfinding.setPathfinder(new LocalADStar());
         CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     }

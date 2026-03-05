@@ -8,27 +8,32 @@
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.2840836651310763,
-        "y": 4.244810351084775
+        "x": 2.588576267574118,
+        "y": 4.0487899782329455
       },
       "isLocked": false,
       "linkedName": "Center Start"
     },
     {
       "anchor": {
-        "x": 2.95,
+        "x": 2.8455926724137934,
         "y": 4.035
       },
       "prevControl": {
-        "x": 3.6741001775516398,
-        "y": 4.222852403938671
+        "x": 3.3322514137481574,
+        "y": 4.010139040590605
       },
       "nextControl": null,
       "isLocked": false,
       "linkedName": "Center Shoot"
     }
   ],
-  "rotationTargets": [],
+  "rotationTargets": [
+    {
+      "waypointRelativePos": 0.7279874213836485,
+      "rotationDegrees": 0.0
+    }
+  ],
   "constraintZones": [],
   "pointTowardsZones": [],
   "eventMarkers": [],
@@ -42,7 +47,7 @@
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": 125.00000000000001
+    "rotation": 180.0
   },
   "reversed": false,
   "folder": null,

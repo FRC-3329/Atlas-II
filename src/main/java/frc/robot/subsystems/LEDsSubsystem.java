@@ -1,5 +1,6 @@
 package frc.robot.subsystems;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -9,6 +10,8 @@ public class LEDsSubsystem extends SubsystemBase {
     public LEDsSubsystem() {
         pdh = new PowerDistribution();
         pdh.clearStickyFaults();
+
+        DogLog.setPdh(pdh);
     }
 
     /**

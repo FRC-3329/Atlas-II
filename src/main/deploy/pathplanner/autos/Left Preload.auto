@@ -3,7 +3,63 @@
   "command": {
     "type": "sequential",
     "data": {
-      "commands": []
+      "commands": [
+        {
+          "type": "path",
+          "data": {
+            "pathName": "Left Start to Left Shoot"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "LowerIntake"
+          }
+        },
+        {
+          "type": "race",
+          "data": {
+            "commands": [
+              {
+                "type": "named",
+                "data": {
+                  "name": "AutoTrackTurret"
+                }
+              },
+              {
+                "type": "named",
+                "data": {
+                  "name": "Shoot"
+                }
+              },
+              {
+                "type": "wait",
+                "data": {
+                  "waitTime": 15.0
+                }
+              }
+            ]
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopFlywheel"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIndexer"
+          }
+        },
+        {
+          "type": "named",
+          "data": {
+            "name": "StopIntake"
+          }
+        }
+      ]
     }
   },
   "resetOdom": false,
