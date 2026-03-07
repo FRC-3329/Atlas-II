@@ -265,6 +265,7 @@ public class FlywheelSubsystem extends SubsystemBase {
                     stopHood();
                     zeroHoodPosition();
                 })
+                // TODO: Tune
                 .withTimeout(7.0)
                 .withName("ZeroHoodFlywheelCommand");
     }

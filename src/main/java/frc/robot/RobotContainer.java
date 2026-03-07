@@ -32,19 +32,24 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
-    private final PhotonVisionSubsystem blueCam = new PhotonVisionSubsystem("blue_cam",
-            PVConstants.BLUE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
-    private final PhotonVisionSubsystem orangeCam = new PhotonVisionSubsystem("orange_cam",
-            PVConstants.ORANGE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
-    private final PhotonVisionSubsystem yellowCam = new PhotonVisionSubsystem("yellow_cam",
+    // private final PhotonVisionSubsystem blueCam = new
+    // PhotonVisionSubsystem("blue_cam",
+    // PVConstants.BLUE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    // private final PhotonVisionSubsystem orangeCam = new
+    // PhotonVisionSubsystem("orange_cam",
+    // PVConstants.ORANGE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    @SuppressWarnings("unused")
+    private final PhotonVisionSubsystem yellowCam = new PhotonVisionSubsystem("Yellow_cam",
             PVConstants.YELLOW_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
-    private final PhotonVisionSubsystem redCam = new PhotonVisionSubsystem("red_cam",
+    @SuppressWarnings("unused")
+    private final PhotonVisionSubsystem redCam = new PhotonVisionSubsystem("Red_cam",
             PVConstants.RED_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     private final GameHelpers gameHelpers;
     private final FlywheelSubsystem flywheel;
     private final IndexerSubsystem indexer = new IndexerSubsystem();
     private final IntakeSubsystem intake = new IntakeSubsystem();
     private final TurretSubsystem turret;
+    @SuppressWarnings("unused")
     private final LEDsSubsystem leds = new LEDsSubsystem();
 
     // Controllers
@@ -64,6 +69,7 @@ public class RobotContainer {
         flywheel = new FlywheelSubsystem(gameHelpers::getShotParameters);
         turret = new TurretSubsystem(drivebase::getPose, gameHelpers::getVirtualTargetFieldAngle);
 
+        configurePathPlannerCommands();
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
 
         // Configure motor brake mode (false = coast)
@@ -83,23 +89,26 @@ public class RobotContainer {
 
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
-        leds.setDefaultCommand(
-                leds.run(() -> {
-                    leds.set(turret.isAutoTrackingEnabled()
-                            && turret.isOnTarget()
-                            && gameHelpers.isValidShotDistance());
-                }).withName("LEDTurretFeedback"));
+        // leds.setDefaultCommand(
+        // leds.run(() -> {
+        // leds.set(turret.isAutoTrackingEnabled()
+        // && turret.isOnTarget()
+        // && gameHelpers.isValidShotDistance());
+        // }).withName("LEDTurretFeedback"));
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
         autoChooser.setDefaultOption("None", Commands.none());
 
-        autoChooser.addOption("Shoot in Place", Commands.parallel(
-                flywheel.zeroHood().alongWith(intake.lower())
-                        .andThen(flywheel.shoot().withTimeout(6.0)),
-                turret.autoTrack()));
+        autoChooser.addOption("Shoot in Place",
+                Commands.parallel(
+                        flywheel.zeroHood().alongWith(intake.lower())
+                                .andThen(shoot()),
+                        turret.autoTrack())
+                        .withTimeout(6.0)
+                        .andThen(Commands.sequence(
+                                flywheel.stop(), indexer.stop(), intake.stop(), turret.stopAutoTracking())));
 
-        configurePathPlannerCommands();
         configureBindings();
     }
 
@@ -133,9 +142,14 @@ public class RobotContainer {
                         indexer.feedBackwards())
                         .withName("EjectGamePiece"));
         NamedCommands.registerCommand("Shoot", shoot());
+        NamedCommands.registerCommand("StopFlywheel", flywheel.stop());
+        NamedCommands.registerCommand("StopIndexer", indexer.stop());
+        NamedCommands.registerCommand("StopIntake", intake.stop());
         NamedCommands.registerCommand("ShootWithAutoTrack",
                 shoot().withName("ShootWithAutoTrack"));
         NamedCommands.registerCommand("AutoTrackTurret", turret.autoTrack());
+        NamedCommands.registerCommand("ZeroHood", flywheel.zeroHood());
+
     }
 
     // See CONTROLLER.md
@@ -157,11 +171,11 @@ public class RobotContainer {
                 .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
 
         //// === FACE BUTTONS === ////
-        // A Button: Out take
+        // A Button: indexer reversal
         driverController.a()
-                .whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward())
-                        .withName("IntakeIndexerBackwards"));
-        // B Button: N/A
+                .whileTrue(indexer.feedBackwards());
+        // B Button: intake/indexer reversal
+        driverController.b().whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward()));
         // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
                 .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
@@ -190,7 +204,7 @@ public class RobotContainer {
                 .onTrue(turret.stopAutoTracking());
 
         // Vibrate controllers ~4 seconds before a phase shift
-        new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
+        new Trigger(gameHelpers::isPhaseShiftImminent)
                 .onTrue(rumbleControllers(1.0, 1.0));
     }
 
@@ -229,7 +243,8 @@ public class RobotContainer {
      */
     public Command shoot() {
         return Commands.parallel(
-                Commands.either(flywheel.shoot(), flywheel.tunableShoot(), turret::isAutoTrackingEnabled),
+                Commands.either(flywheel.shoot(), flywheel.tunableShoot(),
+                        turret::isAutoTrackingEnabled),
                 Commands.waitUntil(flywheel::isAtSpeed).withTimeout(0.4)
                         .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));
     }
