@@ -204,7 +204,7 @@ public class RobotContainer {
                 .onTrue(turret.stopAutoTracking());
 
         // Vibrate controllers ~4 seconds before a phase shift
-        new Trigger(gameHelpers::isPhaseShiftImminent)
+        new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
                 .onTrue(rumbleControllers(1.0, 1.0));
     }
 
