@@ -66,6 +66,8 @@ public class SwerveSubsystem extends SubsystemBase {
 		 * applied.
 		 */
 		swerveDrive.setChassisDiscretization(true, 0.02);
+		swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
+		swerveDrive.setHeadingCorrection(true);
 
 		/*
 		 * kS = voltage to overcome static friction (0.0846525V)
@@ -73,7 +75,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		 * kA = voltage per unit acceleration (0.2266775V per m/s^2)
 		 */
 		// swerveDrive.replaceSwerveModuleFeedforward(
-		// 		new SimpleMotorFeedforward(0.23744, 0.23744, 0.50467));
+		// new SimpleMotorFeedforward(0.23744, 0.23744, 0.50467));
 
 		// swerveDrive.setHeadingCorrection(true);
 		SmartDashboard.putData("ZeroGyro", zeroGyro().withName("Zero Gyro"));
