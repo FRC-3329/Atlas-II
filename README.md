@@ -21,6 +21,7 @@ Code outline for `src/main/java/frc/robot`
 
 ### `commands`
 Custom commands for robot actions
+- **AutoDriveUnderTrenchCommand.java** - Automatically pathfinds the robot to and drives under the nearest trench using PathPlanner
 - **OrientToHubCommand.java** - Automatically orients the robot so the rear-mounted turret faces the hub for shooting
 
 ### `constants`
@@ -30,7 +31,9 @@ All constant values
 - **IndexerConstants.java** - Motor configuration for note indexing system
 - **IntakeConstants.java** - Pivot and roller motor settings for ground intake mechanism
 - **OperatorConstants.java** - Controller ports and joystick deadband values
+- **OrientToHubConstants.java** - PID gains, velocity/acceleration limits, and tolerance for the orient-to-hub command
 - **PVConstants.java** - PhotonVision AprilTag field layout and vision standard deviations
+- **TrenchConstants.java** - Field dimensions, path names, and motion constraints for trench driving
 - **TurretConstants.java** - PID gains, angle limits, and encoder settings for turret rotation
 
 ### Main Files
@@ -43,15 +46,16 @@ Robot subsystems that control physical mechanisms
 - **FlywheelSubsystem.java** - Controls shooter flywheel speed and hood angle with distance-based interpolation maps
 - **IndexerSubsystem.java** - Feeds notes from intake mechanism to the shooter
 - **IntakeSubsystem.java** - Deploys and retracts the intake arm, runs roller to collect notes from the ground
-- **LEDsSubsystem.java** - Control the PDH / LEDs
+- **LEDsSubsystem.java** - Controls the PDH / LEDs
 - **PhotonVisionSubsystem.java** - Processes AprilTag detection data for robot pose estimation
 - **SwerveSubsystem.java** - Swerve drive control with field-relative driving, odometry, and pathfinding
 - **TurretSubsystem.java** - Rotates turret to aim at targets with auto-tracking capability
 
 ### `utils`
 Utility classes for calculations and data structures
-- **CircleFitter.java** - Fits circles to sets of points for trajectory calculations
 - **GameHelpers.java** - Helper methods for game-specific logic and calculations
+- **ShootOnTheMove.java** - Computes shot parameters for a moving robot using time-of-flight recursion
+- **ShotParameters.java** - Distance-keyed interpolation map of flywheel speed, hood angle, and time-of-flight values
 - **VisionData.java** - Data structures and interfaces for vision pose estimates
 
 ## Dependencies

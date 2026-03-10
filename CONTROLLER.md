@@ -16,16 +16,16 @@
 - **Right Bumper**: Auto drive under trench
 
 ### Face Buttons
-- **A Button**: Out take
-- **B Button**: N/A
-- **X Button**: Rotate swerve wheels inward
-- **Y Button**: Auto drive to outpust
+- **A Button**: Reverse indexer
+- **B Button**: Reverse indexer and intake
+- **X Button**: Auto drive under trench
+- **Y Button**: N/A
 
 ### D-Pad
-- **Up**: Move intake up
+- **Up**: Raise intake
 - **Right**: Move turret right
 - **Left**: Move turret left
-- **Down**: Move intake down
+- **Down**: Lower intake
 
 ### Menu Buttons
 - **Start**: Start auto turret tracking
