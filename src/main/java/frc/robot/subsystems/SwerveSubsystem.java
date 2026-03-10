@@ -40,6 +40,8 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
+import dev.doglog.DogLog;
+
 public class SwerveSubsystem extends SubsystemBase {
 	private File directory = new File(Filesystem.getDeployDirectory(), "swerve");
 	private SwerveDrive swerveDrive;
@@ -81,6 +83,9 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
+		DogLog.log(getName() + "/SwerveModuleStates", swerveDrive.getStates());
+		DogLog.log(getName() + "/Pose", getPose());
+		DogLog.log(getName() + "/RobotVelocity", getRobotVelocity());
 	}
 
 	@Override

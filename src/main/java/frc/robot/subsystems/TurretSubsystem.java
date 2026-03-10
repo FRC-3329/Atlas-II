@@ -23,6 +23,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.AnalogPotentiometer;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
@@ -134,6 +135,7 @@ public class TurretSubsystem extends SubsystemBase {
                         null,
                         this));
 
+        SmartDashboard.putData("MoveToDogLog", moveToDogLogAngle());
         motor.optimizeBusUtilization();
     }
 
@@ -232,10 +234,6 @@ public class TurretSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             enableAutoTracking();
         }).andThen(this.run(() -> {
-            if (absoluteCount++ > 100) {
-                motor.setPosition(getAbsoluteAngle());
-                absoluteCount = 0;
-            }
 
             // Determine the field-relative angle to aim at based on robot position
             Rotation2d targetFieldAngle = angleGoalSupplier.get();
@@ -316,6 +314,11 @@ public class TurretSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (absoluteCount++ > 100) {
+            motor.setPosition(getAbsoluteAngle());
+            absoluteCount = 0;
+        }
+        
         DogLog.log((getName() + "/Angle"), getAngle(), Rotations);
         DogLog.log((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/AtTarget"), isAtTarget());

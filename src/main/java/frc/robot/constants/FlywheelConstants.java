@@ -34,13 +34,13 @@ public final class FlywheelConstants {
     public static final class Hood {
         public static final int HOOD_ID = 6;
 
-        public static final double kP = 80.0; // V/rotation
+        public static final double kP = 1000.0; // V/rotation // change to around 1200-1600 idr
         public static final double kI = 0.0;
         public static final double kD = 0.05; // V*s/rotation
         public static final double kS = 0.0; // V
         public static final double kV = 2.2; // V*s/rotation
         public static final double kA = 0.01; // v*s^2/rotation
-        public static final double kG = 0.0; // V
+        public static final double kG = 0.65; // V // change to around 0.65
 
         public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0; // rotations
 

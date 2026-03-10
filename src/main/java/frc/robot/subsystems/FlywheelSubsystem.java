@@ -131,9 +131,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         hood.getVelocity().setUpdateFrequency(50);
         hood.getStatorCurrent().setUpdateFrequency(50); // 50 Hz for stator current monitoring
 
-        left.optimizeBusUtilization();
-        right.optimizeBusUtilization();
-        hood.optimizeBusUtilization();
+        hood.setPosition(Degrees.zero(), 2);
 
         // Change target RPM of motor from Doglog
         DogLog.tunable(
@@ -180,6 +178,10 @@ public class FlywheelSubsystem extends SubsystemBase {
                         this));
 
         SmartDashboard.putData("ZeroHood", zeroHood());
+
+        left.optimizeBusUtilization();
+        right.optimizeBusUtilization();
+        hood.optimizeBusUtilization();
     }
 
     /**

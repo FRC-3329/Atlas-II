@@ -27,7 +27,7 @@ public final class IntakeConstants {
         public static final double JERK = 0.0; // rotations per second cubed
 
         /** Down position - parallel to ground */
-        public static final Angle DOWN_ANGLE = Degrees.of(0.0);
+        public static final Angle DOWN_ANGLE = Degrees.of(-25.0);
         /** Up position - perpendicular to ground */
         public static final Angle UP_ANGLE = Degrees.of(90.0);
 
@@ -46,12 +46,12 @@ public final class IntakeConstants {
     public static final class Roller {
         public static final int MOTOR_ID = 11;
 
-        public static final double INTAKE_VOLTAGE = 9.0; // 75% output
-        public static final double OUTTAKE_VOLTAGE = -9.0;
+        public static final double INTAKE_VOLTAGE = 11.0; // 75% output
+        public static final double OUTTAKE_VOLTAGE = -9.5;
 
         public static final double VOLTAGE_COMPENSATION = 12.0;
 
-        public static final int CURRENT_LIMIT = 30; // Amps
+        public static final int CURRENT_LIMIT = 40; // Amps
         public static final boolean INVERTED = true;
         public static final IdleMode IDLE_MODE = IdleMode.kBrake;
     }

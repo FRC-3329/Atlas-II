@@ -212,7 +212,7 @@ public class IntakeSubsystem extends SubsystemBase {
             currentState = IntakeState.DOWN;
         }).andThen(
                 // Wait until at target, then disable PID control
-                Commands.waitUntil(this::isPivotAtTarget)
+                Commands.waitUntil(this::isPivotAtTarget).withTimeout(2.0)
                         .andThen(disablePivotPIDCommand()))
                 .withName("IntakeLower");
     }

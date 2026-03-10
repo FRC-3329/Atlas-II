@@ -15,6 +15,9 @@ import frc.robot.utils.GameHelpers;
 
 import swervelib.SwerveInputStream;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
@@ -55,8 +58,6 @@ public class RobotContainer {
     // Controllers
     private final CommandXboxController driverController = new CommandXboxController(
             OperatorConstants.kDriverControllerPort);
-    private final CommandXboxController operatorController = new CommandXboxController(
-            OperatorConstants.kOperatorControllerPort);
 
     // Commands
     private final Command driveFieldOrientedAngularVelocity;
@@ -100,14 +101,15 @@ public class RobotContainer {
         SmartDashboard.putData("Auto Chooser", autoChooser);
         autoChooser.setDefaultOption("None", Commands.none());
 
-        autoChooser.addOption("Shoot in Place",
+        autoChooser.addOption("Shoot in Plasce",
                 Commands.parallel(
                         flywheel.zeroHood().alongWith(intake.lower())
                                 .andThen(shoot()),
                         turret.autoTrack())
                         .withTimeout(6.0)
                         .andThen(Commands.sequence(
-                                flywheel.stop(), indexer.stop(), intake.stop(), turret.stopAutoTracking())));
+                                flywheel.stop(), indexer.stop(), intake.stop(),
+                                turret.stopAutoTracking())));
 
         configureBindings();
     }
@@ -121,12 +123,10 @@ public class RobotContainer {
         return Commands
                 .run(() -> {
                     driverController.setRumble(RumbleType.kBothRumble, strength);
-                    operatorController.setRumble(RumbleType.kBothRumble, strength);
                 })
                 .withTimeout(duration)
                 .andThen(() -> {
                     driverController.setRumble(RumbleType.kBothRumble, 0);
-                    operatorController.setRumble(RumbleType.kBothRumble, 0);
                 })
                 .withName("RumbleControllers");
     }
@@ -178,7 +178,7 @@ public class RobotContainer {
         driverController.b().whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward()));
         // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
-                .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
+                .whileTrue(drivebase.lockWheels());
         // Y Button: Auto drive to outpost (Not yet implemented)
 
         //// === D-PAD === ////
@@ -204,7 +204,7 @@ public class RobotContainer {
                 .onTrue(turret.stopAutoTracking());
 
         // Vibrate controllers ~4 seconds before a phase shift
-        new Trigger(gameHelpers::isPhaseShiftImminent)
+        new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
                 .onTrue(rumbleControllers(1.0, 1.0));
     }
 
@@ -243,7 +243,7 @@ public class RobotContainer {
      */
     public Command shoot() {
         return Commands.parallel(
-                Commands.either(flywheel.shoot(), flywheel.tunableShoot(),
+                Commands.either(flywheel.shoot(), flywheel.shoot(RPM.of(1600), Degrees.of(10.0)),
                         turret::isAutoTrackingEnabled),
                 Commands.waitUntil(flywheel::isAtSpeed).withTimeout(0.4)
                         .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));
