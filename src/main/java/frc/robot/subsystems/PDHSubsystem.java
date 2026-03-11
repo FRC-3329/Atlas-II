@@ -4,10 +4,10 @@ import dev.doglog.DogLog;
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
-public class LEDsSubsystem extends SubsystemBase {
+public class PDHSubsystem extends SubsystemBase {
     private final PowerDistribution pdh;
 
-    public LEDsSubsystem() {
+    public PDHSubsystem() {
         pdh = new PowerDistribution();
         pdh.clearStickyFaults();
 
@@ -15,7 +15,7 @@ public class LEDsSubsystem extends SubsystemBase {
     }
 
     /**
-     * Whether to turn on or off the LEDs
+     * Whether to turn on or off the PDH
      * true = on | false = off
      * @param state
      */

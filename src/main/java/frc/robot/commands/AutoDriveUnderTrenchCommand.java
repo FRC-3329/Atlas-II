@@ -26,7 +26,6 @@ import frc.robot.subsystems.SwerveSubsystem;
  */
 public class AutoDriveUnderTrenchCommand extends Command {
     private final SwerveSubsystem swerveSubsystem;
-    private final FlywheelSubsystem flywheelSubsystem;
     private final PathConstraints pathfindingConstraints;
 
     private Command drivingCommand;
@@ -38,7 +37,6 @@ public class AutoDriveUnderTrenchCommand extends Command {
      */
     public AutoDriveUnderTrenchCommand(SwerveSubsystem swerveSubsystem, FlywheelSubsystem flywheelSubsystem) {
         this.swerveSubsystem = swerveSubsystem;
-        this.flywheelSubsystem = flywheelSubsystem;
 
         this.pathfindingConstraints = new PathConstraints(
                 TrenchConstants.MAX_VELOCITY,

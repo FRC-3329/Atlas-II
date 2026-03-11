@@ -7,7 +7,7 @@ import frc.robot.constants.PVConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
-import frc.robot.subsystems.LEDsSubsystem;
+import frc.robot.subsystems.PDHSubsystem;
 import frc.robot.subsystems.PhotonVisionSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
@@ -53,7 +53,7 @@ public class RobotContainer {
     private final IntakeSubsystem intake = new IntakeSubsystem();
     private final TurretSubsystem turret;
     @SuppressWarnings("unused")
-    private final LEDsSubsystem leds = new LEDsSubsystem();
+    private final PDHSubsystem leds = new PDHSubsystem();
 
     // Controllers
     private final CommandXboxController driverController = new CommandXboxController(
