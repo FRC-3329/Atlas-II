@@ -48,6 +48,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     private final Trigger spikeDetected;
 
+    private boolean varyingRPMEnabled = true;
+
     private final MutAngularVelocity doglogVelocity = RPM.mutable(0.0);
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
@@ -223,6 +225,25 @@ public class FlywheelSubsystem extends SubsystemBase {
         }).withName("FlywheelShootFixed");
     }
 
+    public boolean isVaryingRPMEnabled() {
+        return varyingRPMEnabled;
+    }
+
+    public void enableVaryingRPM() {
+        varyingRPMEnabled = true;
+    }
+
+    public void disableVaryingRPM() {
+        varyingRPMEnabled = false;
+    }
+
+    public Command toggleVaryingRPM() {
+        return this.runOnce(() -> {
+            varyingRPMEnabled = !varyingRPMEnabled;
+            DogLog.log(getName() + "/VaryingRPMEnabled", varyingRPMEnabled);
+        }).withName("FlywheelToggleVaryingRPM");
+    }
+
     public Command stop() {
         return this.runOnce(() -> {
             left.stopMotor();
@@ -335,5 +356,9 @@ public class FlywheelSubsystem extends SubsystemBase {
         DogLog.log(
                 (getName() + "/HoodStatorCurrent"),
                 getHoodCurrent());
+
+        DogLog.log(
+                (getName() + "/VaryingRPMEnabled"),
+                varyingRPMEnabled);
     }
 }
