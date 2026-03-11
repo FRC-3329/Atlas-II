@@ -137,13 +137,17 @@ public class RobotContainer {
      * Configures LED patterns and triggers.
      *
      * <ul>
-     *   <li><b>Ready to shoot</b> (turret on-target, auto-tracking, valid shot distance):
-     *       solid alliance color (red or blue).</li>
-     *   <li><b>Enabled but not ready</b>: alliance color breathing (pulsing dim).</li>
-     *   <li><b>Disabled</b>: scrolling rainbow so the robot is easy to spot on the field.</li>
+     * <li><b>Ready to shoot</b> (turret on-target, auto-tracking, valid shot
+     * distance):
+     * solid alliance color (red or blue).</li>
+     * <li><b>Enabled but not ready</b>: alliance color breathing (pulsing
+     * dim).</li>
+     * <li><b>Disabled</b>: scrolling rainbow so the robot is easy to spot on the
+     * field.</li>
      * </ul>
      *
-     * <p>Alliance color is resolved dynamically each cycle so it updates correctly
+     * <p>
+     * Alliance color is resolved dynamically each cycle so it updates correctly
      * even if the DS connects after construction.
      */
     private void configureLEDs() {
@@ -168,8 +172,8 @@ public class RobotContainer {
                         && gameHelpers.isValidShotDistance()))
                 .whileTrue(leds.runPattern(allianceBreathing).withName("LEDAllianceIdle"));
 
-        // Disabled -> scrolling rainbow (visible from the stands?)
-        LEDPattern disabledPattern = LEDPattern.rainbow(255, 128)
+        // Disabled -> scrolling rainbow (16%~)
+        LEDPattern disabledPattern = LEDPattern.rainbow(255, 40)
                 .scrollAtRelativeSpeed(edu.wpi.first.units.Units.Percent
                         .per(edu.wpi.first.units.Units.Second).of(25));
         RobotModeTriggers.disabled()
