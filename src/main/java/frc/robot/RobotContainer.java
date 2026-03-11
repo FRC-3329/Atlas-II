@@ -18,7 +18,6 @@ import swervelib.SwerveInputStream;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
-import static edu.wpi.first.units.Units.Seconds;
 
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
@@ -140,10 +139,7 @@ public class RobotContainer {
      * <li><b>Ready to shoot</b> (turret on-target, auto-tracking, valid shot
      * distance):
      * solid alliance color (red or blue).</li>
-     * <li><b>Enabled but not ready</b>: alliance color breathing (pulsing
-     * dim).</li>
-     * <li><b>Disabled</b>: scrolling rainbow so the robot is easy to spot on the
-     * field.</li>
+     * <li><b>Disabled</b>: scrolling rainbow.</li>
      * </ul>
      *
      * <p>
@@ -157,7 +153,6 @@ public class RobotContainer {
                     : Color.kBlue;
             LEDPattern.solid(c).applyTo(reader, writer);
         };
-        LEDPattern allianceBreathing = allianceSolid.breathe(Seconds.of(2));
 
         // Ready to shoot -> solid alliance color
         new Trigger(() -> turret.isAutoTrackingEnabled()
@@ -165,15 +160,8 @@ public class RobotContainer {
                 && gameHelpers.isValidShotDistance())
                 .whileTrue(leds.runPattern(allianceSolid).withName("LEDReadyToShoot"));
 
-        // Enabled but **not** ready -> breathing alliance color
-        new Trigger(() -> DriverStation.isEnabled()
-                && !(turret.isAutoTrackingEnabled()
-                        && turret.isOnTarget()
-                        && gameHelpers.isValidShotDistance()))
-                .whileTrue(leds.runPattern(allianceBreathing).withName("LEDAllianceIdle"));
-
-        // Disabled -> scrolling rainbow (16%~)
-        LEDPattern disabledPattern = LEDPattern.rainbow(255, 40)
+        // Disabled -> scrolling rainbow (8%~)
+        LEDPattern disabledPattern = LEDPattern.rainbow(255, 20)
                 .scrollAtRelativeSpeed(edu.wpi.first.units.Units.Percent
                         .per(edu.wpi.first.units.Units.Second).of(25));
         RobotModeTriggers.disabled()
