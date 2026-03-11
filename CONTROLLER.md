@@ -19,7 +19,7 @@
 - **A Button**: Reverse indexer
 - **B Button**: Reverse indexer and intake
 - **X Button**: Auto drive under trench
-- **Y Button**: Toggle flywheel varying RPM
+- **Y Button**: N/A
 
 ### D-Pad
 - **Up**: Raise intake

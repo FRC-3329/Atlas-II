@@ -218,9 +218,7 @@ public class RobotContainer {
         // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
                 .whileTrue(drivebase.lockWheels());
-        // Y Button: Toggle flywheel varying RPM
-        driverController.y()
-                .onTrue(flywheel.toggleVaryingRPM());
+        // Y Button: Auto drive to outpost (Not yet implemented)
 
         //// === D-PAD === ////
         // Up: Move intake up
@@ -277,15 +275,15 @@ public class RobotContainer {
      * intake
      * 
      * Uses either distance-based shooting (dynamic) or static shooting based on
-     * whether flywheel varying RPM is enabled. If varying RPM is disabled (e.g.
-     * PV is not working), static shooting is used as a fallback.
+     * whether turret auto tracking is enabled. If turret tracking is disabled,
+     * positional information cannot be trusted, so static shooting is used.
      * 
      * @return Command to shoot fuel
      */
     public Command shoot() {
         return Commands.parallel(
                 Commands.either(flywheel.shoot(), flywheel.shoot(RPM.of(1600), Degrees.of(10.0)),
-                        flywheel::isVaryingRPMEnabled),
+                        turret::isAutoTrackingEnabled),
                 Commands.waitUntil(flywheel::isAtSpeed).withTimeout(0.4)
                         .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));
     }
