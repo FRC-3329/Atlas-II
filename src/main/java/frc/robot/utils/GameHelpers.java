@@ -245,10 +245,10 @@ public class GameHelpers extends SubsystemBase {
      * @return true if the robot is within the valid shooting distance range
      */
     public boolean isValidShotDistance() {
-        double distanceToHub = getHubDistanceMeters();
+        double distanceToHub = virtualTargetDistance.in(Meters);
 
-        return distanceToHub >= Constants.MIN_SHOT_DISTANCE 
-            && distanceToHub <= Constants.MAX_SHOT_DISTANCE;
+        return distanceToHub >= Constants.MIN_SHOT_DISTANCE
+                && distanceToHub <= Constants.MAX_SHOT_DISTANCE;
     }
 
     /**
@@ -312,26 +312,29 @@ public class GameHelpers extends SubsystemBase {
         // now that we have the target location, calculate the virtual target and shot
         // parameters
         ShootOnTheMove.Shot shot = ShootOnTheMove.calculate(getRobotPose(), getRobotVelocites(),
-                pose -> ShotParameters.getShotParameters(pose.getTranslation().getDistance(targetTranslation)));
+                pose -> ShotParameters.getShotParameters(pose.transformBy(TurretConstants.ROBOT_TO_TURRET)
+                        .getTranslation().getDistance(targetTranslation)));
         this.shotParameters = shot.parameters(); // store for flywheel to use
 
         // get the current and future robot translations
-        Translation2d currentRobotTranslation = getRobotPose().getTranslation();
-        Translation2d futureRobotTranslation = shot.futureRobotPose().getTranslation();
+        Translation2d currentTurretTranslation = getRobotPose().transformBy(TurretConstants.ROBOT_TO_TURRET)
+                .getTranslation();
+        Translation2d futureTurretTranslation = shot.futureRobotPose().transformBy(TurretConstants.ROBOT_TO_TURRET)
+                .getTranslation();
 
         // Virtual target is the target translation minus the difference between the
         // future and current robot translation. The order of subtractions here matters.
         Translation2d virtualTargetTranslation = targetTranslation
-                .minus(futureRobotTranslation.minus(currentRobotTranslation));
+                .minus(futureTurretTranslation.minus(currentTurretTranslation));
 
         // store distance/angle to virtual target
         // if the future is equal to the current, then just use current
-        if (currentRobotTranslation.equals(futureRobotTranslation)) {
-            this.virtualTargetFieldAngle = targetTranslation.minus(currentRobotTranslation).getAngle();
-            this.virtualTargetDistance.mut_replace(targetTranslation.getDistance(currentRobotTranslation), Meters);
+        if (currentTurretTranslation.equals(futureTurretTranslation)) {
+            this.virtualTargetFieldAngle = targetTranslation.minus(currentTurretTranslation).getAngle();
+            this.virtualTargetDistance.mut_replace(targetTranslation.getDistance(currentTurretTranslation), Meters);
         } else {
-            this.virtualTargetFieldAngle = virtualTargetTranslation.minus(currentRobotTranslation).getAngle();
-            this.virtualTargetDistance.mut_replace(virtualTargetTranslation.getDistance(currentRobotTranslation),
+            this.virtualTargetFieldAngle = virtualTargetTranslation.minus(currentTurretTranslation).getAngle();
+            this.virtualTargetDistance.mut_replace(virtualTargetTranslation.getDistance(currentTurretTranslation),
                     Meters);
         }
 

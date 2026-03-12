@@ -36,11 +36,12 @@ public class TurretSubsystem extends SubsystemBase {
     private final MotionMagicVoltage positionRequest = new MotionMagicVoltage(0);
     private final VoltageOut sysIdControl = new VoltageOut(0);
     private final SysIdRoutine sysIdRoutine;
-    private final Supplier<Pose2d> robotPoseSupplier;
+    private final Supplier<Pose2d> turretPoseSupplier;
     private final Supplier<Rotation2d> angleGoalSupplier;
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
     private boolean autoTrackingEnabled = false;
+    private double trueTargetRotations = 0.0;
     private int absoluteCount = 0;
 
     /**
@@ -51,7 +52,7 @@ public class TurretSubsystem extends SubsystemBase {
      *                          field's X axis that the turret should be facing.
      */
     public TurretSubsystem(Supplier<Pose2d> robotPoseSupplier, Supplier<Rotation2d> angleGoalSupplier) {
-        this.robotPoseSupplier = robotPoseSupplier;
+        this.turretPoseSupplier = robotPoseSupplier;
         this.angleGoalSupplier = angleGoalSupplier;
 
         absoluteEncoder = new AnalogPotentiometer(
@@ -144,9 +145,9 @@ public class TurretSubsystem extends SubsystemBase {
      * @param angle Target angle
      */
     private void setTargetAngle(Angle angle) {
-        double targetRotations = angle.in(Rotations);
-        targetRotations = MathUtil.clamp(
-                targetRotations,
+        trueTargetRotations = angle.in(Rotations);
+        double targetRotations = MathUtil.clamp(
+                trueTargetRotations,
                 TurretConstants.MIN_ANGLE.in(Rotations),
                 TurretConstants.MAX_ANGLE.in(Rotations));
 
@@ -192,12 +193,10 @@ public class TurretSubsystem extends SubsystemBase {
      * @return true if within LED tolerance of target, false otherwise
      */
     public boolean isOnTarget() {
-        double targetRotations = positionRequest.Position;
         double currentRotations = motor.getPosition().getValueAsDouble();
-        double targetDegrees = Units.rotationsToDegrees(targetRotations);
         double currentDegrees = Units.rotationsToDegrees(currentRotations);
 
-        double error = Math.abs(targetDegrees - currentDegrees);
+        double error = Math.abs(Units.rotationsToDegrees(trueTargetRotations) - currentDegrees);
         return error <= TurretConstants.LED_TOLERANCE_DEGREES;
     }
 
@@ -240,15 +239,15 @@ public class TurretSubsystem extends SubsystemBase {
             Rotation2d targetFieldAngle = angleGoalSupplier.get();
 
             // Convert field-relative angle to robot-relative angle
-            Rotation2d robotHeading = robotPoseSupplier.get().getRotation().plus(Rotation2d.k180deg);
-            Rotation2d turretAngle = targetFieldAngle.minus(robotHeading);
+            Rotation2d turretFieldSetpoint = turretPoseSupplier.get().getRotation().plus(Rotation2d.k180deg);
+            Rotation2d turretRobotSetpoint = targetFieldAngle.minus(turretFieldSetpoint);
 
-            setTargetAngle(Degrees.of(turretAngle.getDegrees()));
+            setTargetAngle(Degrees.of(turretRobotSetpoint.getDegrees()));
 
             DogLog.log((getName() + "/AutoTrackingActive"), true);
             DogLog.log((getName() + "/TargetFieldAngle"), targetFieldAngle.getDegrees(), Degrees);
-            DogLog.log((getName() + "/RobotHeading"), robotHeading.getDegrees(), Degrees);
-            DogLog.log((getName() + "/CalculatedTurretAngle"), turretAngle.getDegrees(), Degrees);
+            DogLog.log((getName() + "/RobotHeading"), turretFieldSetpoint.getDegrees(), Degrees);
+            DogLog.log((getName() + "/CalculatedTurretAngle"), turretRobotSetpoint.getDegrees(), Degrees);
         })).finallyDo(() -> {
             disableAutoTracking();
         }).withName("TurretAutoTrack");
@@ -319,7 +318,7 @@ public class TurretSubsystem extends SubsystemBase {
             motor.setPosition(getAbsoluteAngle());
             absoluteCount = 0;
         }
-        
+
         DogLog.log((getName() + "/Angle"), getAngle(), Rotations);
         DogLog.log((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/AtTarget"), isAtTarget());

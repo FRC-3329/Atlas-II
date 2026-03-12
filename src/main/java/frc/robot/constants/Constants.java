@@ -18,7 +18,7 @@ public class Constants {
     /** Max speed of robot in meters per second */
     public static final double MAX_SPEED = Units.feetToMeters(10);
     /** Minimum distance from hub for a valid shot (in meters) */
-    public static final double MIN_SHOT_DISTANCE = 1.0;
+    public static final double MIN_SHOT_DISTANCE = 1.9;
     /** Maximum distance from hub for a valid shot (in meters) */
-    public static final double MAX_SHOT_DISTANCE = 5.0;
+    public static final double MAX_SHOT_DISTANCE = 5.4;
 }

@@ -59,10 +59,19 @@ public class ShotParameters {
     // add to the map
     static {
         // key units are in meters
-        map.put(4.25, new Parameters(RPM.of(1850), Degrees.of(15), Seconds.of(1.11)));
-        map.put(1.96, new Parameters(RPM.of(1400), Degrees.of(5), Seconds.of(0.86)));
-        map.put(3.9, new Parameters(RPM.of(1650), Degrees.of(10), Seconds.of(1.05)));
-        map.put(2.79, new Parameters(RPM.of(1525), Degrees.of(7.5), Seconds.of(0.97)));
+        map.put(1.84, new Parameters(RPM.of(1450.0), Degrees.of(0.0), Seconds.of(0.89)));
+        map.put(2.2, new Parameters(RPM.of(1550.0), Degrees.of(4.0), Seconds.of(1.01)));
+        map.put(2.6, new Parameters(RPM.of(1650.0), Degrees.of(7.0), Seconds.of(1.15)));
+        map.put(3.1, new Parameters(RPM.of(1780.0), Degrees.of(15.0), Seconds.of(1.22)));
+        map.put(3.5, new Parameters(RPM.of(1800.0), Degrees.of(18.0), Seconds.of(1.27)));
+        map.put(4.1, new Parameters(RPM.of(1880.0), Degrees.of(21.0), Seconds.of(1.22)));
+        map.put(4.7, new Parameters(RPM.of(1990.0), Degrees.of(23.0), Seconds.of(1.31)));
+        map.put(5.2, new Parameters(RPM.of(2100.0), Degrees.of(25.0), Seconds.of(1.32)));
+        map.put(5.7, new Parameters(RPM.of(2150.0), Degrees.of(28.0), Seconds.of(1.26)));
+        // can't really see tags from here, used wheel odometery to get this distance
+        // value
+        map.put(6.2, new Parameters(RPM.of(2250.0), Degrees.of(30.0), Seconds.of(1.36)));
+
     }
 
 }

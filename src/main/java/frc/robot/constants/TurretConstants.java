@@ -1,9 +1,12 @@
 package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 
+import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.units.measure.Angle;
 
 public final class TurretConstants {
@@ -39,4 +42,7 @@ public final class TurretConstants {
     public static final boolean ENABLE_AUTO_AIM = false;
 
     public static final double LED_TOLERANCE_DEGREES = 2.0;
+
+    public static final Transform2d ROBOT_TO_TURRET = new Transform2d(Inches.of(-6.500), Inches.zero(),
+            Rotation2d.kZero);
 }
