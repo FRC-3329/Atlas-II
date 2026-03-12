@@ -181,6 +181,10 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         SmartDashboard.putData("ZeroHood", zeroHood());
 
+        DogLog.log(
+                (getName() + "/VaryingRPMEnabled"),
+                varyingRPMEnabled);
+
         left.optimizeBusUtilization();
         right.optimizeBusUtilization();
         hood.optimizeBusUtilization();
@@ -231,16 +235,26 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     public void enableVaryingRPM() {
         varyingRPMEnabled = true;
+        DogLog.log(getName() + "/VaryingRPMEnabled", true);
+        DogLog.clearFault("VaryingRPMDisabled");
     }
 
     public void disableVaryingRPM() {
         varyingRPMEnabled = false;
+        DogLog.log(getName() + "/VaryingRPMEnabled", false);
+        DogLog.logFault("VaryingRPMDisabled");
     }
 
+    /**
+     * @return Command to toggle varying RPM on/off
+     */
     public Command toggleVaryingRPM() {
         return this.runOnce(() -> {
-            varyingRPMEnabled = !varyingRPMEnabled;
-            DogLog.log(getName() + "/VaryingRPMEnabled", varyingRPMEnabled);
+            if (varyingRPMEnabled) {
+                disableVaryingRPM();
+            } else {
+                enableVaryingRPM();
+            }
         }).withName("FlywheelToggleVaryingRPM");
     }
 
@@ -356,9 +370,5 @@ public class FlywheelSubsystem extends SubsystemBase {
         DogLog.log(
                 (getName() + "/HoodStatorCurrent"),
                 getHoodCurrent());
-
-        DogLog.log(
-                (getName() + "/VaryingRPMEnabled"),
-                varyingRPMEnabled);
     }
 }

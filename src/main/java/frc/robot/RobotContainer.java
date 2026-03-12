@@ -220,7 +220,8 @@ public class RobotContainer {
                 .whileTrue(drivebase.lockWheels());
         // Y Button: Toggle flywheel varying RPM
         driverController.y()
-                .onTrue(flywheel.toggleVaryingRPM());
+                .onTrue(flywheel.toggleVaryingRPM()
+                        .andThen(rumbleControllers(0.5, 0.25)));
         //// === D-PAD === ////
         // Up: Move intake up
         driverController.povUp()
@@ -243,7 +244,7 @@ public class RobotContainer {
         driverController.back()
                 .onTrue(turret.stopAutoTracking());
 
-        // Vibrate controllers ~4 seconds before a phase shift
+        // Vibrate controller for 1 second before a phase shift
         new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
                 .onTrue(rumbleControllers(1.0, 1.0));
     }
