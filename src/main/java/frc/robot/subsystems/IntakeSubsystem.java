@@ -22,6 +22,7 @@ import com.revrobotics.spark.config.SparkMaxConfig;
 import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DutyCycleEncoder;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -322,5 +323,11 @@ public class IntakeSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/State"), currentState.toString());
         DogLog.log((getName() + "/IsDown"), isDown());
         DogLog.log((getName() + "/PivotPIDEnabled"), pivotPIDEnabled);
+
+        if (!isDown()) {
+            DogLog.logFault("Intake pivot is up", Alert.AlertType.kWarning);
+        } else {
+            DogLog.clearFault("Intake pivot is up");
+        }
     }
 }

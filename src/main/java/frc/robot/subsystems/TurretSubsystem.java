@@ -17,6 +17,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
@@ -324,6 +325,13 @@ public class TurretSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/AtTarget"), isAtTarget());
         DogLog.log((getName() + "/OnTarget"), isOnTarget());
         DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
+
+        if (!autoTrackingEnabled) {
+            DogLog.logFault("Turret auto-tracking disabled", Alert.AlertType.kWarning);
+        } else {
+            DogLog.clearFault("Turret auto-tracking disabled");
+        }
+
         DogLog.log((getName() + "/MotorOutput"), motor.get());
         DogLog.log((getName() + "/MotorCurrent"), motor.getStatorCurrent().getValue());
 
