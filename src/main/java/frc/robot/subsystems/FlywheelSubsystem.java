@@ -27,6 +27,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -47,6 +48,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine;
 
     private final Trigger spikeDetected;
+
+    private boolean varyingRPMEnabled = true;
 
     private final MutAngularVelocity doglogVelocity = RPM.mutable(0.0);
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
@@ -179,6 +182,10 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         SmartDashboard.putData("ZeroHood", zeroHood());
 
+        DogLog.log(
+                (getName() + "/VaryingRPMEnabled"),
+                varyingRPMEnabled);
+
         left.optimizeBusUtilization();
         right.optimizeBusUtilization();
         hood.optimizeBusUtilization();
@@ -221,6 +228,35 @@ public class FlywheelSubsystem extends SubsystemBase {
             right.setControl(request.withVelocity(rpm));
             hood.setControl(hoodRequest.withPosition(angle));
         }).withName("FlywheelShootFixed");
+    }
+
+    public boolean isVaryingRPMEnabled() {
+        return varyingRPMEnabled;
+    }
+
+    public void enableVaryingRPM() {
+        varyingRPMEnabled = true;
+        DogLog.log(getName() + "/VaryingRPMEnabled", true);
+        DogLog.clearFault("VaryingRPMDisabled");
+    }
+
+    public void disableVaryingRPM() {
+        varyingRPMEnabled = false;
+        DogLog.log(getName() + "/VaryingRPMEnabled", false);
+        DogLog.logFault("VaryingRPMDisabled", Alert.AlertType.kWarning);
+    }
+
+    /**
+     * @return Command to toggle varying RPM on/off
+     */
+    public Command toggleVaryingRPM() {
+        return this.runOnce(() -> {
+            if (varyingRPMEnabled) {
+                disableVaryingRPM();
+            } else {
+                enableVaryingRPM();
+            }
+        }).withName("FlywheelToggleVaryingRPM");
     }
 
     public Command stop() {

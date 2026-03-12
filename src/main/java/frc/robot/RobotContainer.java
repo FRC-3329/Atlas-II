@@ -218,8 +218,10 @@ public class RobotContainer {
         // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
                 .whileTrue(drivebase.lockWheels());
-        // Y Button: Auto drive to outpost (Not yet implemented)
-
+        // Y Button: Toggle flywheel varying RPM
+        driverController.y()
+                .onTrue(flywheel.toggleVaryingRPM()
+                        .andThen(rumbleControllers(0.5, 0.25)));
         //// === D-PAD === ////
         // Up: Move intake up
         driverController.povUp()
@@ -242,7 +244,7 @@ public class RobotContainer {
         driverController.back()
                 .onTrue(turret.stopAutoTracking());
 
-        // Vibrate controllers ~4 seconds before a phase shift
+        // Vibrate controller for 1 second before a phase shift
         new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
                 .onTrue(rumbleControllers(1.0, 1.0));
     }
@@ -275,15 +277,15 @@ public class RobotContainer {
      * intake
      * 
      * Uses either distance-based shooting (dynamic) or static shooting based on
-     * whether turret auto tracking is enabled. If turret tracking is disabled,
-     * positional information cannot be trusted, so static shooting is used.
+     * whether flywheel varying RPM is enabled. If varying RPM is disabled (e.g.
+     * PV is not working), static shooting is used as a fallback.
      * 
      * @return Command to shoot fuel
      */
     public Command shoot() {
         return Commands.parallel(
                 Commands.either(flywheel.shoot(), flywheel.shoot(RPM.of(1600), Degrees.of(10.0)),
-                        turret::isAutoTrackingEnabled),
+                        flywheel::isVaryingRPMEnabled),
                 Commands.waitUntil(flywheel::isAtSpeed).withTimeout(0.4)
                         .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));
     }
