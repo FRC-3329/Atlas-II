@@ -25,16 +25,12 @@ import com.pathplanner.lib.auto.NamedCommands;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.LEDPattern;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class RobotContainer {
@@ -77,11 +73,10 @@ public class RobotContainer {
         turret = new TurretSubsystem(drivebase::getPose, gameHelpers::getVirtualTargetFieldAngle);
 
         configurePathPlannerCommands();
-        drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
 
+        drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
         // Configure motor brake mode (false = coast)
         setMotorBrake(false);
-
         // Configure drive input stream with deadband and alliance-relative control
         driveAngularVelocity = SwerveInputStream
                 .of(drivebase.getSwerveDrive(),
@@ -93,16 +88,16 @@ public class RobotContainer {
                 .scaleTranslation(0.8)
                 .allianceRelativeControl(true);
         driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
-
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
-        configureLEDs();
+        leds.configureLEDs(() -> turret.isAutoTrackingEnabled()
+                && turret.isOnTarget()
+                && gameHelpers.isValidShotDistance());
 
         autoChooser = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoChooser);
         autoChooser.setDefaultOption("None", Commands.none());
-
-        autoChooser.addOption("Shoot in Plasce",
+        autoChooser.addOption("Shoot in Place",
                 Commands.parallel(
                         flywheel.zeroHood().alongWith(intake.lower())
                                 .andThen(shoot()),
@@ -130,44 +125,6 @@ public class RobotContainer {
                     driverController.setRumble(RumbleType.kBothRumble, 0);
                 })
                 .withName("RumbleControllers");
-    }
-
-    /**
-     * Configures LED patterns and triggers.
-     *
-     * <ul>
-     * <li><b>Ready to shoot</b> (turret on-target, auto-tracking, valid shot
-     * distance):
-     * solid alliance color (red or blue).</li>
-     * <li><b>Disabled</b>: scrolling rainbow.</li>
-     * </ul>
-     *
-     * <p>
-     * Alliance color is resolved dynamically each cycle so it updates correctly
-     * even if the DS connects after construction.
-     */
-    private void configureLEDs() {
-        LEDPattern allianceSolid = (reader, writer) -> {
-            Color c = DriverStation.getAlliance().orElse(Alliance.Red) == Alliance.Red
-                    ? Color.kRed
-                    : Color.kBlue;
-            LEDPattern.solid(c).applyTo(reader, writer);
-        };
-
-        // Ready to shoot -> solid alliance color
-        new Trigger(() -> turret.isAutoTrackingEnabled()
-                && turret.isOnTarget()
-                && gameHelpers.isValidShotDistance())
-                .whileTrue(leds.runPattern(allianceSolid).withName("LEDReadyToShoot"));
-
-        // Disabled -> scrolling rainbow (8%~)
-        LEDPattern disabledPattern = LEDPattern.rainbow(255, 20)
-                .scrollAtRelativeSpeed(edu.wpi.first.units.Units.Percent
-                        .per(edu.wpi.first.units.Units.Second).of(25));
-        RobotModeTriggers.disabled()
-                .whileTrue(leds.runPattern(disabledPattern)
-                        .ignoringDisable(true)
-                        .withName("LEDDisabled"));
     }
 
     private void configurePathPlannerCommands() {
