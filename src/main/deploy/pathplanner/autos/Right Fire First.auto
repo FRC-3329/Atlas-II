@@ -29,7 +29,7 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 5.0
+                  "waitTime": 3.0
                 }
               }
             ]
@@ -56,31 +56,19 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Start to Outpost"
-          }
-        },
-        {
-          "type": "wait",
-          "data": {
-            "waitTime": 3.5
+            "pathName": "Right Fire First"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Outpost to Outpost Shoot"
+            "pathName": "Right Sweep Back"
           }
         },
         {
           "type": "race",
           "data": {
             "commands": [
-              {
-                "type": "path",
-                "data": {
-                  "pathName": "Outpost Jostle"
-                }
-              },
               {
                 "type": "named",
                 "data": {
@@ -96,34 +84,16 @@
               {
                 "type": "wait",
                 "data": {
-                  "waitTime": 8.0
+                  "waitTime": 20.0
                 }
               }
             ]
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopFlywheel"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIndexer"
-          }
-        },
-        {
-          "type": "named",
-          "data": {
-            "name": "StopIntake"
           }
         }
       ]
     }
   },
-  "resetOdom": false,
+  "resetOdom": true,
   "folder": "Right",
   "choreoAuto": false
 }

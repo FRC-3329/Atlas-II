@@ -8,15 +8,15 @@
     "Right",
     "Left"
   ],
-  "defaultMaxVel": 1.0,
-  "defaultMaxAccel": 0.6,
-  "defaultMaxAngVel": 360.0,
+  "defaultMaxVel": 4.0,
+  "defaultMaxAccel": 2.0,
+  "defaultMaxAngVel": 540.0,
   "defaultMaxAngAccel": 540.0,
   "defaultNominalVoltage": 11.5,
   "robotMass": 61.235,
   "robotMOI": 6.883,
   "robotTrackwidth": 0.546,
-  "driveWheelRadius": 0.0508,
+  "driveWheelRadius": 0.051,
   "driveGearing": 6.75,
   "maxDriveSpeed": 5.45,
   "driveMotorType": "NEO",
@@ -32,5 +32,7 @@
   "brModuleY": -0.276,
   "bumperOffsetX": 0.0,
   "bumperOffsetY": 0.0,
-  "robotFeatures": []
+  "robotFeatures": [
+    "{\"name\":\"Rectangle\",\"type\":\"rounded_rect\",\"data\":{\"center\":{\"x\":0.597,\"y\":0.0},\"size\":{\"width\":0.597,\"length\":0.305},\"borderRadius\":0.05,\"strokeWidth\":0.02,\"filled\":false}}"
+  ]
 }
