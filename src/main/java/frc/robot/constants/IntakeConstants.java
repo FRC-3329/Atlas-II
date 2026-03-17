@@ -40,13 +40,13 @@ public final class IntakeConstants {
         public static final double CURRENT_LIMIT = 40.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
 
-        public static final Angle KICK_ANGLE = Degrees.of(40.0);
+        public static final Angle KICK_ANGLE = Degrees.of(30.0);
     }
 
     public static final class Roller {
         public static final int MOTOR_ID = 11;
 
-        public static final double INTAKE_VOLTAGE = 11.0; // 75% output
+        public static final double INTAKE_VOLTAGE = 8.0; // 66% output
         public static final double OUTTAKE_VOLTAGE = -9.5;
 
         public static final double VOLTAGE_COMPENSATION = 12.0;

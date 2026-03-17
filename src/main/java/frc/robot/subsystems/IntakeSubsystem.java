@@ -218,6 +218,12 @@ public class IntakeSubsystem extends SubsystemBase {
                 .withName("IntakeLower");
     }
 
+    public Command kick() {
+        return this.runOnce(() -> {
+            setPivotAngle(IntakeConstants.Pivot.KICK_ANGLE);
+        });
+    }
+
     /**
      * Command to raise the intake
      * Sets the pivot to up position

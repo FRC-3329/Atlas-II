@@ -16,7 +16,7 @@ public final class FlywheelConstants {
         public static final int LEFT_ID = 2;
         public static final int RIGHT_ID = 1;
 
-        public static final double kP = 0.5;
+        public static final double kP = 0.7;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
         public static final double kS = 0.11085;
@@ -27,7 +27,7 @@ public final class FlywheelConstants {
         public static final double ACCELERATION = 10000.0;
         // public static final double JERK = 0.0;
 
-        public static final double CURRENT_LIMIT = 45.0; // Amps
+        public static final double CURRENT_LIMIT = 60.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
     }
 

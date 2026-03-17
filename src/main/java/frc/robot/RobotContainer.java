@@ -182,7 +182,7 @@ public class RobotContainer {
         //// === D-PAD === ////
         // Up: Move intake up
         driverController.povUp()
-                .onTrue(intake.raise());
+                .onTrue(intake.kick());
         // Down: Move intake down
         driverController.povDown()
                 .onTrue(intake.lower());
