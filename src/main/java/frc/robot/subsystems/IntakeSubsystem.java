@@ -44,6 +44,8 @@ public class IntakeSubsystem extends SubsystemBase {
     private final MotionMagicVoltage pivotPositionRequest = new MotionMagicVoltage(0);
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
     private final MutAngle doglogangle = Degrees.mutable(0.0);
+    private final MutAngle absoluteAngle = Rotations.mutable(0.0);
+    private final MutAngle pivotAngle = Rotations.mutable(0.0);
 
     private IntakeState currentState = IntakeState.UP;
     private boolean pivotPIDEnabled = false;
@@ -156,10 +158,9 @@ public class IntakeSubsystem extends SubsystemBase {
      * @return Absolute encoder angle with offset applied
      */
     private Angle getAbsoluteAngle() {
-        double encoderRotations = absoluteEncoder.get();
-        Angle angle = Rotations.of(encoderRotations).plus(IntakeConstants.Pivot.ABSOLUTE_ENCODER_OFFSET);
-
-        return angle;
+        absoluteAngle.mut_replace(absoluteEncoder.get(), Rotations);
+        absoluteAngle.mut_plus(IntakeConstants.Pivot.ABSOLUTE_ENCODER_OFFSET);
+        return absoluteAngle;
     }
 
     /**
@@ -173,7 +174,7 @@ public class IntakeSubsystem extends SubsystemBase {
      * @return Current pivot angle
      */
     public Angle getPivotAngleMeasure() {
-        return Rotations.of(getPivotAngle());
+        return pivotAngle.mut_replace(getPivotAngle(), Rotations);
     }
 
     /**
