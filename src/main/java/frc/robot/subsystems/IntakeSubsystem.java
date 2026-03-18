@@ -47,6 +47,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private IntakeState currentState = IntakeState.UP;
     private boolean pivotPIDEnabled = false;
+    private int absoluteSyncCount = 0;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
@@ -124,7 +125,10 @@ public class IntakeSubsystem extends SubsystemBase {
                 }).andThen(
                         this.idle()));
 
-        pivotMotor.setPosition(IntakeConstants.Pivot.STARTING_ANGLE);
+        Angle initialAbsoluteAngle = getAbsoluteAngle();
+        pivotMotor.setPosition(initialAbsoluteAngle.in(Rotations), 1);
+        DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
+        DogLog.log((getName() + "/InitialAbsoluteAngle"), initialAbsoluteAngle.in(Degrees), Degrees);
 
         SmartDashboard.putData("SetPivotUpStartingAngle", setPivotStartingCommand());
         SmartDashboard.putData("SetPivotDownAngle", setPivotDownAngleCommand());
@@ -314,6 +318,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (absoluteSyncCount++ > 100) {
+            pivotMotor.setPosition(getAbsoluteAngle());
+            absoluteSyncCount = 0;
+        }
+
         DogLog.log((getName() + "/PivotAngle"), getPivotAngle());
         DogLog.log((getName() + "/PivotAngleDegrees"), getPivotAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/PivotAtTarget"), isPivotAtTarget());
