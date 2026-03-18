@@ -56,13 +56,13 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Fire First"
+            "pathName": "Left Fire First"
           }
         },
         {
           "type": "path",
           "data": {
-            "pathName": "Right Sweep Back"
+            "pathName": "Left Sweep Back"
           }
         },
         {
@@ -94,6 +94,6 @@
     }
   },
   "resetOdom": true,
-  "folder": "Left",
+  "folder": null,
   "choreoAuto": false
 }

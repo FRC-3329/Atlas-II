@@ -44,7 +44,7 @@
       ]
     }
   },
-  "resetOdom": false,
-  "folder": "Right",
+  "resetOdom": true,
+  "folder": null,
   "choreoAuto": false
 }

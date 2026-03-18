@@ -13,7 +13,7 @@
         {
           "type": "path",
           "data": {
-            "pathName": "Right Sweep Back"
+            "pathName": "Left Sweep Back"
           }
         },
         {
@@ -44,7 +44,7 @@
       ]
     }
   },
-  "resetOdom": false,
-  "folder": "Left",
+  "resetOdom": true,
+  "folder": null,
   "choreoAuto": false
 }

@@ -28,7 +28,7 @@
         "y": 6.2429745959582394
       },
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left Neutral"
     },
     {
       "anchor": {
@@ -41,7 +41,7 @@
       },
       "nextControl": null,
       "isLocked": false,
-      "linkedName": null
+      "linkedName": "Left Center"
     }
   ],
   "rotationTargets": [
@@ -52,7 +52,26 @@
   ],
   "constraintZones": [],
   "pointTowardsZones": [],
-  "eventMarkers": [],
+  "eventMarkers": [
+    {
+      "name": "LowerIntake",
+      "waypointRelativePos": 0.13644524236983838,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "IntakeGamePiece",
+      "waypointRelativePos": 0.5314183123877919,
+      "endWaypointRelativePos": null,
+      "command": null
+    },
+    {
+      "name": "StopIntake",
+      "waypointRelativePos": 2.0,
+      "endWaypointRelativePos": null,
+      "command": null
+    }
+  ],
   "globalConstraints": {
     "maxVelocity": 4.0,
     "maxAcceleration": 2.0,

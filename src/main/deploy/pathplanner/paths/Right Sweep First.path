@@ -33,11 +33,11 @@
     {
       "anchor": {
         "x": 7.673803879310345,
-        "y": 3.116271551724138
+        "y": 3.067403017241379
       },
       "prevControl": {
         "x": 7.650618142374574,
-        "y": 1.9262779068865508
+        "y": 1.8774093724037917
       },
       "nextControl": null,
       "isLocked": false,
@@ -61,7 +61,7 @@
     },
     {
       "name": "IntakeGamePiece",
-      "waypointRelativePos": 0.6965888689407547,
+      "waypointRelativePos": 0.48833034111310614,
       "endWaypointRelativePos": null,
       "command": null
     },
