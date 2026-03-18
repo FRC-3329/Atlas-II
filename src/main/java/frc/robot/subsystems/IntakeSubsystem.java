@@ -44,9 +44,12 @@ public class IntakeSubsystem extends SubsystemBase {
     private final MotionMagicVoltage pivotPositionRequest = new MotionMagicVoltage(0);
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
     private final MutAngle doglogangle = Degrees.mutable(0.0);
+    private final MutAngle absoluteAngle = Rotations.mutable(0.0);
+    private final MutAngle pivotAngle = Rotations.mutable(0.0);
 
     private IntakeState currentState = IntakeState.UP;
     private boolean pivotPIDEnabled = false;
+    private int absoluteSyncCount = 0;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
@@ -124,7 +127,10 @@ public class IntakeSubsystem extends SubsystemBase {
                 }).andThen(
                         this.idle()));
 
-        pivotMotor.setPosition(IntakeConstants.Pivot.STARTING_ANGLE);
+        Angle initialAbsoluteAngle = getAbsoluteAngle();
+        pivotMotor.setPosition(initialAbsoluteAngle.in(Rotations), 1);
+        DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
+        DogLog.log((getName() + "/InitialAbsoluteAngle"), initialAbsoluteAngle.in(Degrees), Degrees);
 
         SmartDashboard.putData("SetPivotUpStartingAngle", setPivotStartingCommand());
         SmartDashboard.putData("SetPivotDownAngle", setPivotDownAngleCommand());
@@ -152,10 +158,9 @@ public class IntakeSubsystem extends SubsystemBase {
      * @return Absolute encoder angle with offset applied
      */
     private Angle getAbsoluteAngle() {
-        double encoderRotations = absoluteEncoder.get();
-        Angle angle = Rotations.of(encoderRotations).plus(IntakeConstants.Pivot.ABSOLUTE_ENCODER_OFFSET);
-
-        return angle;
+        absoluteAngle.mut_replace(absoluteEncoder.get(), Rotations);
+        absoluteAngle.mut_plus(IntakeConstants.Pivot.ABSOLUTE_ENCODER_OFFSET);
+        return absoluteAngle;
     }
 
     /**
@@ -169,7 +174,7 @@ public class IntakeSubsystem extends SubsystemBase {
      * @return Current pivot angle
      */
     public Angle getPivotAngleMeasure() {
-        return Rotations.of(getPivotAngle());
+        return pivotAngle.mut_replace(getPivotAngle(), Rotations);
     }
 
     /**
@@ -314,6 +319,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        if (absoluteSyncCount++ > 100) {
+            pivotMotor.setPosition(getAbsoluteAngle());
+            absoluteSyncCount = 0;
+        }
+
         DogLog.log((getName() + "/PivotAngle"), getPivotAngle());
         DogLog.log((getName() + "/PivotAngleDegrees"), getPivotAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/PivotAtTarget"), isPivotAtTarget());
