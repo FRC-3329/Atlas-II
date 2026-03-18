@@ -85,7 +85,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
         pivotMotor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         pivotMotor.getVelocity().setUpdateFrequency(50);
-        pivotMotor.optimizeBusUtilization();
 
         absoluteEncoder = new DutyCycleEncoder(IntakeConstants.Pivot.ABSOLUTE_ENCODER_PORT);
         rollerMotor = new SparkMax(IntakeConstants.Roller.MOTOR_ID, MotorType.kBrushless);
@@ -134,6 +133,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
         SmartDashboard.putData("SetPivotUpStartingAngle", setPivotStartingCommand());
         SmartDashboard.putData("SetPivotDownAngle", setPivotDownAngleCommand());
+
+        pivotMotor.optimizeBusUtilization();
     }
 
     public Command setPivotStartingCommand() {
@@ -159,7 +160,7 @@ public class IntakeSubsystem extends SubsystemBase {
      */
     private Angle getAbsoluteAngle() {
         absoluteAngle.mut_replace(absoluteEncoder.get(), Rotations);
-        absoluteAngle.mut_plus(IntakeConstants.Pivot.ABSOLUTE_ENCODER_OFFSET);
+        absoluteAngle.mut_minus(IntakeConstants.Pivot.ABSOLUTE_ENCODER_OFFSET);
         return absoluteAngle;
     }
 

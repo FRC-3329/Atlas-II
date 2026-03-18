@@ -36,18 +36,20 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 public class RobotContainer {
     // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
-    // private final PhotonVisionSubsystem blueCam = new
-    // PhotonVisionSubsystem("blue_cam",
-    // PVConstants.BLUE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
-    // private final PhotonVisionSubsystem orangeCam = new
-    // PhotonVisionSubsystem("orange_cam",
-    // PVConstants.ORANGE_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     @SuppressWarnings("unused")
-    private final PhotonVisionSubsystem yellowCam = new PhotonVisionSubsystem("Yellow_cam",
-            PVConstants.YELLOW_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem blueCam = new PhotonVisionSubsystem("Blue_cam",
+            PVConstants.B_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     @SuppressWarnings("unused")
-    private final PhotonVisionSubsystem redCam = new PhotonVisionSubsystem("Red_cam",
-            PVConstants.RED_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem orangeCam = new PhotonVisionSubsystem("Orange_cam",
+            PVConstants.C_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    // @SuppressWarnings("unused")
+    // private final PhotonVisionSubsystem yellowCam = new
+    // PhotonVisionSubsystem("Yellow_cam",
+    // PVConstants.C_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    // @SuppressWarnings("unused")
+    // private final PhotonVisionSubsystem redCam = new
+    // PhotonVisionSubsystem("Red_cam",
+    // PVConstants.RED_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     private final GameHelpers gameHelpers;
     private final FlywheelSubsystem flywheel;
     private final IndexerSubsystem indexer = new IndexerSubsystem();

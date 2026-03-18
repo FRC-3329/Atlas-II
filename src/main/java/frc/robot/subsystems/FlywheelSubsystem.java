@@ -84,7 +84,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         flywheelConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
 
         flywheelConfig.MotorOutput.Inverted = Flywheel.INVERTED;
-        flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
+        flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
         // 1:2 belting = 0.5 (2x speedup)
         // flywheelConfig.Feedback.SensorToMechanismRatio = 0.5;

@@ -33,7 +33,7 @@ public final class IntakeConstants {
 
         public static final int ABSOLUTE_ENCODER_PORT = 9;
         /** Offset to zero the absolute encoder */
-        public static final Angle ABSOLUTE_ENCODER_OFFSET = Rotations.of(11.43);
+        public static final Angle ABSOLUTE_ENCODER_OFFSET = Degrees.of(17.5);
 
         public static final Angle STARTING_ANGLE = Degrees.of(147.4);
 

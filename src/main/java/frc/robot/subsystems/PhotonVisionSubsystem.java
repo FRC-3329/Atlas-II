@@ -47,7 +47,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 				PVConstants.kTagLayout,
 				robotToCamera);
 
-		camera.setFPSLimit(2);
+		camera.setFPSLimit(4);
 		RobotModeTriggers.disabled()
 				.onTrue(runOnce(() -> camera.setFPSLimit(4)).ignoringDisable(true))
 				.onFalse(runOnce(() -> camera.setFPSLimit(0)));
