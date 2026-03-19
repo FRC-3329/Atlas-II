@@ -18,7 +18,7 @@ public final class PVConstants {
     public static final AprilTagFieldLayout kTagLayout = AprilTagFieldLayout
             .loadField(AprilTagFields.k2026RebuiltWelded);
 
-    public static final Distance CAMERA_HEIGHT_Z = Inches.of(12.96);
+    public static final Distance CAMERA_HEIGHT_Z = Inches.of(14.5);
     public static final Angle CAMERA_PITCH_UP = Degrees.of(25.0);
 
     public static final Transform3d A_ROBOT_TO_CAMERA = new Transform3d(

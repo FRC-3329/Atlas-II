@@ -20,6 +20,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 
@@ -51,6 +52,10 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 		RobotModeTriggers.disabled()
 				.onTrue(runOnce(() -> camera.setFPSLimit(4)).ignoringDisable(true))
 				.onFalse(runOnce(() -> camera.setFPSLimit(0)));
+
+		SmartDashboard.putData(cameraName + " Camera Fast", this.runOnce(() -> {
+			camera.setFPSLimit(20);
+		}).ignoringDisable(true));
 	}
 
 	/**
