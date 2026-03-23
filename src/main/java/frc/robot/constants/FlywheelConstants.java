@@ -16,7 +16,7 @@ public final class FlywheelConstants {
         public static final int LEFT_ID = 2;
         public static final int RIGHT_ID = 1;
 
-        public static final double kP = 0.7;
+        public static final double kP = 0.55;
         public static final double kI = 0.0;
         public static final double kD = 0.0;
         public static final double kS = 0.11085;

@@ -1,7 +1,6 @@
 package frc.robot;
 
 import frc.robot.commands.AutoDriveUnderTrenchCommand;
-import frc.robot.commands.OrientToHubCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.constants.PVConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
@@ -101,8 +100,7 @@ public class RobotContainer {
         autoChooser.setDefaultOption("None", Commands.none());
         autoChooser.addOption("Shoot in Place",
                 Commands.parallel(
-                        flywheel.zeroHood().alongWith(intake.lower())
-                                .andThen(shoot()),
+                        intake.lower().andThen(shoot()),
                         turret.autoTrack())
                         .withTimeout(6.0)
                         .andThen(Commands.sequence(
@@ -130,23 +128,19 @@ public class RobotContainer {
     }
 
     private void configurePathPlannerCommands() {
-        NamedCommands.registerCommand("IntakeGamePiece",
-                intake.intakeForward());
-        NamedCommands.registerCommand("RaiseIntake", intake.raise());
-        NamedCommands.registerCommand("LowerIntake", intake.lower());
+        NamedCommands.registerCommand("IntakeGamePiece", intake.intakeForward().asProxy());
+        NamedCommands.registerCommand("RaiseIntake", intake.raise().asProxy());
+        NamedCommands.registerCommand("LowerIntake", intake.lower().asProxy());
         NamedCommands.registerCommand("EjectGamePiece",
                 Commands.parallel(
-                        intake.intakeBackward(),
+                        intake.intakeBackward().asProxy(),
                         indexer.feedBackwards())
                         .withName("EjectGamePiece"));
-        NamedCommands.registerCommand("Shoot", shoot());
-        NamedCommands.registerCommand("StopFlywheel", flywheel.stop());
-        NamedCommands.registerCommand("StopIndexer", indexer.stop());
-        NamedCommands.registerCommand("StopIntake", intake.stop());
-        NamedCommands.registerCommand("ShootWithAutoTrack",
-                shoot().withName("ShootWithAutoTrack"));
-        NamedCommands.registerCommand("AutoTrackTurret", turret.autoTrack());
-        NamedCommands.registerCommand("ZeroHood", flywheel.zeroHood());
+        NamedCommands.registerCommand("Shoot", shoot().asProxy());
+        NamedCommands.registerCommand("StopFlywheel", flywheel.stop().asProxy());
+        NamedCommands.registerCommand("StopIndexer", indexer.stop().asProxy());
+        NamedCommands.registerCommand("StopIntake", intake.stop().asProxy());
+        NamedCommands.registerCommand("AutoTrackTurret", turret.autoTrack().asProxy());
 
     }
 
@@ -162,8 +156,8 @@ public class RobotContainer {
 
         //// === BUMPERS === ////
         // Left Bumper: Align robot to hub
-        driverController.leftBumper()
-                .whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
+        // driverController.leftBumper()
+        // .whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
         // Right Bumper: Auto drive under trench
         driverController.rightBumper()
                 .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));

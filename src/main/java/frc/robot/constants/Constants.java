@@ -20,5 +20,5 @@ public class Constants {
     /** Minimum distance from hub for a valid shot (in meters) */
     public static final double MIN_SHOT_DISTANCE = 1.9;
     /** Maximum distance from hub for a valid shot (in meters) */
-    public static final double MAX_SHOT_DISTANCE = 5.4;
+    public static final double MAX_SHOT_DISTANCE = 4.02;
 }
