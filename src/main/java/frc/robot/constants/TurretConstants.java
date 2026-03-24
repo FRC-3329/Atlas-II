@@ -7,6 +7,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Angle;
 
 public final class TurretConstants {
@@ -38,7 +39,7 @@ public final class TurretConstants {
 
     public static final double TOP_FREE_SPACE_Y_OFFSET = 1.5; // meters
     public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 1.5; // meters
-    public static final double PASS_X_OFFSET = 0.3048; // 1 foot in meters
+    public static final double PASS_X_OFFSET = Units.feetToMeters(1);
 
     public static final boolean ENABLE_AUTO_AIM = false;
 
