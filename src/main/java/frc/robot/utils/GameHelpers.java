@@ -294,16 +294,20 @@ public class GameHelpers extends SubsystemBase {
             targetTranslation = hubTranslation;
             DogLog.log((getName() + "/TargetZone"), "OurZone");
         } else if (isAboveHub()) {
-            // In opponent zone and above hub - aim at top free space
+            // In opponent zone and above hub - aim at top free space, shifted into our
+            // alliance zone
+            double xOffset = isRedAlliance() ? TurretConstants.PASS_X_OFFSET : -TurretConstants.PASS_X_OFFSET;
             targetTranslation = new Translation2d(
-                    hubTranslation.getX(),
+                    hubTranslation.getX() + xOffset,
                     hubTranslation.getY() + TurretConstants.TOP_FREE_SPACE_Y_OFFSET);
 
             DogLog.log((getName() + "/TargetZone"), "OpponentZoneTop");
         } else {
-            // In opponent zone and below hub - aim at bottom free space
+            // In opponent zone and below hub - aim at bottom free space, shifted into our
+            // alliance zone
+            double xOffset = isRedAlliance() ? TurretConstants.PASS_X_OFFSET : -TurretConstants.PASS_X_OFFSET;
             targetTranslation = new Translation2d(
-                    hubTranslation.getX(),
+                    hubTranslation.getX() + xOffset,
                     hubTranslation.getY() - TurretConstants.BOTTOM_FREE_SPACE_Y_OFFSET);
 
             DogLog.log((getName() + "/TargetZone"), "OpponentZoneBottom");
