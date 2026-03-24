@@ -38,6 +38,7 @@ public final class TurretConstants {
 
     public static final double TOP_FREE_SPACE_Y_OFFSET = 1.5; // meters
     public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 1.5; // meters
+    public static final double PASS_X_OFFSET = 0.3048; // 1 foot in meters
 
     public static final boolean ENABLE_AUTO_AIM = false;
 
