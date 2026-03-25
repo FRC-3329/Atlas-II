@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Volts;
 
@@ -18,19 +19,20 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.IndexerConstants;
 
 public class IndexerSubsystem extends SubsystemBase {
-    private final SparkMax motor;
+    private final SparkMax indexerMotor;
     private final SparkMax beltMotor;
     private final Trigger stallDetected;
 
     public IndexerSubsystem() {
-        motor = new SparkMax(IndexerConstants.MOTOR_ID, MotorType.kBrushless);
-        stallDetected = new Trigger(() -> motor.getOutputCurrent() >= (IndexerConstants.CURRENT_LIMIT - 1.0))
+        indexerMotor = new SparkMax(IndexerConstants.Indexer.MOTOR_ID, MotorType.kBrushless);
+        stallDetected = new Trigger(
+                () -> indexerMotor.getOutputCurrent() >= (IndexerConstants.Indexer.CURRENT_LIMIT - 1.0))
                 .debounce(IndexerConstants.CURRENT_STALL_TIME);
 
         SparkMaxConfig config = new SparkMaxConfig();
-        config.smartCurrentLimit(IndexerConstants.CURRENT_LIMIT);
-        config.inverted(IndexerConstants.INVERTED);
-        config.idleMode(IndexerConstants.IDLE_MODE);
+        config.smartCurrentLimit(IndexerConstants.Indexer.CURRENT_LIMIT);
+        config.inverted(IndexerConstants.Indexer.INVERTED);
+        config.idleMode(IndexerConstants.Indexer.IDLE_MODE);
 
         config.signals
                 .absoluteEncoderPositionAlwaysOn(false)
@@ -45,15 +47,15 @@ public class IndexerSubsystem extends SubsystemBase {
                 .appliedOutputPeriodMs(20)
                 .faultsPeriodMs(20);
 
-        motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        indexerMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         // Configure belt motor to follow indexer motor
-        beltMotor = new SparkMax(IndexerConstants.BELT_MOTOR_ID, MotorType.kBrushless);
+        beltMotor = new SparkMax(IndexerConstants.Belt.MOTOR_ID, MotorType.kBrushless);
 
         SparkMaxConfig beltConfig = new SparkMaxConfig();
-        beltConfig.follow(motor);
-        beltConfig.smartCurrentLimit(IndexerConstants.CURRENT_LIMIT);
-        beltConfig.idleMode(IndexerConstants.IDLE_MODE);
+        beltConfig.follow(indexerMotor);
+        beltConfig.smartCurrentLimit(IndexerConstants.Belt.CURRENT_LIMIT);
+        beltConfig.idleMode(IndexerConstants.Belt.IDLE_MODE);
 
         beltConfig.signals
                 .absoluteEncoderPositionAlwaysOn(false)
@@ -72,13 +74,13 @@ public class IndexerSubsystem extends SubsystemBase {
 
         setDefaultCommand(
                 this.runOnce(() -> {
-                    motor.set(0);
+                    indexerMotor.set(0);
                 }).andThen(
                         this.idle()));
     }
 
     private void setVoltage(double voltage) {
-        motor.setVoltage(voltage);
+        indexerMotor.setVoltage(voltage);
         DogLog.log(getName() + "/Voltage", voltage, Volts);
     }
 
@@ -99,14 +101,19 @@ public class IndexerSubsystem extends SubsystemBase {
     }
 
     public Command stop() {
-        return this.runOnce(() -> motor.stopMotor());
+        return this.runOnce(() -> indexerMotor.stopMotor());
     }
 
     @Override
     public void periodic() {
-        DogLog.log(getName() + "/Current", motor.getOutputCurrent(), Amps);
-        DogLog.log(getName() + "/Velocity", motor.getEncoder().getVelocity(), RPM);
+        DogLog.log(getName() + "/Current", indexerMotor.getOutputCurrent(), Amps);
+        DogLog.log(getName() + "/Velocity", indexerMotor.getEncoder().getVelocity(), RPM);
         DogLog.log(getName() + "/stallDetected", stallDetected.getAsBoolean());
+
+        // Log temp when current limit is high enough to cause heat concerns
+        if (IndexerConstants.Indexer.CURRENT_LIMIT >= 60) {
+            DogLog.log(getName() + "/Temperature", indexerMotor.getMotorTemperature(), Celsius);
+        }
 
         DogLog.log(getName() + "/BeltCurrent", beltMotor.getOutputCurrent(), Amps);
         DogLog.log(getName() + "/BeltVelocity", beltMotor.getEncoder().getVelocity(), RPM);
