@@ -21,5 +21,6 @@ public final class IndexerConstants {
 
         public static final int CURRENT_LIMIT = 40; // Amps
         public static final IdleMode IDLE_MODE = IdleMode.kBrake;
+        public static final boolean INVERTED = false;
     }
 }

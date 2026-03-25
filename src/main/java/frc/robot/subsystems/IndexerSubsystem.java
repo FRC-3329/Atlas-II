@@ -53,7 +53,7 @@ public class IndexerSubsystem extends SubsystemBase {
         beltMotor = new SparkMax(IndexerConstants.Belt.MOTOR_ID, MotorType.kBrushless);
 
         SparkMaxConfig beltConfig = new SparkMaxConfig();
-        beltConfig.follow(indexerMotor);
+        beltConfig.follow(indexerMotor, IndexerConstants.Belt.INVERTED);
         beltConfig.smartCurrentLimit(IndexerConstants.Belt.CURRENT_LIMIT);
         beltConfig.idleMode(IndexerConstants.Belt.IDLE_MODE);
 
