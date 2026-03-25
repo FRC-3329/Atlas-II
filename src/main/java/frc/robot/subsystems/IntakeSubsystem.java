@@ -15,9 +15,9 @@ import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
+import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
-import com.revrobotics.spark.SparkMax;
-import com.revrobotics.spark.config.SparkMaxConfig;
+import com.revrobotics.spark.config.SparkFlexConfig;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
@@ -38,7 +38,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     private final TalonFX pivotMotor;
-    private final SparkMax rollerMotor;
+    private final SparkFlex rollerMotor;
     private final DutyCycleEncoder absoluteEncoder;
 
     private final MotionMagicVoltage pivotPositionRequest = new MotionMagicVoltage(0);
@@ -87,10 +87,10 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotor.getVelocity().setUpdateFrequency(50);
 
         absoluteEncoder = new DutyCycleEncoder(IntakeConstants.Pivot.ABSOLUTE_ENCODER_PORT);
-        rollerMotor = new SparkMax(IntakeConstants.Roller.MOTOR_ID, MotorType.kBrushless);
+        rollerMotor = new SparkFlex(IntakeConstants.Roller.MOTOR_ID, MotorType.kBrushless);
 
         // Configure roller motor
-        SparkMaxConfig rollerConfig = new SparkMaxConfig();
+        SparkFlexConfig rollerConfig = new SparkFlexConfig();
         rollerConfig.smartCurrentLimit(IntakeConstants.Roller.CURRENT_LIMIT);
         rollerConfig.inverted(IntakeConstants.Roller.INVERTED);
         rollerConfig.idleMode(IntakeConstants.Roller.IDLE_MODE);
