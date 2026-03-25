@@ -19,6 +19,7 @@ import frc.robot.constants.IndexerConstants;
 
 public class IndexerSubsystem extends SubsystemBase {
     private final SparkMax motor;
+    private final SparkMax beltMotor;
     private final Trigger stallDetected;
 
     public IndexerSubsystem() {
@@ -45,6 +46,29 @@ public class IndexerSubsystem extends SubsystemBase {
                 .faultsPeriodMs(20);
 
         motor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
+        // Configure belt motor to follow indexer motor
+        beltMotor = new SparkMax(IndexerConstants.BELT_MOTOR_ID, MotorType.kBrushless);
+
+        SparkMaxConfig beltConfig = new SparkMaxConfig();
+        beltConfig.follow(motor);
+        beltConfig.smartCurrentLimit(IndexerConstants.CURRENT_LIMIT);
+        beltConfig.idleMode(IndexerConstants.IDLE_MODE);
+
+        beltConfig.signals
+                .absoluteEncoderPositionAlwaysOn(false)
+                .primaryEncoderVelocityAlwaysOn(false)
+                .analogPositionAlwaysOn(false)
+                .analogVelocityAlwaysOn(false)
+                .externalOrAltEncoderPositionAlwaysOn(false)
+                .externalOrAltEncoderVelocityAlwaysOn(false)
+                .primaryEncoderPositionAlwaysOn(false)
+                .primaryEncoderVelocityAlwaysOn(false)
+                .iAccumulationAlwaysOn(false)
+                .appliedOutputPeriodMs(20)
+                .faultsPeriodMs(20);
+
+        beltMotor.configure(beltConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
         setDefaultCommand(
                 this.runOnce(() -> {
@@ -83,5 +107,8 @@ public class IndexerSubsystem extends SubsystemBase {
         DogLog.log(getName() + "/Current", motor.getOutputCurrent(), Amps);
         DogLog.log(getName() + "/Velocity", motor.getEncoder().getVelocity(), RPM);
         DogLog.log(getName() + "/stallDetected", stallDetected.getAsBoolean());
+
+        DogLog.log(getName() + "/BeltCurrent", beltMotor.getOutputCurrent(), Amps);
+        DogLog.log(getName() + "/BeltVelocity", beltMotor.getEncoder().getVelocity(), RPM);
     }
 }
