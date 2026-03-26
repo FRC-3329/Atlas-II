@@ -113,7 +113,6 @@ public class IndexerSubsystem extends SubsystemBase {
     public void periodic() {
         DogLog.log(getName() + "/Current", indexerMotor.getOutputCurrent(), Amps);
         DogLog.log(getName() + "/Velocity", indexerMotor.getEncoder().getVelocity(), RPM);
-        DogLog.log(getName() + "/stallDetected", stallDetected.getAsBoolean());
 
         // High current limits can overheat Vortex motors; log temp for monitoring
         if (IndexerConstants.Indexer.CURRENT_LIMIT >= 60) {

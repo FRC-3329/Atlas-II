@@ -145,6 +145,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private void setPivotAngle(Angle angle) {
         pivotMotor.setControl(pivotPositionRequest.withPosition(angle.in(Rotations)));
         pivotPIDEnabled = true;
+        DogLog.log((getName() + "/PivotPIDEnabled"), true);
     }
 
     public IntakeState getState() {
@@ -167,6 +168,7 @@ public class IntakeSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.DOWN_ANGLE);
             currentState = IntakeState.DOWN;
+            DogLog.log((getName() + "/IsDown"), true);
         }).andThen(
                 Commands.waitUntil(this::isPivotAtTarget).withTimeout(2.0)
                         .andThen(disablePivotPIDCommand()))
@@ -183,6 +185,7 @@ public class IntakeSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.UP_ANGLE);
             currentState = IntakeState.UP;
+            DogLog.log((getName() + "/IsDown"), false);
         }).withName("IntakeRaise");
     }
 
@@ -234,6 +237,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private void disablePivotPID() {
         pivotMotor.setControl(pivotDisableRequest);
         pivotPIDEnabled = false;
+        DogLog.log((getName() + "/PivotPIDEnabled"), false);
     }
 
     public Command stop() {
@@ -247,7 +251,6 @@ public class IntakeSubsystem extends SubsystemBase {
     public void periodic() {
         DogLog.log((getName() + "/PivotAngle"), getPivotAngle());
         DogLog.log((getName() + "/PivotAngleDegrees"), getPivotAngleMeasure().in(Degrees), Degrees);
-        DogLog.log((getName() + "/PivotAtTarget"), isPivotAtTarget());
         DogLog.log((getName() + "/PivotCurrent"), pivotMotor.getSupplyCurrent().getValueAsDouble(), Amps);
         DogLog.log((getName() + "/PivotVelocity"), pivotMotor.getVelocity().getValueAsDouble());
 
@@ -256,8 +259,6 @@ public class IntakeSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/RollerVelocity"), rollerMotor.getEncoder().getVelocity(), RPM);
 
         DogLog.log((getName() + "/State"), currentState.toString());
-        DogLog.log((getName() + "/IsDown"), isDown());
-        DogLog.log((getName() + "/PivotPIDEnabled"), pivotPIDEnabled);
 
         if (!isDown()) {
             DogLog.logFault("Intake pivot is up", Alert.AlertType.kWarning);

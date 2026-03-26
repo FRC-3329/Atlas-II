@@ -308,10 +308,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     @Override
     public void periodic() {
         DogLog.log(
-                (getName() + "/AtSpeed"),
-                isAtSpeed());
-
-        DogLog.log(
                 (getName() + "/Speed"),
                 left.get());
 

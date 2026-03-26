@@ -182,10 +182,12 @@ public class TurretSubsystem extends SubsystemBase {
 
     public void enableAutoTracking() {
         autoTrackingEnabled = true;
+        DogLog.log((getName() + "/AutoTracking"), true);
     }
 
     public void disableAutoTracking() {
         autoTrackingEnabled = false;
+        DogLog.log((getName() + "/AutoTracking"), false);
     }
 
     public boolean isAutoTrackingEnabled() {
@@ -273,9 +275,6 @@ public class TurretSubsystem extends SubsystemBase {
 
         DogLog.log((getName() + "/Angle"), getAngle(), Rotations);
         DogLog.log((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
-        DogLog.log((getName() + "/AtTarget"), isAtTarget());
-        DogLog.log((getName() + "/OnTarget"), isOnTarget());
-        DogLog.log((getName() + "/AutoTracking"), autoTrackingEnabled);
 
         if (!autoTrackingEnabled) {
             DogLog.logFault("Turret auto-tracking disabled", Alert.AlertType.kWarning);
