@@ -57,7 +57,7 @@ public final class IntakeConstants {
         public static final double VOLTAGE_COMPENSATION = 12.0;
 
         public static final int CURRENT_LIMIT = 40;
-        public static final boolean INVERTED = true;
+        public static final boolean INVERTED = false;
         public static final IdleMode IDLE_MODE = IdleMode.kBrake;
     }
 }
