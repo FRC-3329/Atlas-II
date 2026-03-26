@@ -137,6 +137,7 @@ public class RobotContainer {
         driverController.rightTrigger(0.5)
                 .whileTrue(shoot());
 
+        driverController.leftBumper().whileTrue(intake.tunePID());
         driverController.rightBumper()
                 .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
 
@@ -198,7 +199,7 @@ public class RobotContainer {
      */
     public Command shoot() {
         return Commands.parallel(
-                Commands.either(flywheel.shoot(), flywheel.shoot(RPM.of(1600), Degrees.of(10.0)),
+                Commands.either(flywheel.shoot(), flywheel.tunableShoot(),
                         flywheel::isVaryingRPMEnabled),
                 Commands.waitUntil(flywheel::isAtSpeed).withTimeout(0.4)
                         .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));

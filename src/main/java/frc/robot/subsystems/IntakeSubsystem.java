@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
 import static edu.wpi.first.units.Units.Amps;
+import static edu.wpi.first.units.Units.Celsius;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
@@ -19,12 +20,14 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
 import com.revrobotics.ResetMode;
 import com.revrobotics.spark.SparkFlex;
+import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
+import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -46,6 +49,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
     private final MutAngle doglogangle = Degrees.mutable(0.0);
     private final MutAngle pivotAngle = Rotations.mutable(0.0);
+    private final MutAngularVelocity doglogVel = RPM.mutable(0.0);
 
     private IntakeState currentState = IntakeState.UP;
     private boolean pivotPIDEnabled = false;
@@ -125,6 +129,14 @@ public class IntakeSubsystem extends SubsystemBase {
                     doglogangle.mut_replace(angle, Degrees);
                 });
 
+        DogLog.tunable(
+                (getName() + "/RollerVelocityRPM"),
+                0.0,
+                RPM,
+                (vel) -> {
+                    doglogVel.mut_replace(vel, RPM);
+                });
+
         setDefaultCommand(
                 this.runOnce(() -> {
                     rollerMotor.setVoltage(0);
@@ -158,6 +170,13 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public boolean isPivotAtTarget() {
         return pivotMotor.getMotionMagicAtTarget().getValue();
+    }
+
+    public Command tunePID() {
+        return this.runOnce(
+                () -> rollerMotor.getClosedLoopController().setSetpoint(doglogVel.in(RPM), ControlType.kVelocity))
+                .andThen(this.idle())
+                .finallyDo(() -> rollerMotor.stopMotor());
     }
 
     /**
@@ -257,6 +276,7 @@ public class IntakeSubsystem extends SubsystemBase {
         DogLog.log((getName() + "/RollerVoltage"), rollerMotor.getAppliedOutput() * rollerMotor.getBusVoltage(), Volts);
         DogLog.log((getName() + "/RollerCurrent"), rollerMotor.getOutputCurrent(), Amps);
         DogLog.log((getName() + "/RollerVelocity"), rollerMotor.getEncoder().getVelocity(), RPM);
+        DogLog.log((getName() + "/RollerTemp"), rollerMotor.getMotorTemperature(), Celsius);
 
         DogLog.log((getName() + "/State"), currentState.toString());
 

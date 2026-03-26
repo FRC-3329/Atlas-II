@@ -54,8 +54,8 @@ public class IndexerSubsystem extends SubsystemBase {
         beltMotor = new SparkMax(IndexerConstants.Belt.MOTOR_ID, MotorType.kBrushless);
 
         SparkMaxConfig beltConfig = new SparkMaxConfig();
-        beltConfig.follow(indexerMotor, IndexerConstants.Belt.INVERTED);
         beltConfig.smartCurrentLimit(IndexerConstants.Belt.CURRENT_LIMIT);
+        beltConfig.inverted(IndexerConstants.Belt.INVERTED);
         beltConfig.idleMode(IndexerConstants.Belt.IDLE_MODE);
 
         beltConfig.signals
@@ -76,28 +76,38 @@ public class IndexerSubsystem extends SubsystemBase {
         setDefaultCommand(
                 this.runOnce(() -> {
                     indexerMotor.set(0);
+                    beltMotor.set(0);
                 }).andThen(
                         this.idle()));
     }
 
-    private void setVoltage(double voltage) {
+    private void setIndxerVoltage(double voltage) {
         indexerMotor.setVoltage(voltage);
         DogLog.log(getName() + "/Voltage", voltage, Volts);
     }
 
+    private void setBeltVoltage(double voltage) {
+        beltMotor.setVoltage(voltage);
+    }
+
     public Command feed() {
-        return this.run(() -> setVoltage(IndexerConstants.FEED_VOLTAGE))
-                .withName("IndexerFeed");
+        return this.run(() -> {
+            setIndxerVoltage(IndexerConstants.Indexer.FEED_VOLTAGE);
+            setBeltVoltage(IndexerConstants.Belt.FEED_VOLTAGE);
+        }).withName("IndexerFeed");
     }
 
     public Command feedBackwards() {
-        return this.run(() -> setVoltage(-IndexerConstants.FEED_VOLTAGE))
-                .withName("IndexerFeedBackwards");
+        return this.run(() -> {
+            setIndxerVoltage(-IndexerConstants.Indexer.FEED_VOLTAGE);
+            setBeltVoltage(-IndexerConstants.Belt.FEED_VOLTAGE);
+        }).withName("IndexerFeedBackwards");
     }
 
     /**
      * Feeds forward until a stall is detected (fuel jammed), briefly reverses
-     * to clear the jam, then repeats. Keeps fuel flowing without driver intervention.
+     * to clear the jam, then repeats. Keeps fuel flowing without driver
+     * intervention.
      */
     public Command smartFeed() {
         return Commands.repeatingSequence(
