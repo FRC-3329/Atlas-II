@@ -30,6 +30,7 @@ All constant values
 - **FlywheelConstants.java** - PID gains, motion magic parameters, and current limits for flywheel and hood motors
 - **IndexerConstants.java** - Motor configuration for note indexing system
 - **IntakeConstants.java** - Pivot and roller motor settings for ground intake mechanism
+- **LEDConstants.java** - PWM port and strip length for addressable LEDs
 - **OperatorConstants.java** - Controller ports and joystick deadband values
 - **OrientToHubConstants.java** - PID gains, velocity/acceleration limits, and tolerance for the orient-to-hub command
 - **PVConstants.java** - PhotonVision AprilTag field layout and vision standard deviations
@@ -46,7 +47,8 @@ Robot subsystems that control physical mechanisms
 - **FlywheelSubsystem.java** - Controls shooter flywheel speed and hood angle with distance-based interpolation maps
 - **IndexerSubsystem.java** - Feeds notes from intake mechanism to the shooter
 - **IntakeSubsystem.java** - Deploys and retracts the intake arm, runs roller to collect notes from the ground
-- **LEDsSubsystem.java** - Controls the PDH / LEDs
+- **LEDSubsystem.java** - Controls addressable LED strip with pattern-based status indicators
+- **PDHSubsystem.java** - Manages the Power Distribution Hub switchable channel and logging
 - **PhotonVisionSubsystem.java** - Processes AprilTag detection data for robot pose estimation
 - **SwerveSubsystem.java** - Swerve drive control with field-relative driving, odometry, and pathfinding
 - **TurretSubsystem.java** - Rotates turret to aim at targets with auto-tracking capability

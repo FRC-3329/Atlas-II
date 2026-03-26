@@ -12,17 +12,17 @@
 - **Right Trigger**: Shoot
 
 ### Bumpers
-- **Left Bumper**: Align robot to hub
+- **Left Bumper**: *(unbound)*
 - **Right Bumper**: Auto drive under trench
 
 ### Face Buttons
 - **A Button**: Reverse indexer
 - **B Button**: Reverse indexer and intake
-- **X Button**: Auto drive under trench
+- **X Button**: Lock swerve wheels
 - **Y Button**: Toggle flywheel varying RPM
 
 ### D-Pad
-- **Up**: Raise intake
+- **Up**: Kick intake
 - **Right**: Move turret right
 - **Left**: Move turret left
 - **Down**: Lower intake
