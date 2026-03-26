@@ -1,8 +1,10 @@
 package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.SensorDirectionValue;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 import edu.wpi.first.units.measure.Angle;
@@ -18,7 +20,7 @@ public final class IntakeConstants {
         public static final double kV = 4.25;
         public static final double kA = 0.00;
         public static final double kG = 0.24;
-        
+
         public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0; // rotations
 
         public static final double CRUISE_VELOCITY = 2.0; // rotations per second
@@ -30,16 +32,18 @@ public final class IntakeConstants {
         /** Up position - perpendicular to ground */
         public static final Angle UP_ANGLE = Degrees.of(90.0);
 
-        public static final int ABSOLUTE_ENCODER_PORT = 9;
-        /** Offset to zero the absolute encoder */
-        public static final Angle ABSOLUTE_ENCODER_OFFSET = Degrees.of(17.5);
-
         public static final Angle STARTING_ANGLE = Degrees.of(147.4);
 
         public static final double CURRENT_LIMIT = 40.0; // Amps
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
 
         public static final Angle KICK_ANGLE = Degrees.of(30.0);
+
+        // CANcoder (WCP ThroughBore Encoder)
+        public static final int CANCODER_ID = 0;
+        public static final Angle CANCODER_OFFSET = Rotations.of(0.0);
+        public static final SensorDirectionValue CANCODER_DIRECTION = SensorDirectionValue.CounterClockwise_Positive;
+        public static final double GEARING_RATIO = 4.0 * 5.0 * 43.0 / 24.0;
     }
 
     public static final class Roller {
