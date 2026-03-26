@@ -28,7 +28,7 @@ public final class IntakeConstants {
         public static final double JERK = 0.0; // rotations per second cubed
 
         /** Down position - parallel to ground */
-        public static final Angle DOWN_ANGLE = Degrees.of(-25.0);
+        public static final Angle DOWN_ANGLE = Degrees.of(0.0);
         /** Up position - perpendicular to ground */
         public static final Angle UP_ANGLE = Degrees.of(90.0);
 
