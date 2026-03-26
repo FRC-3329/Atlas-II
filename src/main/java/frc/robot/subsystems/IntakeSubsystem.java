@@ -6,11 +6,14 @@ import static edu.wpi.first.units.Units.RPM;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.Volts;
 
+import com.ctre.phoenix6.configs.CANcoderConfiguration;
 import com.ctre.phoenix6.configs.Slot0Configs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 import com.revrobotics.PersistMode;
@@ -23,8 +26,6 @@ import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.wpilibj.Alert;
-import edu.wpi.first.wpilibj.DutyCycleEncoder;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
@@ -39,20 +40,24 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final TalonFX pivotMotor;
     private final SparkFlex rollerMotor;
-    private final DutyCycleEncoder absoluteEncoder;
+    private final CANcoder cancoder;
 
     private final MotionMagicVoltage pivotPositionRequest = new MotionMagicVoltage(0);
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
     private final MutAngle doglogangle = Degrees.mutable(0.0);
-    private final MutAngle absoluteAngle = Rotations.mutable(0.0);
     private final MutAngle pivotAngle = Rotations.mutable(0.0);
 
     private IntakeState currentState = IntakeState.UP;
     private boolean pivotPIDEnabled = false;
-    private int absoluteSyncCount = 0;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
+
+        cancoder = new CANcoder(IntakeConstants.Pivot.CANCODER_ID);
+        CANcoderConfiguration cancoderConfig = new CANcoderConfiguration();
+        cancoderConfig.MagnetSensor.MagnetOffset = IntakeConstants.Pivot.CANCODER_OFFSET.in(Rotations);
+        cancoderConfig.MagnetSensor.SensorDirection = IntakeConstants.Pivot.CANCODER_DIRECTION;
+        cancoder.getConfigurator().apply(cancoderConfig, 1);
 
         // Configure pivot motor
         TalonFXConfiguration pivotConfig = new TalonFXConfiguration();
@@ -79,14 +84,16 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotConfig.MotorOutput.Inverted = IntakeConstants.Pivot.INVERTED;
         pivotConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        pivotConfig.Feedback.SensorToMechanismRatio = 4.0 * 5.0 * 43.0 / 24.0;
+        pivotConfig.Feedback.FeedbackRemoteSensorID = cancoder.getDeviceID();
+        pivotConfig.Feedback.FeedbackSensorSource = FeedbackSensorSourceValue.RemoteCANcoder;
+        pivotConfig.Feedback.SensorToMechanismRatio = 1.0;
+        pivotConfig.Feedback.RotorToSensorRatio = IntakeConstants.Pivot.GEARING_RATIO;
 
         pivotMotor.getConfigurator().apply(pivotConfig, 1);
 
         pivotMotor.getPosition().setUpdateFrequency(50); // 50 Hz for position control
         pivotMotor.getVelocity().setUpdateFrequency(50);
 
-        absoluteEncoder = new DutyCycleEncoder(IntakeConstants.Pivot.ABSOLUTE_ENCODER_PORT);
         rollerMotor = new SparkFlex(IntakeConstants.Roller.MOTOR_ID, MotorType.kBrushless);
 
         // Configure roller motor
@@ -126,42 +133,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 }).andThen(
                         this.idle()));
 
-        Angle initialAbsoluteAngle = getAbsoluteAngle();
-        pivotMotor.setPosition(initialAbsoluteAngle.in(Rotations), 1);
-        DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
-        DogLog.log((getName() + "/InitialAbsoluteAngle"), initialAbsoluteAngle.in(Degrees), Degrees);
-
-        SmartDashboard.putData("SetPivotUpStartingAngle", setPivotStartingCommand());
-        SmartDashboard.putData("SetPivotDownAngle", setPivotDownAngleCommand());
-
         pivotMotor.optimizeBusUtilization();
-    }
-
-    public Command setPivotStartingCommand() {
-        return this.runOnce(() -> {
-            currentState = IntakeState.UP;
-            pivotMotor.setPosition(IntakeConstants.Pivot.STARTING_ANGLE);
-        })
-                .ignoringDisable(true)
-                .withName("Set Pivot Angle Up");
-    }
-
-    public Command setPivotDownAngleCommand() {
-        return this.runOnce(() -> {
-            currentState = IntakeState.DOWN;
-            pivotMotor.setPosition(IntakeConstants.Pivot.DOWN_ANGLE);
-        })
-                .ignoringDisable(true)
-                .withName("Set Pivot Angle Down");
-    }
-
-    /**
-     * @return Absolute encoder angle with offset applied
-     */
-    private Angle getAbsoluteAngle() {
-        absoluteAngle.mut_replace(absoluteEncoder.get(), Rotations);
-        absoluteAngle.mut_minus(IntakeConstants.Pivot.ABSOLUTE_ENCODER_OFFSET);
-        return absoluteAngle;
     }
 
     /**
@@ -320,18 +292,11 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        if (absoluteSyncCount++ > 100) {
-            pivotMotor.setPosition(getAbsoluteAngle());
-            absoluteSyncCount = 0;
-        }
-
         DogLog.log((getName() + "/PivotAngle"), getPivotAngle());
         DogLog.log((getName() + "/PivotAngleDegrees"), getPivotAngleMeasure().in(Degrees), Degrees);
         DogLog.log((getName() + "/PivotAtTarget"), isPivotAtTarget());
         DogLog.log((getName() + "/PivotCurrent"), pivotMotor.getSupplyCurrent().getValueAsDouble(), Amps);
         DogLog.log((getName() + "/PivotVelocity"), pivotMotor.getVelocity().getValueAsDouble());
-
-        DogLog.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngle().in(Degrees), Degrees);
 
         DogLog.log((getName() + "/RollerVoltage"), rollerMotor.getAppliedOutput() * rollerMotor.getBusVoltage(), Volts);
         DogLog.log((getName() + "/RollerCurrent"), rollerMotor.getOutputCurrent(), Amps);
