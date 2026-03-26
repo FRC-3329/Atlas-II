@@ -21,7 +21,9 @@ import frc.robot.constants.Constants;
 import frc.robot.constants.TurretConstants;
 
 /**
- * Utility class for game-specific operations.
+ * Computes game-state-aware targeting: selects the correct target based
+ * on field position, applies shoot-on-the-move offsets, and tracks
+ * phase shift timing.
  */
 public class GameHelpers extends SubsystemBase {
     private final Supplier<Pose2d> robotPoseSupplier;
@@ -31,22 +33,13 @@ public class GameHelpers extends SubsystemBase {
     private String cachedGameData = "";
     private ShotParameters.Parameters shotParameters;
 
-    /**
-     * @param robotPoseSupplier     A supplier that provides the robot's current
-     *                              pose on
-     *                              the field
-     * @param robotVelocitySupplier A supplier to provide the current robot centric
-     *                              velocity
-     */
     public GameHelpers(Supplier<Pose2d> robotPoseSupplier, Supplier<ChassisSpeeds> robotVelocitySupplier) {
         this.robotPoseSupplier = robotPoseSupplier;
         this.robotVelocitySupplier = robotVelocitySupplier;
         this.virtualTargetDistance = Meters.mutable(0.0);
     }
 
-    /**
-     * @return The hub position in the current alliance's coordinate system
-     */
+    /** Returns the hub position, flipped for red alliance. */
     public Translation2d calculateHubPosition() {
         Translation2d hubPosition = Constants.HUB_LOCATION;
         Optional<Alliance> alliance = DriverStation.getAlliance();
@@ -58,108 +51,68 @@ public class GameHelpers extends SubsystemBase {
         return hubPosition;
     }
 
-    /**
-     * @return The distance to the hub in meters
-     */
     public Distance getHubDistance() {
         Translation2d robotTranslation = robotPoseSupplier.get().getTranslation();
         double distanceMeters = robotTranslation.getDistance(calculateHubPosition());
         return Meters.of(distanceMeters);
     }
 
-    /**
-     * @return The distance to the hub in meters
-     */
     public double getHubDistanceMeters() {
         Translation2d robotTranslation = robotPoseSupplier.get().getTranslation();
         return robotTranslation.getDistance(calculateHubPosition());
     }
 
     /**
-     * @return The angle between the robot and the target depending on the robot's
-     *         current position on the field and velocity. The current position
-     *         selects the target while the position and velocity adjust the virtual
-     *         target for SOTM.
+     * Angle and distance to the SOTM-adjusted virtual target,
+     * accounting for robot velocity so the fuel arrives at the
+     * real target despite robot motion.
      */
     public Rotation2d getVirtualTargetFieldAngle() {
         return virtualTargetFieldAngle;
     }
 
-    /**
-     * @return The distance between the robot and the target depending on the
-     *         robot's current position on the field and velocity. The current
-     *         position selects the target while the position and velocity adjust
-     *         the virtual target for SOTM.
-     */
     public Distance getVirtualTargetDistance() {
         return virtualTargetDistance;
     }
 
-    /**
-     * @return The updated shot parameters for the robot's current state on the
-     *         field. This uses the position and velocity to determine both the
-     *         correct target and offset the target to account for SOTM.
-     */
     public ShotParameters.Parameters getShotParameters() {
         return shotParameters;
     }
 
-    /**
-     * This is the angle from the robot's position to the hub, relative to the
-     * field's x-axis.
-     * 
-     * @return The angle to the hub as a Rotation2d
-     */
     public Rotation2d getAngleToHub() {
         Translation2d robotTranslation = robotPoseSupplier.get().getTranslation();
         return calculateHubPosition().minus(robotTranslation).getAngle();
     }
 
-    /**
-     * @return current alliance (Red or Blue) if present
-     */
     public Optional<Alliance> getAlliance() {
         return DriverStation.getAlliance();
     }
 
-    /**
-     * @return true if the alliance is Red, false otherwise
-     */
     public boolean isRedAlliance() {
         Optional<Alliance> alliance = DriverStation.getAlliance();
         return alliance.isPresent() && alliance.get() == Alliance.Red;
     }
 
-    /**
-     * @return true if the alliance is Blue, false otherwise
-     */
     public boolean isBlueAlliance() {
         Optional<Alliance> alliance = DriverStation.getAlliance();
         return alliance.isPresent() && alliance.get() == Alliance.Blue;
     }
 
-    /**
-     * @return The robot's current pose on the field
-     */
     public Pose2d getRobotPose() {
         return robotPoseSupplier.get();
     }
 
-    /**
-     * @return The robot's current velocity (not field velocity)
-     */
     public ChassisSpeeds getRobotVelocites() {
         return robotVelocitySupplier.get();
     }
 
     /**
-     * Determines which alliance's goal is currently active based on match time and
-     * game data.
-     * The game data specifies which alliance's goal goes inactive first.
+     * Determines which alliance's goal is currently scoreable based on
+     * the phase shift schedule encoded in game data.
+     * <p>
      * During auto, the team's own goal is always active.
-     * 
-     * @return The active Alliance (Red or Blue), or empty if game data is
-     *         unavailable
+     * During teleop, goals alternate on a fixed schedule; the game data
+     * string tells us which alliance goes inactive first.
      */
     public Optional<Alliance> getActiveGoalAlliance() {
         if (DriverStation.isAutonomous()) {
@@ -187,10 +140,6 @@ public class GameHelpers extends SubsystemBase {
         }
     }
 
-    /**
-     * @return true if the team's goal is active, false otherwise or if game data is
-     *         unavailable
-     */
     public boolean isAllianceGoalActive() {
         Optional<Alliance> activeAlliance = getActiveGoalAlliance();
         Optional<Alliance> teamAlliance = DriverStation.getAlliance();
@@ -203,12 +152,8 @@ public class GameHelpers extends SubsystemBase {
     }
 
     /**
-     * Checks if the robot is in its own alliance zone.
-     * The field is divided at the center line (X = half field width).
-     * For blue alliance, our zone is X < center.
-     * For red alliance, our zone is X > center.
-     * 
-     * @return true if robot is in its alliance's zone, false otherwise
+     * The field is divided at the hub X coordinate.
+     * Blue zone = X < hub; Red zone = X > hub (after flipping).
      */
     public boolean isInOurZone() {
         Pose2d robotPose = getRobotPose();
@@ -227,11 +172,6 @@ public class GameHelpers extends SubsystemBase {
         }
     }
 
-    /**
-     * Checks if the robot is above the hub in Y position.
-     * 
-     * @return true if robot Y position is greater than hub Y position
-     */
     public boolean isAboveHub() {
         Pose2d robotPose = getRobotPose();
         Translation2d hubPosition = calculateHubPosition();
@@ -239,11 +179,6 @@ public class GameHelpers extends SubsystemBase {
         return robotPose.getY() > hubPosition.getY();
     }
 
-    /**
-     * Checks if the robot is within a valid shooting distance from the hub.
-     * 
-     * @return true if the robot is within the valid shooting distance range
-     */
     public boolean isValidShotDistance() {
         double distanceToHub = virtualTargetDistance.in(Meters);
 
@@ -252,10 +187,8 @@ public class GameHelpers extends SubsystemBase {
     }
 
     /**
-     * Teleop match time counts down from ~135 to 0.
-     * Phase shift boundaries are at 130, 105, 80, 55, and 30 seconds.
-     * 
-     * @return seconds remaining in the current shift
+     * Phase shift boundaries: 130, 105, 80, 55, and 30 seconds remaining.
+     * Match time counts down from ~135.
      */
     public int timeLeftInShiftSeconds() {
         double currentMatchTime = DriverStation.getMatchTime();
@@ -275,9 +208,7 @@ public class GameHelpers extends SubsystemBase {
         }
     }
 
-    /**
-     * @return true if a phase shift is about to happen within the next 4 seconds
-     */
+    /** Returns true in the 4s before a phase shift so the driver can prepare. */
     public boolean isPhaseShiftImminent() {
         int timeLeft = timeLeftInShiftSeconds();
         return timeLeft <= 4 && timeLeft > 0;
@@ -313,26 +244,24 @@ public class GameHelpers extends SubsystemBase {
             DogLog.log((getName() + "/TargetZone"), "OpponentZoneBottom");
         }
 
-        // now that we have the target location, calculate the virtual target and shot
-        // parameters
+        // Compute the SOTM-adjusted virtual target and shot parameters
         ShootOnTheMove.Shot shot = ShootOnTheMove.calculate(getRobotPose(), getRobotVelocites(),
                 pose -> ShotParameters.getShotParameters(pose.transformBy(TurretConstants.ROBOT_TO_TURRET)
                         .getTranslation().getDistance(targetTranslation)));
-        this.shotParameters = shot.parameters(); // store for flywheel to use
+        this.shotParameters = shot.parameters();
 
-        // get the current and future robot translations
         Translation2d currentTurretTranslation = getRobotPose().transformBy(TurretConstants.ROBOT_TO_TURRET)
                 .getTranslation();
         Translation2d futureTurretTranslation = shot.futureRobotPose().transformBy(TurretConstants.ROBOT_TO_TURRET)
                 .getTranslation();
 
-        // Virtual target is the target translation minus the difference between the
-        // future and current robot translation. The order of subtractions here matters.
+        // Virtual target = real target shifted opposite to robot motion,
+        // so aiming at it from the current position accounts for where
+        // the robot will be when the fuel arrives.
         Translation2d virtualTargetTranslation = targetTranslation
                 .minus(futureTurretTranslation.minus(currentTurretTranslation));
 
-        // store distance/angle to virtual target
-        // if the future is equal to the current, then just use current
+        // When the robot is stationary, no SOTM adjustment is needed
         if (currentTurretTranslation.equals(futureTurretTranslation)) {
             this.virtualTargetFieldAngle = targetTranslation.minus(currentTurretTranslation).getAngle();
             this.virtualTargetDistance.mut_replace(targetTranslation.getDistance(currentTurretTranslation), Meters);
@@ -342,7 +271,6 @@ public class GameHelpers extends SubsystemBase {
                     Meters);
         }
 
-        // logging
         DogLog.log((getName() + "/InOurZone"), isInOurZone());
         DogLog.log((getName() + "/AboveHub"), isAboveHub());
         DogLog.log((getName() + "/VirtualTargetFieldAngle"), virtualTargetFieldAngle);

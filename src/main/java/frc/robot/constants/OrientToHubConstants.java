@@ -8,7 +8,7 @@ import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularAcceleration;
 import edu.wpi.first.units.measure.AngularVelocity;
 
-// TODO: Update values
+/** PID gains still need tuning — this command is not yet match-ready. */
 public class OrientToHubConstants {
     public static final double ORIENT_TO_HUB_KP = 0.0;
     public static final double ORIENT_TO_HUB_KI = 0.0;

@@ -14,11 +14,7 @@ public class PDHSubsystem extends SubsystemBase {
         DogLog.setPdh(pdh);
     }
 
-    /**
-     * Whether to turn on or off the PDH
-     * true = on | false = off
-     * @param state
-     */
+    /** Controls the PDH switchable channel (e.g. for powering LEDs or sensors). */
     public void set(boolean state) {
         pdh.setSwitchableChannel(state);
     }

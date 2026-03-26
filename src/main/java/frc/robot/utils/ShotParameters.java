@@ -16,10 +16,9 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.Distance;
 import edu.wpi.first.units.measure.Time;
 
-// credit to 1683
-// https://github.com/TechnoTitans/TitanWare2024/blob/master/src/main/java/frc/robot/subsystems/superstructure/ShootOnTheMove.java
+// Adapted from Team 1683 TechnoTitans' TitanWare2024
 public class ShotParameters {
-    /** The parameters we characterize for each distance key in the map */
+    /** Empirically-measured parameters for a given distance from the target. */
     public record Parameters(double flywheelRPS, double hoodRotations, double tofSeconds)
             implements Interpolatable<Parameters> {
 
@@ -36,29 +35,21 @@ public class ShotParameters {
         }
     };
 
+    /** Interpolates between empirically-measured data points. */
     private static final InterpolatingTreeMap<Double, Parameters> map = new InterpolatingTreeMap<>(
             InverseInterpolator.forDouble(),
             Parameters::interpolate);
 
-    /**
-     * @param distanceMeters Distance from the target in meters
-     * @return Shot parameters for the distance from the target
-     */
     public static Parameters getShotParameters(double distanceMeters) {
         return map.get(distanceMeters);
     }
 
-    /**
-     * @param distanceMeters Distance from the target
-     * @return Shot parameters for the distance from the target
-     */
     public static Parameters getShotParameters(Distance distance) {
         return map.get(distance.in(Meters));
     }
 
-    // add to the map
+    // Distance (meters) -> (flywheel RPM, hood angle, time-of-flight)
     static {
-        // key units are in meters
         map.put(1.84, new Parameters(RPM.of(1450.0), Degrees.of(0.0), Seconds.of(0.89)));
         map.put(2.2, new Parameters(RPM.of(1550.0), Degrees.of(4.0), Seconds.of(1.01)));
         map.put(2.6, new Parameters(RPM.of(1650.0), Degrees.of(7.0), Seconds.of(1.15)));

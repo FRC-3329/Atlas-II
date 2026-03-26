@@ -22,18 +22,18 @@ import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 
 /**
- * Command to automatically drive the robot under the nearest trench.
+ * Selects and follows a path under the nearest trench based on which
+ * quadrant of the field the robot is in relative to the hub.
  */
 public class AutoDriveUnderTrenchCommand extends Command {
     private final SwerveSubsystem swerveSubsystem;
     private final PathConstraints pathfindingConstraints;
 
     private Command drivingCommand;
-    // private Command zeroHoodCommand;
 
     /**
      * @param swerveSubsystem   the swerve drive subsystem
-     * @param flywheelSubsystem the flywheel subsystem (for zeroing the hood)
+     * @param flywheelSubsystem required so auto-driving and shooting don't conflict
      */
     public AutoDriveUnderTrenchCommand(SwerveSubsystem swerveSubsystem, FlywheelSubsystem flywheelSubsystem) {
         this.swerveSubsystem = swerveSubsystem;
@@ -55,13 +55,13 @@ public class AutoDriveUnderTrenchCommand extends Command {
             DogLog.log("ADUT/Status", "Unable to determine path (no alliance data)");
 
             drivingCommand = Commands.none();
-            // zeroHoodCommand = Commands.none();
         } else {
             try {
                 PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
                 boolean isRed = DriverStation.getAlliance()
                         .map(a -> a == Alliance.Red)
                         .orElse(false);
+                // Show the actual path on the field widget for debugging
                 PathPlannerPath displayPath = isRed ? path.flipPath() : path;
 
                 DogLog.log("ADUT/Status", "Pathfinding then following " + pathName
@@ -76,38 +76,30 @@ public class AutoDriveUnderTrenchCommand extends Command {
                         : Rotation2d.kZero;
                 Pose2d startPose = new Pose2d(startPosition, startRotation);
 
+                // Pathfind to the path start first, then follow the pre-planned path
                 drivingCommand = Commands.sequence(
                         AutoBuilder.pathfindToPose(startPose, pathfindingConstraints),
                         AutoBuilder.followPath(path));
-
-                // zeroHoodCommand = flywheelSubsystem.zeroHood();
             } catch (Exception e) {
                 DogLog.log("ADUT/Status", "Failed to load path " + pathName + ": " + e.getMessage());
                 DriverStation.reportError("ADUT: Failed to load path " + pathName, e.getStackTrace());
 
                 drivingCommand = Commands.none();
-                // zeroHoodCommand = Commands.none();
             }
         }
 
         drivingCommand.initialize();
-        // zeroHoodCommand.initialize();
     }
 
     @Override
     public void execute() {
         drivingCommand.execute();
-
-        // if (!zeroHoodCommand.isFinished()) {
-        // zeroHoodCommand.execute();
-        // } this needs to end the zero hood command once it is finished
     }
 
     @Override
     public void end(boolean interrupted) {
         drivingCommand.end(interrupted);
-        // zeroHoodCommand.end(interrupted);
-
+        // Clear the path visualization from the field widget
         swerveSubsystem.getSwerveDrive().field.getObject("TrenchPath").setPoses();
     }
 
@@ -129,6 +121,7 @@ public class AutoDriveUnderTrenchCommand extends Command {
         double robotX = robotPose.getX();
         double robotY = robotPose.getY();
 
+        // Flip robot position to blue-relative coordinates so zone logic is alliance-agnostic
         if (isRed) {
             Translation2d flippedRobotPos = FlippingUtil.flipFieldPosition(
                     new Translation2d(robotX, robotY));

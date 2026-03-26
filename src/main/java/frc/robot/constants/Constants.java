@@ -6,19 +6,16 @@ import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.units.measure.Time;
 
-// TODO: Update values
 public class Constants {
-    /** Location of hub on the field */
+    /** Blue-alliance-relative position of the hub center on the field (meters). */
     public static final Translation2d HUB_LOCATION = new Translation2d(
             4.624,
             4.035);
 
-    /** 20ms or 50hz */
+    /** TimedRobot loop period — 20ms matches the default CAN frame rate. */
     public static final Time LOOP_TIME = Seconds.of(0.02);
-    /** Max speed of robot in meters per second */
     public static final double MAX_SPEED = Units.feetToMeters(10);
-    /** Minimum distance from hub for a valid shot (in meters) */
+    /** Shots closer than this hit the hub rim; shots farther lose accuracy. */
     public static final double MIN_SHOT_DISTANCE = 1.9;
-    /** Maximum distance from hub for a valid shot (in meters) */
     public static final double MAX_SHOT_DISTANCE = 4.02;
 }

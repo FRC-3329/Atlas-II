@@ -34,6 +34,7 @@ public class IndexerSubsystem extends SubsystemBase {
         config.inverted(IndexerConstants.Indexer.INVERTED);
         config.idleMode(IndexerConstants.Indexer.IDLE_MODE);
 
+        // Disable unused CAN frames to reduce bus utilization
         config.signals
                 .absoluteEncoderPositionAlwaysOn(false)
                 .primaryEncoderVelocityAlwaysOn(false)
@@ -49,7 +50,7 @@ public class IndexerSubsystem extends SubsystemBase {
 
         indexerMotor.configure(config, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // Configure belt motor to follow indexer motor
+        // Belt follows the indexer motor so they always spin together
         beltMotor = new SparkMax(IndexerConstants.Belt.MOTOR_ID, MotorType.kBrushless);
 
         SparkMaxConfig beltConfig = new SparkMaxConfig();
@@ -94,6 +95,10 @@ public class IndexerSubsystem extends SubsystemBase {
                 .withName("IndexerFeedBackwards");
     }
 
+    /**
+     * Feeds forward until a stall is detected (fuel jammed), briefly reverses
+     * to clear the jam, then repeats. Keeps fuel flowing without driver intervention.
+     */
     public Command smartFeed() {
         return Commands.repeatingSequence(
                 feed().until(stallDetected),
@@ -110,7 +115,7 @@ public class IndexerSubsystem extends SubsystemBase {
         DogLog.log(getName() + "/Velocity", indexerMotor.getEncoder().getVelocity(), RPM);
         DogLog.log(getName() + "/stallDetected", stallDetected.getAsBoolean());
 
-        // Log temp when current limit is high enough to cause heat concerns
+        // High current limits can overheat Vortex motors; log temp for monitoring
         if (IndexerConstants.Indexer.CURRENT_LIMIT >= 60) {
             DogLog.log(getName() + "/Temperature", indexerMotor.getMotorTemperature(), Celsius);
         }

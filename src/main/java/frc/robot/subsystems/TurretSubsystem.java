@@ -62,7 +62,6 @@ public class TurretSubsystem extends SubsystemBase {
 
         motor = new TalonFX(TurretConstants.MOTOR_ID);
 
-        // Configure motor
         TalonFXConfiguration config = new TalonFXConfiguration();
         Slot0Configs slot0 = config.Slot0;
 
@@ -83,7 +82,7 @@ public class TurretSubsystem extends SubsystemBase {
         config.MotorOutput.Inverted = TurretConstants.INVERTED;
         config.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // 3:1 gearbox into 100:10 main gear = 300:1
+        // 3:1 planetary gearbox into 100:10 spur gear = 30:1 total reduction
         config.Feedback.SensorToMechanismRatio = 30.0;
 
         motor.getConfigurator().apply(config, 0.2);
@@ -105,7 +104,7 @@ public class TurretSubsystem extends SubsystemBase {
             DogLog.log((getName() + "/AbsoluteEncoderInitialized"), false);
         }
 
-        // Allow tuning turret angle from DogLog
+        // DogLog tunable for testing angles without redeploying
         DogLog.tunable(
                 (getName() + "/AngleSetPoint"),
                 0.0,
@@ -114,14 +113,12 @@ public class TurretSubsystem extends SubsystemBase {
                     doglogAngle.mut_replace(angle, Degrees);
                 });
 
-        // Set default command to idle
         setDefaultCommand(
                 this.runOnce(() -> {
                     motor.set(0);
                 }).andThen(
                         this.idle()));
 
-        // SysID config for characterization
         sysIdRoutine = new SysIdRoutine(
                 new SysIdRoutine.Config(
                         Volts.of(0.5).per(Second),
@@ -141,9 +138,6 @@ public class TurretSubsystem extends SubsystemBase {
         motor.optimizeBusUtilization();
     }
 
-    /**
-     * @param angle Target angle
-     */
     private void setTargetAngle(Angle angle) {
         trueTargetRotations = angle.in(Rotations);
         double targetRotations = MathUtil.clamp(
@@ -154,43 +148,29 @@ public class TurretSubsystem extends SubsystemBase {
         motor.setControl(positionRequest.withPosition(targetRotations));
     }
 
-    /**
-     * @return Current turret angle in rotations
-     */
     public double getAngle() {
         return motor.getPosition().getValueAsDouble();
     }
 
-    /**
-     * @return Current turret angle
-     */
     public Angle getAngleMeasure() {
         return Rotations.of(getAngle());
     }
 
-    /**
-     * @return Absolute encoder raw angle in degrees
-     */
     public double getAbsoluteAngleRaw() {
         return absoluteEncoder.get();
     }
 
-    /**
-     * @return Absolute encoder angle with units
-     */
     public Angle getAbsoluteAngle() {
         return Degrees.of(getAbsoluteAngleRaw());
     }
 
-    /**
-     * @return true if at target, false otherwise
-     */
     public boolean isAtTarget() {
         return motor.getMotionMagicAtTarget().getValue();
     }
 
     /**
-     * @return true if within LED tolerance of target, false otherwise
+     * Uses a wider tolerance than MotionMagic so the LED feedback
+     * activates slightly before the turret fully settles.
      */
     public boolean isOnTarget() {
         double currentRotations = motor.getPosition().getValueAsDouble();
@@ -208,37 +188,24 @@ public class TurretSubsystem extends SubsystemBase {
         autoTrackingEnabled = false;
     }
 
-    /**
-     * 
-     * @return true if auto-tracking is enabled, false otherwise
-     */
     public boolean isAutoTrackingEnabled() {
         return autoTrackingEnabled;
     }
 
     /**
-     * Command to automatically aim the turret based on the robot's position on the
-     * field.
-     * 
-     * 1. In our alliance zone: Aim directly at the hub center
-     * 2. In opponent zone, above hub: Aim at the top free space above the hub
-     * 3. In opponent zone, below hub: Aim at the bottom free space below the hub
-     * 
-     * The turret angle is calculated as: targetFieldAngle - robotHeading
-     * This converts the field-relative angle to the target into a robot-relative
-     * angle.
-     * 
-     * @return Command that continuously updates turret angle to track the target
+     * Continuously aims the turret at the target computed by {@code GameHelpers}.
+     * <p>
+     * Converts the field-relative target angle to a robot-relative turret
+     * angle by subtracting the robot's heading (the turret sits on the
+     * robot, so field angles must become relative to the chassis).
      */
     public Command autoTrack() {
         return this.runOnce(() -> {
             enableAutoTracking();
         }).andThen(this.run(() -> {
-
-            // Determine the field-relative angle to aim at based on robot position
             Rotation2d targetFieldAngle = angleGoalSupplier.get();
 
-            // Convert field-relative angle to robot-relative angle
+            // Turret is rear-mounted, so offset heading by 180°
             Rotation2d turretFieldSetpoint = turretPoseSupplier.get().getRotation().plus(Rotation2d.k180deg);
             Rotation2d turretRobotSetpoint = targetFieldAngle.minus(turretFieldSetpoint);
 
@@ -253,52 +220,35 @@ public class TurretSubsystem extends SubsystemBase {
         }).withName("TurretAutoTrack");
     }
 
-    /**
-     * @return Command to stop auto-tracking
-     */
     public Command stopAutoTracking() {
         return this.runOnce(() -> {
             motor.set(0);
         }).withName("TurretStopAutoTracking");
     }
 
-    /**
-     * @return Command to move left (increases angle counter-clockwise)
-     */
     public Command moveLeft() {
         return this.run(() -> {
             motor.set(TurretConstants.MANUAL_SPEED);
         }).onlyWhile(() -> {
-            // Only allow moving left if angle is below maximum
+            // Prevent exceeding soft limits to protect cable wrap
             return getAbsoluteAngle().lt(TurretConstants.MAX_ANGLE);
         }).withName("TurretMoveLeft");
     }
 
-    /**
-     * @return Command to move right (decreases angle clockwise)
-     */
     public Command moveRight() {
         return this.run(() -> {
             motor.set(-TurretConstants.MANUAL_SPEED);
         }).onlyWhile(() -> {
-            // Only allow moving right if angle is above minimum
             return getAbsoluteAngle().gt(TurretConstants.MIN_ANGLE);
         }).withName("TurretMoveRight");
     }
 
-    /**
-     * @param angle Target angle
-     * @return Command to move to angle
-     */
     public Command moveToAngle(Angle angle) {
         return this.run(() -> {
             setTargetAngle(angle);
         }).withName("TurretMoveToAngle");
     }
 
-    /**
-     * @return Command to move the turret to the current DogLog angle setpoint
-     */
     public Command moveToDogLogAngle() {
         return moveToAngle(doglogAngle).finallyDo(() -> motor.stopMotor())
                 .withName("TurretMoveToDogLogAngle");
@@ -314,6 +264,8 @@ public class TurretSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
+        // Periodically re-sync the motor encoder with the absolute encoder
+        // to correct any drift from skipped counts or brownouts.
         if (absoluteCount++ > 100) {
             motor.setPosition(getAbsoluteAngle());
             absoluteCount = 0;

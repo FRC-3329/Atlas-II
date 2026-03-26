@@ -33,7 +33,6 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class RobotContainer {
-    // Subsystems
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
     @SuppressWarnings("unused")
     private final PhotonVisionSubsystem blueCam = new PhotonVisionSubsystem("Blue_cam",
@@ -41,14 +40,6 @@ public class RobotContainer {
     @SuppressWarnings("unused")
     private final PhotonVisionSubsystem orangeCam = new PhotonVisionSubsystem("Orange_cam",
             PVConstants.C_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
-    // @SuppressWarnings("unused")
-    // private final PhotonVisionSubsystem yellowCam = new
-    // PhotonVisionSubsystem("Yellow_cam",
-    // PVConstants.C_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
-    // @SuppressWarnings("unused")
-    // private final PhotonVisionSubsystem redCam = new
-    // PhotonVisionSubsystem("Red_cam",
-    // PVConstants.RED_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     private final GameHelpers gameHelpers;
     private final FlywheelSubsystem flywheel;
     private final IndexerSubsystem indexer = new IndexerSubsystem();
@@ -58,13 +49,10 @@ public class RobotContainer {
     private final PDHSubsystem pdh = new PDHSubsystem();
     private final LEDSubsystem leds = new LEDSubsystem();
 
-    // Controllers
     private final CommandXboxController driverController = new CommandXboxController(
             OperatorConstants.kDriverControllerPort);
 
-    // Commands
     private final Command driveFieldOrientedAngularVelocity;
-
     private final SwerveInputStream driveAngularVelocity;
     private final SendableChooser<Command> autoChooser;
 
@@ -76,9 +64,8 @@ public class RobotContainer {
         configurePathPlannerCommands();
 
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
-        // Configure motor brake mode (false = coast)
+        // Coast during setup so the robot can be pushed into position
         setMotorBrake(false);
-        // Configure drive input stream with deadband and alliance-relative control
         driveAngularVelocity = SwerveInputStream
                 .of(drivebase.getSwerveDrive(),
                         () -> -driverController.getLeftY(),
@@ -91,6 +78,7 @@ public class RobotContainer {
         driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
+        // Signal readiness to the driver so they know when to shoot
         leds.configureLEDs(() -> turret.isAutoTrackingEnabled()
                 && turret.isOnTarget()
                 && gameHelpers.isValidShotDistance());
@@ -110,11 +98,7 @@ public class RobotContainer {
         configureBindings();
     }
 
-    /**
-     * @param strength rumble strength from 0 to 1
-     * @param duration how many seconds to rumble the controllers for
-     * @return the command to rumble the controllers
-     */
+    /** Provides haptic feedback to alert the driver of state changes. */
     private Command rumbleControllers(double strength, double duration) {
         return Commands
                 .run(() -> {
@@ -127,7 +111,10 @@ public class RobotContainer {
                 .withName("RumbleControllers");
     }
 
+    /** Registers commands that PathPlanner auto routines can reference by name. */
     private void configurePathPlannerCommands() {
+        // asProxy() prevents requirement conflicts between the auto command group
+        // and the commands that these subsystems schedule elsewhere
         NamedCommands.registerCommand("IntakeGamePiece", intake.intakeForward().asProxy());
         NamedCommands.registerCommand("RaiseIntake", intake.raise().asProxy());
         NamedCommands.registerCommand("LowerIntake", intake.lower().asProxy());
@@ -141,63 +128,44 @@ public class RobotContainer {
         NamedCommands.registerCommand("StopIndexer", indexer.stop().asProxy());
         NamedCommands.registerCommand("StopIntake", intake.stop().asProxy());
         NamedCommands.registerCommand("AutoTrackTurret", turret.autoTrack().asProxy());
-
     }
 
-    // See CONTROLLER.md
+    /** Button bindings - see CONTROLLER.md for the full layout diagram. */
     private void configureBindings() {
-        //// === TRIGGERS === ////
-        // Left Trigger: Intake
         driverController.leftTrigger(0.5)
                 .whileTrue(intake.intakeForward());
-        // Right Trigger: Shoot
         driverController.rightTrigger(0.5)
                 .whileTrue(shoot());
 
-        //// === BUMPERS === ////
-        // Left Bumper: Align robot to hub
-        // driverController.leftBumper()
-        // .whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
-        // Right Bumper: Auto drive under trench
         driverController.rightBumper()
                 .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
 
-        //// === FACE BUTTONS === ////
-        // A Button: indexer reversal
+        // A/B = unjam mechanisms by reversing indexer/intake
         driverController.a()
                 .whileTrue(indexer.feedBackwards());
-        // B Button: intake/indexer reversal
         driverController.b().whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward()));
-        // X Button: Rotate swerve wheels inward (lock wheels)
         driverController.x()
                 .whileTrue(drivebase.lockWheels());
-        // Y Button: Toggle flywheel varying RPM
+        // Rumble confirms the toggle so the driver doesn't have to check the dashboard
         driverController.y()
                 .onTrue(flywheel.toggleVaryingRPM()
                         .andThen(rumbleControllers(0.5, 0.25)));
-        //// === D-PAD === ////
-        // Up: Move intake up
+
         driverController.povUp()
                 .onTrue(intake.kick());
-        // Down: Move intake down
         driverController.povDown()
                 .onTrue(intake.lower());
-        // Left: Move turret left
         driverController.povLeft()
                 .whileTrue(turret.moveLeft());
-        // Right: Move turret right
         driverController.povRight()
                 .whileTrue(turret.moveRight());
 
-        //// === MENU BUTTONS === ////
-        // Start: Start auto turret tracking
         driverController.start()
                 .onTrue(turret.autoTrack());
-        // Back: Stop auto turret tracking
         driverController.back()
                 .onTrue(turret.stopAutoTracking());
 
-        // Vibrate controller for 1 second before a phase shift
+        // Warn the driver that the goal is about to switch so they can reposition
         new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
                 .onTrue(rumbleControllers(1.0, 1.0));
     }
@@ -207,17 +175,14 @@ public class RobotContainer {
     }
 
     /**
-     * This is required because it prevents the drivetrain from snapping back
-     * to the angle it was at before starting the auto driving command.
-     * This is required due to how {@code translationOnlyWhile() } works and
-     * how the controller processor updates the heading lock.
-     * 
-     * @param drivingCommand The command to auto drive.
-     * @return The wrapped command to auto drive.
+     * Wraps an auto-driving command to prevent heading-lock snap-back.
+     * <p>
+     * The drive input stream caches the last heading. Without this wrapper,
+     * the robot snaps to the pre-auto heading when the command ends because
+     * the heading lock was never updated during auto driving.
      */
     private Command autoDriving(Command drivingCommand) {
         return drivingCommand.beforeStarting(() -> {
-            // Update state in controller supplier
             driveAngularVelocity.get();
         }).finallyDo(interrupted -> {
             driveAngularVelocity.get();
@@ -225,15 +190,11 @@ public class RobotContainer {
     }
 
     /**
-     * 1. Spin up the flywheel
-     * 2. In parallel, wait until the flywheel is at speed, then run the indexer and
-     * intake
-     * 
-     * Uses either distance-based shooting (dynamic) or static shooting based on
-     * whether flywheel varying RPM is enabled. If varying RPM is disabled (e.g.
-     * PV is not working), static shooting is used as a fallback.
-     * 
-     * @return Command to shoot fuel
+     * Spins up the flywheel while simultaneously waiting for target speed,
+     * then feeds fuel through the indexer and intake.
+     * <p>
+     * Falls back to a fixed RPM/angle when varying RPM is disabled
+     * (e.g. PhotonVision offline, so distance is unknown).
      */
     public Command shoot() {
         return Commands.parallel(
@@ -243,9 +204,6 @@ public class RobotContainer {
                         .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));
     }
 
-    /**
-     * @return Command to auto-track the turret to the target
-     */
     public Command getTurretAutoTrack() {
         return turret.autoTrack();
     }

@@ -6,24 +6,22 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 
-// credit to 1683
-// https://github.com/TechnoTitans/TitanWare2024/blob/master/src/main/java/frc/robot/subsystems/superstructure/ShootOnTheMove.java
+// Adapted from Team 1683 TechnoTitans' TitanWare2024
 public class ShootOnTheMove {
-    private static final int MAX_ITERATIONS = 3; // 2-5 iterations should suffice
+    /** Converges quickly; diminishing returns beyond ~3 iterations. */
+    private static final int MAX_ITERATIONS = 3;
 
-    /** The shot parameters at the virtual target. */
+    /**
+     * Contains the converged shot parameters and the predicted robot pose
+     * at the time the fuel reaches the target.
+     */
     public record Shot(ShotParameters.Parameters parameters, Pose2d futureRobotPose) {
     }
 
     /**
-     * Dynamic Shooting via Time-of-Flight Recursion
-     * 
-     * @param currentPose        The robot's current pose on the field
-     * @param chassisSpeeds      The robot relative velocities
-     * @param parametersFunction a function to convert the position of the robot on
-     *                           the field into shot parameters
-     * @return A shot condition with the shot parameters and the virtual target
-     *         being aimed at
+     * Iteratively predicts where the robot will be when the fuel arrives
+     * at the target, using time-of-flight to project future position,
+     * then re-computing parameters from that position.
      */
     public static Shot calculate(
             final Pose2d currentPose,

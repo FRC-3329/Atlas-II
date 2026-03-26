@@ -28,9 +28,12 @@ public class Robot extends TimedRobot {
 
     @Override
     public void robotInit() {
+        // Capture all network table + driver station data for post-match analysis
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+
+        // AD* pathfinder must be initialized early; warmup prevents first-path lag
         Pathfinding.setPathfinder(new LocalADStar());
         CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     }
@@ -45,6 +48,7 @@ public class Robot extends TimedRobot {
 
     @Override
     public void autonomousInit() {
+        // Brake mode prevents drift between path segments
         m_robotContainer.setMotorBrake(true);
 
         m_autonomousCommand = m_robotContainer.getAutonomousCommand();
@@ -64,6 +68,7 @@ public class Robot extends TimedRobot {
             m_autonomousCommand.cancel();
         }
 
+        // Always auto-aim at competition; constant gate allows practice without FMS
         if (DriverStation.isFMSAttached() || TurretConstants.ENABLE_AUTO_AIM) {
             CommandScheduler.getInstance().schedule(m_robotContainer.getTurretAutoTrack());
         }

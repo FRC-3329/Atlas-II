@@ -13,21 +13,14 @@ import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.utils.GameHelpers;
 
 /**
- * Command to automatically orient the robot so that the turret (on the back)
- * faces the hub.
- * Since the turret is on the back of the robot, the robot needs to face 180
- * degrees away
- * from the hub.
+ * Orients the robot so the turret faces the hub.
+ * The turret is rear-mounted, so the robot must face 180° away from the hub.
  */
 public class OrientToHubCommand extends Command {
     private final SwerveSubsystem swerveSubsystem;
     private final GameHelpers gameHelpers;
     private final ProfiledPIDController rotationController;
 
-    /**
-     * @param swerveSubsystem The swerve drive subsystem
-     * @param gameHelpers     Helper class for game-specific calculations
-     */
     public OrientToHubCommand(SwerveSubsystem swerveSubsystem, GameHelpers gameHelpers) {
         this.swerveSubsystem = swerveSubsystem;
         this.gameHelpers = gameHelpers;
@@ -40,6 +33,7 @@ public class OrientToHubCommand extends Command {
                         OrientToHubConstants.ORIENT_TO_HUB_MAX_ACCELERATION
                                 .in(RadiansPerSecondPerSecond)));
 
+        // Wrap around ±π so the PID takes the shortest rotation path
         rotationController.enableContinuousInput(-Math.PI, Math.PI);
         rotationController.setTolerance(
                 OrientToHubConstants.ORIENT_TO_HUB_TOLERANCE.in(edu.wpi.first.units.Units.Radians));

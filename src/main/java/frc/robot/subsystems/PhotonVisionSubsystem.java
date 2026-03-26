@@ -34,9 +34,9 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 	private Matrix<N3, N1> curStdDevs;
 
 	/**
-	 * @param cameraName    name of the camera in PV
-	 * @param robotToCamera transform from robot center to camera
-	 * @param estConsumer   consumer to add the vision data to
+	 * @param cameraName    name of the camera in PhotonVision
+	 * @param robotToCamera physical transform from robot center to camera lens
+	 * @param estConsumer   callback to feed pose estimates into the drivetrain
 	 */
 	public PhotonVisionSubsystem(String cameraName, Transform3d robotToCamera, EstimateConsumer estConsumer) {
 		this.cameraName = cameraName;
@@ -48,6 +48,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 				PVConstants.kTagLayout,
 				robotToCamera);
 
+		// Throttle FPS while disabled to save bandwidth; full speed when enabled
 		camera.setFPSLimit(4);
 		RobotModeTriggers.disabled()
 				.onTrue(runOnce(() -> camera.setFPSLimit(4)).ignoringDisable(true))
@@ -59,27 +60,18 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * Calculates new std devs.
-	 * This algorithm is a heuristic that creates dynamic standard deviations based
-	 * on number of: tags, estimation strategy, and distance from the tags.
-	 * 
-	 * @param estimatedPose The estimated pose to guess standard deviations for.
-	 * @param targets       All targets in this camera frame
+	 * Dynamically adjusts standard deviations based on tag count and distance
+	 * to control how much the Kalman filter trusts each vision estimate.
 	 */
 	private void updateEstimationStdDevs(
 			Optional<EstimatedRobotPose> estimatedPose,
 			List<PhotonTrackedTarget> targets) {
 		if (estimatedPose.isEmpty()) {
-			// No pose input, default to single-tag std devs
 			curStdDevs = PVConstants.kSingleTagStdDevs;
 		} else {
-			// Pose present, start running Heuristic
 			Matrix<N3, N1> estStdDevs = PVConstants.kSingleTagStdDevs;
 			int numTags = 0;
 			double avgDist = 0;
-
-			// Precalculation, see how many tags we found, and calculate an average-distance
-			// metric
 			for (PhotonTrackedTarget tgt : targets) {
 				Optional<Pose3d> tagPose = photonEstimator
 						.getFieldTags()
@@ -102,21 +94,20 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 			}
 
 			if (numTags == 0) {
-				// No tags visible, default to single-tag std devs
 				curStdDevs = PVConstants.kSingleTagStdDevs;
 			} else {
-				// One or more tags visible, run the full heuristic
 				avgDist /= numTags;
 
-				// Decrease std devs if multiple targets are visible
+				// Multiple tags give a more reliable solve
 				if (numTags > 1) {
 					estStdDevs = PVConstants.kMultiTagStdDevs;
 				}
 
-				// Increase std devs based on (average) distance
+				// Single tag at long range is unreliable — reject it entirely
 				if (numTags == 1 && avgDist > 4) {
 					estStdDevs = VecBuilder.fill(Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE);
 				} else {
+					// Scale uncertainty with distance squared
 					estStdDevs = estStdDevs.times(1 + (avgDist * avgDist / 30));
 				}
 
@@ -143,7 +134,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 		Optional<EstimatedRobotPose> visionEst = Optional.empty();
 		for (PhotonPipelineResult change : camera.getAllUnreadResults()) {
-			// Attempt multi-tag first
+			// Prefer multi-tag PnP for accuracy; single-tag fallback commented out
 			visionEst = photonEstimator.estimateCoprocMultiTagPose(change);
 
 			if (visionEst.isEmpty()) {

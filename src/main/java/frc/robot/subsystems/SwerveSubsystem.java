@@ -14,7 +14,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.math.Matrix;
-import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
+
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -48,7 +48,6 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	public SwerveSubsystem() {
 		try {
-			// SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 			swerveDrive = new SwerveParser(directory)
 					.createSwerveDrive(Constants.MAX_SPEED,
 							new Pose2d(
@@ -60,25 +59,12 @@ public class SwerveSubsystem extends SubsystemBase {
 			throw new RuntimeException(e);
 		}
 
-		/*
-		 * Chassis discretization helps make the swerve drive more accurate by
-		 * accounting
-		 * for the time delay between when we calculate speeds and when they're actually
-		 * applied.
-		 */
+		// Compensates for the delay between calculating and applying speeds,
+		// which otherwise causes the robot to arc instead of driving straight.
 		swerveDrive.setChassisDiscretization(true, 0.02);
 		swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
 		swerveDrive.setHeadingCorrection(true);
 
-		/*
-		 * kS = voltage to overcome static friction (0.0846525V)
-		 * kV = voltage per unit velocity (2.68855V per m/s)
-		 * kA = voltage per unit acceleration (0.2266775V per m/s^2)
-		 */
-		// swerveDrive.replaceSwerveModuleFeedforward(
-		// new SimpleMotorFeedforward(0.23744, 0.23744, 0.50467));
-
-		// swerveDrive.setHeadingCorrection(true);
 		SmartDashboard.putData("ZeroGyro", zeroGyro().withName("Zero Gyro"));
 
 		setupPathPlanner();
@@ -108,19 +94,8 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * This lets us use cameras (like PV or QN) to correct our position estimate by
-	 * looking at AprilTags.
-	 * The standard deviations (stdDevs) tell the Kalman filter how much to trust
-	 * this measurement vs our wheel odometry.
-	 * 
-	 * @param visionMeasurement the pose measured by the camera (will be converted
-	 *                          from 3D to 2D)
-	 * @param timestampSeconds  when the measurement was taken (from FPGA timestamp)
-	 * @param stdDevs           how much we trust this measurement (lower = more
-	 *                          trust)
-	 * 
-	 *                          See
-	 *                          {@link SwerveDrivePoseEstimator#addVisionMeasurement(Pose2d, double, Matrix)}.
+	 * Fuses a vision pose measurement into the Kalman filter.
+	 * Standard deviations control how much to trust vision vs. wheel odometry.
 	 */
 	public void addVisionMeasurement(
 			Pose3d visionMeasurement,
@@ -129,22 +104,10 @@ public class SwerveSubsystem extends SubsystemBase {
 		swerveDrive.addVisionMeasurement(visionMeasurement.toPose2d(), timestampSeconds, stdDevs);
 	}
 
-	/**
-	 * Field-oriented means "forward" on the joystick always moves the robot away
-	 * from the driver station, regardless of which way the robot is facing.
-	 * 
-	 * @param velocity the desired field-oriented {@link ChassisSpeeds} (vx, vy,
-	 *                 omega)
-	 */
 	public void driveFieldOriented(ChassisSpeeds velocity) {
 		swerveDrive.driveFieldOriented(velocity);
 	}
 
-	/**
-	 * @param velocity a {@link Supplier} that provides {@link ChassisSpeeds} every
-	 *                 loop
-	 * @return a command that drives the robot
-	 */
 	public Command driveFieldOriented(Supplier<ChassisSpeeds> velocity) {
 		return run(() -> {
 			swerveDrive.driveFieldOriented(velocity.get());
@@ -152,15 +115,8 @@ public class SwerveSubsystem extends SubsystemBase {
 	}
 
 	/**
-	 * This version lets you specify a target heading direction (headingX, headingY)
-	 * and
-	 * the robot will automatically rotate to face that direction while translating.
-	 * 
-	 * @param translationX forward/backward speed (-1 to 1)
-	 * @param translationY left/right speed (-1 to 1)
-	 * @param headingX     target heading X component (like right stick X)
-	 * @param headingY     target heading Y component (like right stick Y)
-	 * @return command that drives with heading control
+	 * Drives with a target heading direction via the right stick, allowing
+	 * simultaneous translation and heading control.
 	 */
 	public Command driveCommand(
 			DoubleSupplier translationX,
@@ -185,9 +141,6 @@ public class SwerveSubsystem extends SubsystemBase {
 		}).withName("SwerveDriveWithHeading");
 	}
 
-	/**
-	 * @param brake {@code true} for brake mode, {@code false} for coast mode
-	 */
 	public void setMotorBrake(boolean brake) {
 		swerveDrive.setMotorIdleMode(brake);
 	}
@@ -199,12 +152,7 @@ public class SwerveSubsystem extends SubsystemBase {
 				.withName("SwerveZeroGyro");
 	}
 
-	/**
-	 * Lock the wheels in an X formation for defense
-	 * This makes the robot very difficult to push
-	 * 
-	 * @return command to lock wheels
-	 */
+	/** Locks the wheels in an X formation so the robot can't be pushed. */
 	public Command lockWheels() {
 		return run(() -> swerveDrive.lockPose())
 				.withName("SwerveLockWheels");
@@ -218,14 +166,7 @@ public class SwerveSubsystem extends SubsystemBase {
 		swerveDrive.resetOdometry(pose);
 	}
 
-	/**
-	 * SysId runs automated tests to measure how the motors respond to voltage.
-	 * This helps us tune PID controllers and feedforward values for better control.
-	 * 
-	 * This version tests the angle (steering) motors specifically.
-	 * 
-	 * @return angle motor characterization command
-	 */
+	/** SysId characterization for the angle (steering) motors. */
 	public Command getAngleCharacterizationCommand() {
 		return SwerveDriveTest.generateSysIdCommand(
 				SwerveDriveTest.setAngleSysIdRoutine(
@@ -233,14 +174,7 @@ public class SwerveSubsystem extends SubsystemBase {
 				3, 6, 3);
 	}
 
-	/**
-	 * SysId runs automated tests to measure how the motors respond to voltage.
-	 * This helps us tune PID controllers and feedforward values for better control.
-	 * 
-	 * This version tests the drive (wheel) motors specifically.
-	 * 
-	 * @return drive motor characterization command
-	 */
+	/** SysId characterization for the drive (wheel) motors. */
 	public Command getDriveCharacterizationCommand() {
 		return SwerveDriveTest.generateSysIdCommand(
 				SwerveDriveTest.setDriveSysIdRoutine(
@@ -270,10 +204,11 @@ public class SwerveSubsystem extends SubsystemBase {
 						}
 					},
 					new PPHolonomicDriveController(
-							new PIDConstants(4.5, 0.0, 0.2), // Translation
-							new PIDConstants(4.5, 0.0, 0.2) // Rotation
+							new PIDConstants(4.5, 0.0, 0.2),
+							new PIDConstants(4.5, 0.0, 0.2)
 					),
 					config,
+					// PathPlanner needs to mirror paths for the red alliance
 					() -> {
 						Optional<Alliance> alliance = DriverStation.getAlliance();
 
@@ -290,19 +225,10 @@ public class SwerveSubsystem extends SubsystemBase {
 		}
 	}
 
-	/**
-	 * @param pathName name of the PathPlanner auto
-	 * @return command to follow the autonomous path
-	 */
 	public Command getAutonomousCommand(String pathName) {
 		return new PathPlannerAuto(pathName);
 	}
 
-	/**
-	 * @param pathName    name of the path to follow
-	 * @param constraints constraints for pathfinding
-	 * @return command to pathfind and follow
-	 */
 	public Command pathfindThenFollowPath(String pathName, PathConstraints constraints) {
 		try {
 			PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);

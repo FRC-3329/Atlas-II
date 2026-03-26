@@ -35,28 +35,14 @@ public class LEDSubsystem extends SubsystemBase {
         led.setData(buffer);
     }
 
-    /**
-     * Creates a command that continuously applies a pattern to the LED buffer.
-     *
-     * @param pattern the LED pattern to run
-     * @return a command that applies the pattern each cycle
-     */
     public Command runPattern(LEDPattern pattern) {
         return run(() -> pattern.applyTo(buffer));
     }
 
     /**
-     * Configures LED patterns and triggers.
+     * Configures trigger-based LED patterns to communicate robot state to the driver.
      *
-     * <ul>
-     * <li><b>Ready to shoot</b> (turret on-target, auto-tracking, valid shot
-     * distance):
-     * solid alliance color (red or blue).</li>
-     * <li><b>Disabled</b>: scrolling rainbow.</li>
-     * </ul>
-     * 
-     * @param readyToShoot a supplier that returns true when the robot is ready to
-     *                     shoot
+     * @param readyToShoot returns true when the turret is aimed and within range
      */
     public void configureLEDs(BooleanSupplier readyToShoot) {
         LEDPattern allianceSolid = (reader, writer) -> {
@@ -66,11 +52,11 @@ public class LEDSubsystem extends SubsystemBase {
             LEDPattern.solid(c).applyTo(reader, writer);
         };
 
-        // Ready to shoot -> solid alliance color
+        // Solid alliance color = ready to shoot
         new Trigger(readyToShoot)
                 .whileTrue(runPattern(allianceSolid).withName("LEDReadyToShoot"));
 
-        // Disabled -> scrolling rainbow (8%~)
+        // Rainbow while disabled so the pit crew can tell the robot is powered on
         LEDPattern disabledPattern = LEDPattern.rainbow(255, 20)
                 .scrollAtRelativeSpeed(edu.wpi.first.units.Units.Percent
                         .per(edu.wpi.first.units.Units.Second).of(25));

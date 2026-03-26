@@ -59,7 +59,6 @@ public class IntakeSubsystem extends SubsystemBase {
         cancoderConfig.MagnetSensor.SensorDirection = IntakeConstants.Pivot.CANCODER_DIRECTION;
         cancoder.getConfigurator().apply(cancoderConfig, 1);
 
-        // Configure pivot motor
         TalonFXConfiguration pivotConfig = new TalonFXConfiguration();
         Slot0Configs pivotSlot0 = pivotConfig.Slot0;
 
@@ -96,7 +95,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
         rollerMotor = new SparkFlex(IntakeConstants.Roller.MOTOR_ID, MotorType.kBrushless);
 
-        // Configure roller motor
         SparkFlexConfig rollerConfig = new SparkFlexConfig();
         rollerConfig.smartCurrentLimit(IntakeConstants.Roller.CURRENT_LIMIT);
         rollerConfig.inverted(IntakeConstants.Roller.INVERTED);
@@ -118,7 +116,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // Allow tuning pivot angle from DogLog
+        // DogLog tunable for testing specific pivot angles without redeploying
         DogLog.tunable(
                 (getName() + "/PivotAngleSetPoint"),
                 0.0,
@@ -136,61 +134,40 @@ public class IntakeSubsystem extends SubsystemBase {
         pivotMotor.optimizeBusUtilization();
     }
 
-    /**
-     * @return Current pivot angle in rotations
-     */
     public double getPivotAngle() {
         return pivotMotor.getPosition().getValueAsDouble();
     }
 
-    /**
-     * @return Current pivot angle
-     */
     public Angle getPivotAngleMeasure() {
         return pivotAngle.mut_replace(getPivotAngle(), Rotations);
     }
 
-    /**
-     * @param angle Target angle for pivot
-     */
     private void setPivotAngle(Angle angle) {
         pivotMotor.setControl(pivotPositionRequest.withPosition(angle.in(Rotations)));
         pivotPIDEnabled = true;
     }
 
-    /**
-     * @return Current intake state
-     */
     public IntakeState getState() {
         return currentState;
     }
 
-    /**
-     * @return true if intake is down, false otherwise
-     */
     public boolean isDown() {
         return currentState == IntakeState.DOWN;
     }
 
-    /**
-     * @return true if pivot is at target, false otherwise
-     */
     public boolean isPivotAtTarget() {
         return pivotMotor.getMotionMagicAtTarget().getValue();
     }
 
     /**
-     * Command to lower the intake
-     * Sets the pivot to down position and disables PID once down
-     * 
-     * @return Command to lower intake
+     * Lowers the intake then disables PID once arrived so the motor doesn't
+     * fight gravity or burn current while resting on the ground.
      */
     public Command lower() {
         return this.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.DOWN_ANGLE);
             currentState = IntakeState.DOWN;
         }).andThen(
-                // Wait until at target, then disable PID control
                 Commands.waitUntil(this::isPivotAtTarget).withTimeout(2.0)
                         .andThen(disablePivotPIDCommand()))
                 .withName("IntakeLower");
@@ -202,12 +179,6 @@ public class IntakeSubsystem extends SubsystemBase {
         });
     }
 
-    /**
-     * Command to raise the intake
-     * Sets the pivot to up position
-     * 
-     * @return Command to raise intake
-     */
     public Command raise() {
         return this.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.UP_ANGLE);
@@ -215,10 +186,7 @@ public class IntakeSubsystem extends SubsystemBase {
         }).withName("IntakeRaise");
     }
 
-    /**
-     * @return Command to move to the current DogLog angle. Disables PID when
-     *         interrupted.
-     */
+    /** Moves to the DogLog tunable angle; disables PID when interrupted. */
     public Command moveToDogLogAngle() {
         return this
                 .runOnce(() -> setPivotAngle(doglogangle))
@@ -228,10 +196,8 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     /**
-     * Command to run the intake roller forward
-     * Only runs if intake is down
-     * 
-     * @return Command to run intake forward
+     * Guards against running the roller while the intake is up,
+     * which would eject fuel onto the field.
      */
     public Command intakeForward() {
         return new ConditionalCommand(
@@ -246,12 +212,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 .withName("IntakeForward");
     }
 
-    /**
-     * Command to run the intake roller backward
-     * Only runs if intake is down
-     * 
-     * @return Command to run intake backward
-     */
+    /** Guards against running the roller backward while the intake is up. */
     public Command intakeBackward() {
         return new ConditionalCommand(
                 this.run(() -> {
@@ -265,19 +226,11 @@ public class IntakeSubsystem extends SubsystemBase {
                 .withName("IntakeBackward");
     }
 
-    /**
-     * Command to disable pivot PID control
-     * Sets zero percent duty cycle
-     * 
-     * @return Command to disable pivot PID
-     */
     public Command disablePivotPIDCommand() {
         return this.runOnce(this::disablePivotPID).withName("IntakeDisablePivotPID");
     }
 
-    /**
-     * Disable's pivot PID control by setting zero percent duty cycle
-     */
+    /** Sets zero duty cycle output so the motor stops holding position. */
     private void disablePivotPID() {
         pivotMotor.setControl(pivotDisableRequest);
         pivotPIDEnabled = false;

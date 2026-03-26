@@ -54,9 +54,6 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final MutAngularVelocity doglogVelocity = RPM.mutable(0.0);
     private final MutAngle doglogAngle = Degrees.mutable(0.0);
 
-    /**
-     * @param hubDistanceSupplier supplier for the shot parameters for the flywheel
-     */
     public FlywheelSubsystem(Supplier<ShotParameters.Parameters> shotParametersSupplier) {
         this.shotParametersSupplier = shotParametersSupplier;
         this.left = new TalonFX(Flywheel.LEFT_ID);
@@ -65,7 +62,6 @@ public class FlywheelSubsystem extends SubsystemBase {
         this.spikeDetected = new Trigger(() -> getHoodCurrent() > Hood.ZEROING_CURRENT_THRESHOLD)
                 .debounce(Hood.STALL_DEBOUNCE_TIME);
 
-        // Flywheel config
         TalonFXConfiguration flywheelConfig = new TalonFXConfiguration();
         Slot0Configs flywheelSlot0 = flywheelConfig.Slot0;
 
@@ -86,19 +82,15 @@ public class FlywheelSubsystem extends SubsystemBase {
         flywheelConfig.MotorOutput.Inverted = Flywheel.INVERTED;
         flywheelConfig.MotorOutput.NeutralMode = NeutralModeValue.Coast;
 
-        // 1:2 belting = 0.5 (2x speedup)
-        // flywheelConfig.Feedback.SensorToMechanismRatio = 0.5;
-
         left.getConfigurator().apply(flywheelConfig);
 
-        // Invert the right motor relative to the left
+        // Right motor spins opposite direction since the wheels face each other
         flywheelConfig.MotorOutput.Inverted = (Flywheel.INVERTED == InvertedValue.CounterClockwise_Positive)
                 ? InvertedValue.Clockwise_Positive
                 : InvertedValue.CounterClockwise_Positive;
 
         right.getConfigurator().apply(flywheelConfig);
 
-        // Hood config
         TalonFXConfiguration hoodConfig = new TalonFXConfiguration();
         Slot0Configs hoodSlot0 = hoodConfig.Slot0;
 
@@ -115,7 +107,6 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         hoodConfig.MotionMagic.MotionMagicCruiseVelocity = Hood.CRUISE_VELOCITY;
         hoodConfig.MotionMagic.MotionMagicAcceleration = Hood.ACCELERATION;
-        // hoodConfig.MotionMagic.MotionMagicJerk = Hood.JERK;
 
         hoodConfig.CurrentLimits.SupplyCurrentLimit = Hood.CURRENT_LIMIT;
         hoodConfig.CurrentLimits.SupplyCurrentLimitEnable = true;
@@ -123,7 +114,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         hoodConfig.MotorOutput.Inverted = Hood.INVERTED;
         hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // 9:1 gearbox with 48:24 (2:1) belting = 18:1 total reduction
+        // 9:1 gearbox with 48:24 (2:1) belt = 18:1 total reduction
         hoodConfig.Feedback.SensorToMechanismRatio = 18.0;
 
         hood.getConfigurator().apply(hoodConfig);
@@ -136,7 +127,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         hood.setPosition(Degrees.zero(), 2);
 
-        // Change target RPM of motor from Doglog
+        // DogLog tunables for live RPM/angle adjustment during testing
         DogLog.tunable(
                 (getName() + "/RPMSetPoint"),
                 750.0,
@@ -145,7 +136,6 @@ public class FlywheelSubsystem extends SubsystemBase {
                     doglogVelocity.mut_replace(angularVelocity, RPM);
                 });
 
-        // Change target hood angle from Doglog
         DogLog.tunable(
                 (getName() + "/DegreesSetPoint"),
                 20.0,
@@ -154,7 +144,6 @@ public class FlywheelSubsystem extends SubsystemBase {
                     doglogAngle.mut_replace(angle, Degrees);
                 });
 
-        // Set default command to idle
         setDefaultCommand(
                 this.runOnce(() -> {
                     left.set(0);
@@ -162,7 +151,6 @@ public class FlywheelSubsystem extends SubsystemBase {
                 }).andThen(
                         this.idle()));
 
-        // SysID configuration
         sysIdRoutine = new SysIdRoutine(
                 new SysIdRoutine.Config(
                         null,
@@ -191,11 +179,6 @@ public class FlywheelSubsystem extends SubsystemBase {
         hood.optimizeBusUtilization();
     }
 
-    /**
-     * Set the speed of motors
-     * 
-     * @param speed Speed of both motors
-     */
     public Command setSpeed(double speed) {
         return this.run(() -> {
             left.set(speed);
@@ -203,7 +186,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         }).withName("FlywheelSetSpeed");
     }
 
-    /** Shoot the flywheel at the appropriate speed based on distance to the hub */
+    /** Shoots using distance-interpolated RPM and hood angle from the shot parameter map. */
     public Command shoot() {
         return this.run(() -> {
             ShotParameters.Parameters params = shotParametersSupplier.get();
@@ -216,12 +199,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         }).withName("FlywheelShoot");
     }
 
-    /**
-     * Shoot the flywheel at a fixed RPM and hood angle
-     *
-     * @param rpm   Target RPM
-     * @param angle Target hood angle
-     */
+    /** Shoots at a fixed RPM and hood angle (ignores distance). */
     public Command shoot(AngularVelocity rpm, Angle angle) {
         return this.run(() -> {
             left.setControl(request.withVelocity(rpm));
@@ -246,9 +224,6 @@ public class FlywheelSubsystem extends SubsystemBase {
         DogLog.logFault("VaryingRPMDisabled", Alert.AlertType.kWarning);
     }
 
-    /**
-     * @return Command to toggle varying RPM on/off
-     */
     public Command toggleVaryingRPM() {
         return this.runOnce(() -> {
             if (varyingRPMEnabled) {
@@ -267,11 +242,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     /**
-     * Shoot the flywheel at the angular velocity and hood angle specified by
-     * DogLog's angular velocity and angle setpoint. Disables the hood PID on
-     * command interruption.
-     * 
-     * @return the command to shoot based on DogLog values
+     * Shoots at the RPM/angle set via DogLog dashboard tunables.
+     * Disables the hood PID on interruption so it doesn't fight gravity while idle.
      */
     public Command tunableShoot() {
         return shoot(doglogVelocity, doglogAngle)
@@ -288,9 +260,8 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     /**
-     * Command to zero the hood by detecting current spike
-     * 
-     * @return Command that zeros the hood position
+     * Zeros the hood position by driving it into the hard-stop and detecting
+     * the resulting current spike.
      */
     public Command zeroHood() {
         return this
@@ -303,12 +274,10 @@ public class FlywheelSubsystem extends SubsystemBase {
                     stopHood();
                     zeroHoodPosition();
                 })
-                // TODO: Tune
                 .withTimeout(7.0)
                 .withName("ZeroHoodFlywheelCommand");
     }
 
-    /** Check if the flywheel is at the target speed */
     public boolean isAtSpeed() {
         boolean leftAtSpeed = left.getMotionMagicAtTarget().getValue();
         boolean rightAtSpeed = right.getMotionMagicAtTarget().getValue();
@@ -316,36 +285,22 @@ public class FlywheelSubsystem extends SubsystemBase {
         return leftAtSpeed && rightAtSpeed;
     }
 
-    /**
-     * Get the hood motor's stator current
-     * 
-     * @return Current in amps
-     */
     public double getHoodCurrent() {
         return hood.getStatorCurrent().getValueAsDouble();
     }
 
-    /**
-     * Set the hood motor voltage directly
-     * 
-     * @param voltage Voltage to apply to hood motor
-     */
     public void setHoodVoltage(double voltage) {
         hood.setVoltage(voltage);
     }
 
     /**
-     * Set the hood position to zero
+     * Applies a small negative offset because the hard-stop isn't exactly at
+     * the mechanical zero.
      */
     public void zeroHoodPosition() {
-        // hood.setPosition(0.0);
-        // lol??
         hood.setPosition(Degrees.of(-2.36));
     }
 
-    /**
-     * Stop the hood motor
-     */
     public void stopHood() {
         hood.stopMotor();
     }
