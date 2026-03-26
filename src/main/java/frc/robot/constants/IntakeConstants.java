@@ -40,8 +40,8 @@ public final class IntakeConstants {
         public static final Angle KICK_ANGLE = Degrees.of(30.0);
 
         // CANcoder (WCP ThroughBore Encoder)
-        public static final int CANCODER_ID = 0;
-        public static final Angle CANCODER_OFFSET = Rotations.of(0.0);
+        public static final int CANCODER_ID = 5;
+        public static final Angle CANCODER_OFFSET = Degrees.of(-67.64);
         public static final SensorDirectionValue CANCODER_DIRECTION = SensorDirectionValue.CounterClockwise_Positive;
         public static final double GEARING_RATIO = 4.0 * 5.0 * 43.0 / 24.0;
     }
