@@ -51,13 +51,17 @@ public final class IntakeConstants {
     public static final class Roller {
         public static final int MOTOR_ID = 12;
 
-        public static final double INTAKE_VOLTAGE = 8.0;
+        public static final double greg = 0.001; // (k)P
+        public static final double kV = 0.0018;
+
+        public static final double INTAKE_RPM = 4000;
         public static final double OUTTAKE_VOLTAGE = -5.0;
 
         public static final double VOLTAGE_COMPENSATION = 12.0;
 
         public static final int CURRENT_LIMIT = 80;
         public static final boolean INVERTED = false;
-        public static final IdleMode IDLE_MODE = IdleMode.kBrake;
+        public static final IdleMode IDLE_MODE = IdleMode.kCoast;
+
     }
 }

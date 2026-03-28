@@ -103,6 +103,8 @@ public class IntakeSubsystem extends SubsystemBase {
         rollerConfig.smartCurrentLimit(IntakeConstants.Roller.CURRENT_LIMIT);
         rollerConfig.inverted(IntakeConstants.Roller.INVERTED);
         rollerConfig.idleMode(IntakeConstants.Roller.IDLE_MODE);
+        rollerConfig.encoder.quadratureMeasurementPeriod(1);
+        rollerConfig.encoder.quadratureAverageDepth(3);
         rollerConfig.voltageCompensation(IntakeConstants.Roller.VOLTAGE_COMPENSATION);
 
         rollerConfig.signals
@@ -117,6 +119,9 @@ public class IntakeSubsystem extends SubsystemBase {
                 .iAccumulationAlwaysOn(false)
                 .appliedOutputPeriodMs(20)
                 .faultsPeriodMs(20);
+
+        rollerConfig.closedLoop.feedForward.kV(IntakeConstants.Roller.kV);
+        rollerConfig.closedLoop.p(IntakeConstants.Roller.greg);
 
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
@@ -136,6 +141,16 @@ public class IntakeSubsystem extends SubsystemBase {
                 (vel) -> {
                     doglogVel.mut_replace(vel, RPM);
                 });
+
+        DogLog.tunable((getName() + "/kV"), 0.0, (kV) -> {
+            rollerConfig.closedLoop.feedForward.kV(kV);
+            rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        });
+
+        DogLog.tunable((getName() + "/kP"), 0.0, (kP) -> {
+            rollerConfig.closedLoop.p(kP);
+            rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+        });
 
         setDefaultCommand(
                 this.runOnce(() -> {
@@ -224,7 +239,8 @@ public class IntakeSubsystem extends SubsystemBase {
     public Command intakeForward() {
         return new ConditionalCommand(
                 this.run(() -> {
-                    rollerMotor.setVoltage(IntakeConstants.Roller.INTAKE_VOLTAGE);
+                    rollerMotor.getClosedLoopController().setSetpoint(IntakeConstants.Roller.INTAKE_RPM,
+                            ControlType.kVelocity);
                 }),
                 this.runOnce(() -> {
                     DogLog.log(getName() + "/IntakeForwardBlocked",

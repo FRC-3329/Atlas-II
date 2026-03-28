@@ -1,6 +1,7 @@
 package frc.robot;
 
 import frc.robot.commands.AutoDriveUnderTrenchCommand;
+import frc.robot.commands.OrientToHubCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.constants.PVConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
@@ -137,7 +138,7 @@ public class RobotContainer {
         driverController.rightTrigger(0.5)
                 .whileTrue(shoot());
 
-        driverController.leftBumper().whileTrue(intake.tunePID());
+        driverController.leftBumper().whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
         driverController.rightBumper()
                 .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
 
