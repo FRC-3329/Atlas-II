@@ -19,42 +19,49 @@ public final class PVConstants {
             .loadField(AprilTagFields.k2026RebuiltWelded);
 
     /** Shared across all cameras — they're mounted at the same height. */
-    public static final Distance CAMERA_HEIGHT_Z = Inches.of(14.5);
+    public static final Distance CAMERA_HEIGHT_Z = Inches.of(7.69);
     /** Tilted up to see tags at range while the robot frame stays low. */
     public static final Angle CAMERA_PITCH_UP = Degrees.of(25.0);
 
-    /** Rear-left camera, facing backward-left. */
+    /** Left Side. */
     public static final Transform3d A_ROBOT_TO_CAMERA = new Transform3d(
-            Inches.of(-10.71),
-            Inches.of(-8.15),
+            Inches.of(-7.81),
+            Inches.of(-11.14),
             CAMERA_HEIGHT_Z,
             new Rotation3d(
                     Degrees.zero(),
                     CAMERA_PITCH_UP.unaryMinus(),
-                    Degrees.of(-108.1)
-            ));
+                    Degrees.of(20.0)));
 
-    /** Rear-center camera, facing straight backward. */
+    /** Left Front. */
     public static final Transform3d B_ROBOT_TO_CAMERA = new Transform3d(
-            Inches.of(-10.14),
-            Inches.of(9.87),
-            CAMERA_HEIGHT_Z,
+            Inches.of(-11.08),
+            Inches.of(-8.47),
+            Inches.of(7.78),
             new Rotation3d(
                     Degrees.zero(),
                     CAMERA_PITCH_UP.unaryMinus(),
-                    Degrees.of(180.0)
-            ));
+                    Degrees.of(35.0)));
 
-    /** Rear-right camera, facing backward-right. */
+    /** Right Side. */
     public static final Transform3d C_ROBOT_TO_CAMERA = new Transform3d(
-            Inches.of(-10.71),
-            Inches.of(8.15),
+            Inches.of(-7.81),
+            Inches.of(11.14),
             CAMERA_HEIGHT_Z,
             new Rotation3d(
                     Degrees.zero(),
                     CAMERA_PITCH_UP.unaryMinus(),
-                    Degrees.of(108.1)
-            ));
+                    Degrees.of(20.0)));
+
+    /** Right Front. */
+    public static final Transform3d D_ROBOT_TO_CAMERA = new Transform3d(
+            Inches.of(-11.11),
+            Inches.of(8.47),
+            CAMERA_HEIGHT_Z,
+            new Rotation3d(
+                    Degrees.zero(),
+                    CAMERA_PITCH_UP.unaryMinus(),
+                    Degrees.of(20.0)));
 
     /** Higher std devs = less trust; single tags have more ambiguity. */
     public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);

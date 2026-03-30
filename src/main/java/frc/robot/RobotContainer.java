@@ -16,9 +16,6 @@ import frc.robot.utils.GameHelpers;
 
 import swervelib.SwerveInputStream;
 
-import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.RPM;
-
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
@@ -37,10 +34,13 @@ public class RobotContainer {
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
     @SuppressWarnings("unused")
     private final PhotonVisionSubsystem blueCam = new PhotonVisionSubsystem("Blue_cam",
-            PVConstants.B_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+            PVConstants.A_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     @SuppressWarnings("unused")
-    private final PhotonVisionSubsystem orangeCam = new PhotonVisionSubsystem("Orange_cam",
+    private final PhotonVisionSubsystem redCam = new PhotonVisionSubsystem("Red_cam",
             PVConstants.C_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    @SuppressWarnings("unused")
+    private final PhotonVisionSubsystem yellowCam = new PhotonVisionSubsystem("Yellow_cam",
+            PVConstants.D_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
     private final GameHelpers gameHelpers;
     private final FlywheelSubsystem flywheel;
     private final IndexerSubsystem indexer = new IndexerSubsystem();
