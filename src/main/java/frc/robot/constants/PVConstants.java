@@ -21,7 +21,7 @@ public final class PVConstants {
     /** Shared across all cameras — they're mounted at the same height. */
     public static final Distance CAMERA_HEIGHT_Z = Inches.of(7.69);
     /** Tilted up to see tags at range while the robot frame stays low. */
-    public static final Angle CAMERA_PITCH_UP = Degrees.of(25.0);
+    public static final Angle CAMERA_PITCH_UP = Degrees.of(20.0);
 
     /** Left Side. */
     public static final Transform3d A_ROBOT_TO_CAMERA = new Transform3d(
