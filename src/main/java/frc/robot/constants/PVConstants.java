@@ -31,13 +31,13 @@ public final class PVConstants {
             new Rotation3d(
                     Degrees.zero(),
                     CAMERA_PITCH_UP.unaryMinus(),
-                    Degrees.of(20.0)));
+                    Degrees.of(-103.5)));
 
     /** Left Front. */
     public static final Transform3d B_ROBOT_TO_CAMERA = new Transform3d(
             Inches.of(-11.08),
             Inches.of(-8.47),
-            Inches.of(7.78),
+            CAMERA_HEIGHT_Z,
             new Rotation3d(
                     Degrees.zero(),
                     CAMERA_PITCH_UP.unaryMinus(),
@@ -51,7 +51,7 @@ public final class PVConstants {
             new Rotation3d(
                     Degrees.zero(),
                     CAMERA_PITCH_UP.unaryMinus(),
-                    Degrees.of(20.0)));
+                    Degrees.of(181.0)));
 
     /** Right Front. */
     public static final Transform3d D_ROBOT_TO_CAMERA = new Transform3d(
@@ -61,7 +61,7 @@ public final class PVConstants {
             new Rotation3d(
                     Degrees.zero(),
                     CAMERA_PITCH_UP.unaryMinus(),
-                    Degrees.of(20.0)));
+                    Degrees.of(103.5)));
 
     /** Higher std devs = less trust; single tags have more ambiguity. */
     public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
