@@ -52,7 +52,6 @@ public class IntakeSubsystem extends SubsystemBase {
     private final MutAngularVelocity doglogVel = RPM.mutable(0.0);
 
     private IntakeState currentState = IntakeState.UP;
-    private boolean pivotPIDEnabled = false;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
@@ -171,7 +170,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private void setPivotAngle(Angle angle) {
         pivotMotor.setControl(pivotPositionRequest.withPosition(angle.in(Rotations)));
-        pivotPIDEnabled = true;
         DogLog.log((getName() + "/PivotPIDEnabled"), true);
     }
 
@@ -271,7 +269,6 @@ public class IntakeSubsystem extends SubsystemBase {
     /** Sets zero duty cycle output so the motor stops holding position. */
     private void disablePivotPID() {
         pivotMotor.setControl(pivotDisableRequest);
-        pivotPIDEnabled = false;
         DogLog.log((getName() + "/PivotPIDEnabled"), false);
     }
 

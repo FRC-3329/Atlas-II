@@ -129,6 +129,7 @@ public class IndexerSubsystem extends SubsystemBase {
             DogLog.log(getName() + "/Temperature", indexerMotor.getMotorTemperature(), Celsius);
         }
 
+        DogLog.log(getName() + "/stallDetected", stallDetected.getAsBoolean());
         DogLog.log(getName() + "/BeltCurrent", beltMotor.getOutputCurrent(), Amps);
         DogLog.log(getName() + "/BeltVelocity", beltMotor.getEncoder().getVelocity(), RPM);
     }

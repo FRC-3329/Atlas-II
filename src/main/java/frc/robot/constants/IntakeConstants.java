@@ -1,7 +1,6 @@
 package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Degrees;
-import static edu.wpi.first.units.Units.Rotations;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.SensorDirectionValue;
@@ -59,7 +58,7 @@ public final class IntakeConstants {
 
         public static final double VOLTAGE_COMPENSATION = 12.0;
 
-        public static final int CURRENT_LIMIT = 80;
+        public static final int CURRENT_LIMIT = 70;
         public static final boolean INVERTED = false;
         public static final IdleMode IDLE_MODE = IdleMode.kCoast;
 
