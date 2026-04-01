@@ -6,7 +6,7 @@ public final class IndexerConstants {
     
 
     /** Duration the motor must be at current limit before we consider it stalled. */
-    public static final double CURRENT_STALL_TIME = 0.5;
+    public static final double CURRENT_STALL_TIME = 0.2;
     /** Brief reversal to un-jam fuel before resuming forward feed. */
     public static final double SMART_REVERSAL_TIME = 0.2;
 

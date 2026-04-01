@@ -26,8 +26,8 @@ public final class TurretConstants {
     public static final double JERK = 0.0;
 
     /** Soft limits prevent the turret from wrapping cables around the robot. */
-    public static final Angle MIN_ANGLE = Degrees.of(-60.0);
-    public static final Angle MAX_ANGLE = Degrees.of(60.0);
+    public static final Angle MIN_ANGLE = Degrees.of(-85.0);
+    public static final Angle MAX_ANGLE = Degrees.of(75.0);
 
     public static final double CURRENT_LIMIT = 30.0;
     public static final InvertedValue INVERTED = InvertedValue.Clockwise_Positive;
@@ -43,7 +43,7 @@ public final class TurretConstants {
     public static final double TOP_FREE_SPACE_Y_OFFSET = 1.5;
     public static final double BOTTOM_FREE_SPACE_Y_OFFSET = 1.5;
     /** X offset to push the virtual target further into our zone so fuel doesn't roll back. */
-    public static final double PASS_X_OFFSET = Units.feetToMeters(1);
+    public static final double PASS_X_OFFSET = Units.feetToMeters(5);
 
     /** When false, auto-aim only activates when FMS is connected (match play). */
     public static final boolean ENABLE_AUTO_AIM = false;

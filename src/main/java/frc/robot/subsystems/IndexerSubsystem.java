@@ -26,7 +26,7 @@ public class IndexerSubsystem extends SubsystemBase {
     public IndexerSubsystem() {
         indexerMotor = new SparkMax(IndexerConstants.Indexer.MOTOR_ID, MotorType.kBrushless);
         stallDetected = new Trigger(
-                () -> indexerMotor.getOutputCurrent() >= (IndexerConstants.Indexer.CURRENT_LIMIT - 1.0))
+                () -> indexerMotor.getOutputCurrent() >= (IndexerConstants.Indexer.CURRENT_LIMIT - 2.0))
                 .debounce(IndexerConstants.CURRENT_STALL_TIME);
 
         SparkMaxConfig config = new SparkMaxConfig();
