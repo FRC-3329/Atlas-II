@@ -12,9 +12,9 @@ public final class IntakeConstants {
     public static final class Pivot {
         public static final int MOTOR_ID = 7;
 
-        public static final double kP = 390.40;
+        public static final double kP = 10;
         public static final double kI = 0.0;
-        public static final double kD = 7.59;
+        public static final double kD = 0.0;
         public static final double kS = 0.0;
         public static final double kV = 4.25;
         public static final double kA = 0.08;
@@ -38,7 +38,7 @@ public final class IntakeConstants {
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
 
         /** Partially raised to flick fuel upward into the indexer. */
-        public static final Angle KICK_ANGLE = Degrees.of(30.0);
+        public static final Angle KICK_ANGLE = Degrees.of(60.0);
 
         public static final int CANCODER_ID = 5;
         public static final Angle CANCODER_OFFSET = Degrees.of(-67.64);

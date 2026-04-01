@@ -263,7 +263,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public Command disablePivotPIDCommand() {
-        return this.runOnce(this::disablePivotPID).withName("IntakeDisablePivotPID");
+        return Commands.runOnce(this::disablePivotPID).withName("IntakeDisablePivotPID");
     }
 
     /** Sets zero duty cycle output so the motor stops holding position. */
