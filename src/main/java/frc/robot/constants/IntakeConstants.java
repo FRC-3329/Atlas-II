@@ -12,13 +12,13 @@ public final class IntakeConstants {
     public static final class Pivot {
         public static final int MOTOR_ID = 7;
 
-        public static final double kP = 34.46;
+        public static final double kP = 390.40;
         public static final double kI = 0.0;
-        public static final double kD = 0.52;
+        public static final double kD = 7.59;
         public static final double kS = 0.0;
         public static final double kV = 4.25;
-        public static final double kA = 0.00;
-        public static final double kG = 0.24;
+        public static final double kA = 0.08;
+        public static final double kG = 0.37;
 
         public static final double GRAVITY_ARM_POSITION_OFFSET = 0.0; // rotations
 

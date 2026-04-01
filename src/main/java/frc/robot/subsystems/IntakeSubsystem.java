@@ -197,7 +197,7 @@ public class IntakeSubsystem extends SubsystemBase {
      * fight gravity or burn current while resting on the ground.
      */
     public Command lower() {
-        return this.runOnce(() -> {
+        return Commands.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.DOWN_ANGLE);
             currentState = IntakeState.DOWN;
             DogLog.log((getName() + "/IsDown"), true);
@@ -208,7 +208,7 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public Command kick() {
-        return this.runOnce(() -> {
+        return Commands.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.KICK_ANGLE);
         });
     }

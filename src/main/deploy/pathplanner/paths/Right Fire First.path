@@ -3,41 +3,41 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 3.5297521551724147,
-        "y": 0.8585452586206896
+        "x": 3.930474137931035,
+        "y": 0.6923922413793104
       },
       "prevControl": null,
       "nextControl": {
-        "x": 3.95979525862069,
-        "y": 0.14506465517241396
+        "x": 5.807025862068966,
+        "y": 0.5360129310344826
       },
       "isLocked": false,
       "linkedName": "Right Fire Start"
     },
     {
       "anchor": {
-        "x": 7.673803879310345,
-        "y": 0.95
+        "x": 7.331724137931035,
+        "y": 1.0051508620689662
       },
       "prevControl": {
-        "x": 7.427205398352309,
-        "y": 0.9089002531736605
+        "x": 7.085125656972999,
+        "y": 0.9640511152426268
       },
       "nextControl": {
-        "x": 7.920402360268383,
-        "y": 0.9910997468263394
+        "x": 7.578322618889073,
+        "y": 1.0462506088953056
       },
       "isLocked": false,
       "linkedName": "Right Neutral"
     },
     {
       "anchor": {
-        "x": 7.742219827586206,
-        "y": 2.3539224137931036
+        "x": 7.566293103448277,
+        "y": 2.3636961206896556
       },
       "prevControl": {
-        "x": 7.7884750395121785,
-        "y": 1.641790224619585
+        "x": 7.61254831537425,
+        "y": 1.651563931516137
       },
       "nextControl": null,
       "isLocked": false,
@@ -50,7 +50,7 @@
       "rotationDegrees": 180.0
     },
     {
-      "waypointRelativePos": 0.6540880503144654,
+      "waypointRelativePos": 0.4051355206847361,
       "rotationDegrees": 180.0
     },
     {
@@ -99,9 +99,9 @@
     }
   ],
   "globalConstraints": {
-    "maxVelocity": 4.0,
+    "maxVelocity": 5.0,
     "maxAcceleration": 2.0,
-    "maxAngularVelocity": 540.0,
+    "maxAngularVelocity": 720.0,
     "maxAngularAcceleration": 540.0,
     "nominalVoltage": 11.5,
     "unlimited": false
@@ -114,7 +114,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -110.0
+    "rotation": -162.25532837494305
   },
   "useDefaultConstraints": true
 }

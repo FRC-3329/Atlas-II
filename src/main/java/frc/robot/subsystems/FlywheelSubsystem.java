@@ -21,7 +21,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import dev.doglog.DogLog;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -30,6 +30,7 @@ import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.constants.FlywheelConstants.Flywheel;
@@ -186,7 +187,10 @@ public class FlywheelSubsystem extends SubsystemBase {
         }).withName("FlywheelSetSpeed");
     }
 
-    /** Shoots using distance-interpolated RPM and hood angle from the shot parameter map. */
+    /**
+     * Shoots using distance-interpolated RPM and hood angle from the shot parameter
+     * map.
+     */
     public Command shoot() {
         return this.run(() -> {
             ShotParameters.Parameters params = shotParametersSupplier.get();
@@ -303,6 +307,24 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     public void stopHood() {
         hood.stopMotor();
+    }
+
+    public Command characterize() {
+        final double waitSeconds = 2.0;
+        final double quasistaticSeconds = 5.0;
+        final double dynamicSeconds = 3.0;
+        return Commands.sequence(
+                Commands.runOnce(SignalLogger::start),
+                Commands.waitSeconds(waitSeconds),
+                sysIdQuasistatic(Direction.kForward).withTimeout(quasistaticSeconds),
+                Commands.waitSeconds(waitSeconds),
+                sysIdQuasistatic(Direction.kReverse).withTimeout(quasistaticSeconds),
+                Commands.waitSeconds(waitSeconds),
+                sysIdDynamic(Direction.kForward).withTimeout(dynamicSeconds),
+                Commands.waitSeconds(waitSeconds),
+                sysIdDynamic(Direction.kReverse).withTimeout(dynamicSeconds),
+                Commands.waitSeconds(waitSeconds),
+                Commands.runOnce(SignalLogger::stop));
     }
 
     @Override

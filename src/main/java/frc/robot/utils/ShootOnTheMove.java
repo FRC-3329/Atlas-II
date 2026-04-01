@@ -9,7 +9,7 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 // Adapted from Team 1683 TechnoTitans' TitanWare2024
 public class ShootOnTheMove {
     /** Converges quickly; diminishing returns beyond ~3 iterations. */
-    private static final int MAX_ITERATIONS = 3;
+    private static final int MAX_ITERATIONS = 5;
 
     /**
      * Contains the converged shot parameters and the predicted robot pose

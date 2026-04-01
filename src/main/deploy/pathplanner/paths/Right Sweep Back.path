@@ -3,41 +3,41 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 7.742219827586206,
-        "y": 2.3539224137931036
+        "x": 7.566293103448277,
+        "y": 2.3636961206896556
       },
       "prevControl": null,
       "nextControl": {
-        "x": 7.826413758229255,
-        "y": 1.3388098479429327
+        "x": 7.650487034091326,
+        "y": 1.3485835548394847
       },
       "isLocked": false,
       "linkedName": "Right Center"
     },
     {
       "anchor": {
-        "x": 5.533362068965517,
-        "y": 0.6532974137931036
+        "x": 5.474719827586207,
+        "y": 0.7901293103448279
       },
       "prevControl": {
-        "x": 5.850023413426341,
-        "y": 0.6616746980380989
+        "x": 5.791381172047031,
+        "y": 0.7985065945898232
       },
       "nextControl": {
-        "x": 3.6861314655172412,
-        "y": 0.6044288793103454
+        "x": 3.627489224137931,
+        "y": 0.7412607758620697
       },
       "isLocked": false,
       "linkedName": null
     },
     {
       "anchor": {
-        "x": 2.9628771551724147,
-        "y": 0.9465086206896558
+        "x": 3.2560883620689665,
+        "y": 0.8878663793103454
       },
       "prevControl": {
-        "x": 4.077079741379311,
-        "y": 0.45782327586207006
+        "x": 4.428933189655177,
+        "y": 0.5555603448275861
       },
       "nextControl": null,
       "isLocked": false,
@@ -58,16 +58,16 @@
   "pointTowardsZones": [],
   "eventMarkers": [],
   "globalConstraints": {
-    "maxVelocity": 4.0,
+    "maxVelocity": 5.0,
     "maxAcceleration": 2.0,
-    "maxAngularVelocity": 540.0,
+    "maxAngularVelocity": 720.0,
     "maxAngularAcceleration": 540.0,
     "nominalVoltage": 11.5,
     "unlimited": false
   },
   "goalEndState": {
     "velocity": 0,
-    "rotation": -110.0
+    "rotation": -164.21924669048454
   },
   "reversed": false,
   "folder": null,
