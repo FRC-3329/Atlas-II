@@ -154,7 +154,8 @@ public class RobotContainer {
                         .andThen(rumbleControllers(0.5, 0.25)));
 
         driverController.povUp()
-                .onTrue(intake.kick());
+                .onTrue(intake.kick())
+                .onFalse(intake.lower());
         driverController.povDown()
                 .onTrue(intake.lower());
         driverController.povLeft()
