@@ -52,6 +52,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private final MutAngularVelocity doglogVel = RPM.mutable(0.0);
 
     private IntakeState currentState = IntakeState.UP;
+    private double targetAngleRotations = 0.0;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
@@ -169,7 +170,8 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     private void setPivotAngle(Angle angle) {
-        pivotMotor.setControl(pivotPositionRequest.withPosition(angle.in(Rotations)));
+        targetAngleRotations = angle.in(Rotations);
+        pivotMotor.setControl(pivotPositionRequest.withPosition(targetAngleRotations));
         DogLog.log((getName() + "/PivotPIDEnabled"), true);
     }
 
@@ -182,7 +184,8 @@ public class IntakeSubsystem extends SubsystemBase {
     }
 
     public boolean isPivotAtTarget() {
-        return pivotMotor.getMotionMagicAtTarget().getValue();
+        double toleranceRotations = IntakeConstants.Pivot.PIVOT_TOLERANCE.in(Rotations);
+        return Math.abs(getPivotAngle() - targetAngleRotations) <= toleranceRotations;
     }
 
     public Command tunePID() {
