@@ -137,12 +137,11 @@ public class RobotContainer {
         driverController.rightTrigger(0.5)
                 .whileTrue(shoot());
 
-        driverController.leftBumper().whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
+        driverController.rightBumper().whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
+        driverController.leftBumper().whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward()));
 
-        // A/B = unjam mechanisms by reversing indexer/intake
         driverController.a()
                 .whileTrue(indexer.feedBackwards());
-        driverController.b().whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward()));
         driverController.x()
                 .whileTrue(drivebase.lockWheels());
         // Rumble confirms the toggle so the driver doesn't have to check the dashboard

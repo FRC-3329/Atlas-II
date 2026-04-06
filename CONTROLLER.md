@@ -12,12 +12,11 @@
 - **Right Trigger**: Shoot
 
 ### Bumpers
-- **Left Bumper**: *(unbound)*
-- **Right Bumper**: Auto drive under trench
+- **Left Bumper**: Reverse indexer and intake
+- **Right Bumper**: Auto Aim Swerve
 
 ### Face Buttons
-- **A Button**: Reverse indexer
-- **B Button**: Reverse indexer and intake
+- **A Button**: Reverse indexer and intake
 - **X Button**: Lock swerve wheels
 - **Y Button**: Toggle flywheel varying RPM
 
