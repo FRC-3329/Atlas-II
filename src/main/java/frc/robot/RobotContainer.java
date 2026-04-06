@@ -77,7 +77,7 @@ public class RobotContainer {
                 .aim(() -> new Pose2d(gameHelpers.getVirtualTargetTranslation(), Rotation2d.kZero))
                 .aimHeadingOffset(Rotation2d.fromDegrees(180.0))
                 .aimHeadingOffset(true)
-                .aimWhile(driverController.leftBumper());
+                .aimWhile(driverController.rightBumper());
         driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
