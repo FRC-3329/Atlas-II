@@ -1,6 +1,5 @@
 package frc.robot;
 
-import frc.robot.commands.AutoDriveUnderTrenchCommand;
 import frc.robot.commands.OrientToHubCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.constants.PVConstants;
@@ -139,8 +138,6 @@ public class RobotContainer {
                 .whileTrue(shoot());
 
         driverController.leftBumper().whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
-        driverController.rightBumper()
-                .whileTrue(autoDriving(new AutoDriveUnderTrenchCommand(drivebase, flywheel)));
 
         // A/B = unjam mechanisms by reversing indexer/intake
         driverController.a()

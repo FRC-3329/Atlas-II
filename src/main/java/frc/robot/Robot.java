@@ -1,9 +1,5 @@
 package frc.robot;
 
-import com.pathplanner.lib.commands.FollowPathCommand;
-import com.pathplanner.lib.pathfinding.LocalADStar;
-import com.pathplanner.lib.pathfinding.Pathfinding;
-
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -32,10 +28,6 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
-
-        // AD* pathfinder must be initialized early; warmup prevents first-path lag
-        Pathfinding.setPathfinder(new LocalADStar());
-        CommandScheduler.getInstance().schedule(FollowPathCommand.warmupCommand());
     }
 
     @Override
