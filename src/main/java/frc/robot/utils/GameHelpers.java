@@ -30,6 +30,7 @@ public class GameHelpers extends SubsystemBase {
     private final Supplier<ChassisSpeeds> robotVelocitySupplier;
     private final MutDistance virtualTargetDistance;
     private Rotation2d virtualTargetFieldAngle;
+    private Translation2d virtualTargetTranslation = Constants.HUB_LOCATION;
     private String cachedGameData = "";
     private ShotParameters.Parameters shotParameters;
 
@@ -69,6 +70,10 @@ public class GameHelpers extends SubsystemBase {
      */
     public Rotation2d getVirtualTargetFieldAngle() {
         return virtualTargetFieldAngle;
+    }
+
+    public Translation2d getVirtualTargetTranslation() {
+        return virtualTargetTranslation;
     }
 
     public Distance getVirtualTargetDistance() {
@@ -263,9 +268,11 @@ public class GameHelpers extends SubsystemBase {
 
         // When the robot is stationary, no SOTM adjustment is needed
         if (currentTurretTranslation.equals(futureTurretTranslation)) {
+            this.virtualTargetTranslation = targetTranslation;
             this.virtualTargetFieldAngle = targetTranslation.minus(currentTurretTranslation).getAngle();
             this.virtualTargetDistance.mut_replace(targetTranslation.getDistance(currentTurretTranslation), Meters);
         } else {
+            this.virtualTargetTranslation = virtualTargetTranslation;
             this.virtualTargetFieldAngle = virtualTargetTranslation.minus(currentTurretTranslation).getAngle();
             this.virtualTargetDistance.mut_replace(virtualTargetTranslation.getDistance(currentTurretTranslation),
                     Meters);

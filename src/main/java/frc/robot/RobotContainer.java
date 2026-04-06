@@ -1,6 +1,5 @@
 package frc.robot;
 
-import frc.robot.commands.OrientToHubCommand;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.constants.PVConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
@@ -74,7 +73,11 @@ public class RobotContainer {
                         () -> -driverController.getRightX())
                 .deadband(OperatorConstants.DEADBAND)
                 .scaleTranslation(0.8)
-                .allianceRelativeControl(true);
+                .allianceRelativeControl(true)
+                .aim(() -> new Pose2d(gameHelpers.getVirtualTargetTranslation(), Rotation2d.kZero))
+                .aimHeadingOffset(Rotation2d.fromDegrees(180.0))
+                .aimHeadingOffset(true)
+                .aimWhile(driverController.leftBumper());
         driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
@@ -137,7 +140,6 @@ public class RobotContainer {
         driverController.rightTrigger(0.5)
                 .whileTrue(shoot());
 
-        driverController.rightBumper().whileTrue(new OrientToHubCommand(drivebase, gameHelpers));
         driverController.leftBumper().whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward()));
 
         driverController.a()
