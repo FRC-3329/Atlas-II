@@ -77,7 +77,7 @@ public class RobotContainer {
                 .aim(() -> new Pose2d(gameHelpers.getVirtualTargetTranslation(), Rotation2d.kZero))
                 .aimHeadingOffset(Rotation2d.fromDegrees(180.0))
                 .aimHeadingOffset(true)
-                .aimWhile(driverController.rightBumper());
+                .aimWhile(driverController.b());
         driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
@@ -141,9 +141,13 @@ public class RobotContainer {
                 .whileTrue(shoot());
 
         driverController.leftBumper().whileTrue(indexer.feedBackwards().alongWith(intake.intakeBackward()));
+        driverController.rightBumper()
+                .onTrue(intake.kick())
+                .onFalse(intake.lower());
 
         driverController.a()
                 .whileTrue(indexer.feedBackwards());
+        // b is bound to swerve aiming above
         driverController.x()
                 .whileTrue(drivebase.lockWheels());
         // Rumble confirms the toggle so the driver doesn't have to check the dashboard
@@ -151,9 +155,6 @@ public class RobotContainer {
                 .onTrue(flywheel.toggleVaryingRPM()
                         .andThen(rumbleControllers(0.5, 0.25)));
 
-        driverController.povUp()
-                .onTrue(intake.kick())
-                .onFalse(intake.lower());
         driverController.povDown()
                 .onTrue(intake.lower());
         driverController.povLeft()
