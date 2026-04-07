@@ -34,7 +34,7 @@ public final class IntakeConstants {
         /** Angle at power-on before CANcoder sync; must match mechanical home. */
         public static final Angle STARTING_ANGLE = Degrees.of(147.4);
 
-        public static final Angle PIVOT_TOLERANCE = Degrees.of(2.0);
+        public static final Angle PIVOT_TOLERANCE = Degrees.of(3.5);
 
         public static final double CURRENT_LIMIT = 40.0;
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
