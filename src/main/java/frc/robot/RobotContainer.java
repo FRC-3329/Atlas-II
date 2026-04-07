@@ -167,8 +167,8 @@ public class RobotContainer {
                 .onTrue(turret.stopAutoTracking());
 
         // Warn the driver that the goal is about to switch so they can reposition
-        new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
-                .onTrue(rumbleControllers(1.0, 1.0));
+        //new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
+        //        .onTrue(rumbleControllers(1.0, 1.0));
     }
 
     public void setMotorBrake(boolean brake) {
