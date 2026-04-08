@@ -14,9 +14,13 @@ import frc.robot.utils.GameHelpers;
 
 import swervelib.SwerveInputStream;
 
+import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.RPM;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -167,8 +171,9 @@ public class RobotContainer {
                 .onTrue(turret.stopAutoTracking());
 
         // Warn the driver that the goal is about to switch so they can reposition
-        //new Trigger(() -> DriverStation.isTeleop() && gameHelpers.isPhaseShiftImminent())
-        //        .onTrue(rumbleControllers(1.0, 1.0));
+        // new Trigger(() -> DriverStation.isTeleop() &&
+        // gameHelpers.isPhaseShiftImminent())
+        // .onTrue(rumbleControllers(1.0, 1.0));
     }
 
     public void setMotorBrake(boolean brake) {
@@ -199,7 +204,7 @@ public class RobotContainer {
      */
     public Command shoot() {
         return Commands.parallel(
-                Commands.either(flywheel.shoot(), flywheel.tunableShoot(),
+                Commands.either(flywheel.shoot(), flywheel.shoot(RPM.of(1600.0), Degrees.of(10.0)),
                         flywheel::isVaryingRPMEnabled),
                 Commands.waitUntil(flywheel::isAtSpeed).withTimeout(0.4)
                         .andThen(indexer.smartFeed().alongWith(intake.intakeForward())));
@@ -213,6 +218,7 @@ public class RobotContainer {
         Command auton = autoChooser.getSelected();
 
         if (auton != null) {
+            DogLog.log("Robot/AutoSelected", auton.getName());
             return autoDriving(auton);
         } else {
             DriverStation.reportError(

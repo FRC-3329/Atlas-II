@@ -1,5 +1,7 @@
 package frc.robot;
 
+import com.pathplanner.lib.util.PathPlannerLogging;
+
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -28,6 +30,7 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
+        PathPlannerLogging.setLogTargetPoseCallback(pose -> DogLog.log("PathPlanner/TargetPose", pose));
     }
 
     @Override
