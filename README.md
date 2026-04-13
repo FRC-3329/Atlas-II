@@ -1,4 +1,4 @@
-# 2026 Rebuilt
+# Atlas-II
 Source code for the robot used in REBUILT developed by team 3329, the Wildbots!
 
 ## Prerequisites
@@ -19,11 +19,6 @@ Source code for the robot used in REBUILT developed by team 3329, the Wildbots!
 ## Code Outline
 Code outline for `src/main/java/frc/robot`
 
-### `commands`
-Custom commands for robot actions
-- **AutoDriveUnderTrenchCommand.java** - Automatically pathfinds the robot to and drives under the nearest trench using PathPlanner
-- **OrientToHubCommand.java** - Automatically orients the robot so the rear-mounted turret faces the hub for shooting
-
 ### `constants`
 All constant values
 - **Constants.java** - Global constants (hub location, loop time, max speed)
@@ -32,7 +27,6 @@ All constant values
 - **IntakeConstants.java** - Pivot and roller motor settings for ground intake mechanism
 - **LEDConstants.java** - PWM port and strip length for addressable LEDs
 - **OperatorConstants.java** - Controller ports and joystick deadband values
-- **OrientToHubConstants.java** - PID gains, velocity/acceleration limits, and tolerance for the orient-to-hub command
 - **PVConstants.java** - PhotonVision AprilTag field layout and vision standard deviations
 - **TrenchConstants.java** - Field dimensions, path names, and motion constraints for trench driving
 - **TurretConstants.java** - PID gains, angle limits, and encoder settings for turret rotation
@@ -72,8 +66,8 @@ Utility classes for calculations and data structures
 All contributions are welcome! To get started:
 1. Clone the repo
 ```sh
-# Fork https://github.com/FRC-3329/2026-Rebuilt.git
-git clone https://github.com/YOUR_USERNAME/2026-Rebuilt.git
+# Fork https://github.com/FRC-3329/Atlas-II.git
+git clone https://github.com/YOUR_USERNAME/Atlas-II.git
 ```
 2. Add your feature
 ```sh
@@ -85,10 +79,10 @@ git commit -m "feat: my amazing feature"
 ```sh
 git push -u origin feature-name
 ```
-Then make a [pull request!](https://github.com/FRC-3329/2026-Rebuilt/compare)
+Then make a [pull request!](https://github.com/FRC-3329/Atlas-II/compare)
 
 ## Issues
-If you find an issue, please check [existing issues](https://github.com/FRC-3329/2026-Rebuilt/issues) first. If your issue is not already filed, feel free to [make one!](https://github.com/FRC-3329/2026-Rebuilt/issues/new)
+If you find an issue, please check [existing issues](https://github.com/FRC-3329/Atlas-II/issues) first. If your issue is not already filed, feel free to [make one!](https://github.com/FRC-3329/Atlas-II/issues/new)
 
 ## Source Code License
 This project uses the [WPILib license](./WPILib-License.md)
