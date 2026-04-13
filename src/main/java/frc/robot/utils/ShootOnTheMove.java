@@ -2,6 +2,7 @@ package frc.robot.utils;
 
 import java.util.function.Function;
 
+import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -27,12 +28,17 @@ public class ShootOnTheMove {
             final Pose2d currentPose,
             final ChassisSpeeds chassisSpeeds,
             final Function<Pose2d, ShotParameters.Parameters> parametersFunction) {
+        DogLog.log("Timing/SOTM/IterationCount", MAX_ITERATIONS);
+        DogLog.time("Timing/SOTM/TotalSeconds");
+
         Pose2d futureRobotPose = currentPose;
 
         ShotParameters.Parameters parameters = parametersFunction.apply(currentPose);
         double timeOfFlightSeconds = parameters.tofSeconds();
 
         for (int i = 0; i < MAX_ITERATIONS; i++) {
+            DogLog.time("Timing/SOTM/PerIterationSeconds");
+
             final Twist2d twist = new Twist2d(
                     chassisSpeeds.vxMetersPerSecond * timeOfFlightSeconds,
                     chassisSpeeds.vyMetersPerSecond * timeOfFlightSeconds,
@@ -41,8 +47,11 @@ public class ShootOnTheMove {
             futureRobotPose = currentPose.exp(twist);
             parameters = parametersFunction.apply(futureRobotPose);
             timeOfFlightSeconds = parameters.tofSeconds();
+
+            DogLog.timeEnd("Timing/SOTM/PerIterationSeconds");
         }
 
+        DogLog.timeEnd("Timing/SOTM/TotalSeconds");
         return new Shot(parameters, futureRobotPose);
     }
 }

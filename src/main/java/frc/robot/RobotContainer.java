@@ -33,6 +33,8 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 public class RobotContainer {
     private final SwerveSubsystem drivebase = new SwerveSubsystem();
+
+    // While these cameras aren't referenced directly, they still need to be initalized in the RobotContainer
     @SuppressWarnings("unused")
     private final PhotonVisionSubsystem blueCam = new PhotonVisionSubsystem("Blue_cam",
             PVConstants.A_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
@@ -42,11 +44,14 @@ public class RobotContainer {
     @SuppressWarnings("unused")
     private final PhotonVisionSubsystem yellowCam = new PhotonVisionSubsystem("Yellow_cam",
             PVConstants.D_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+
     private final GameHelpers gameHelpers;
+
     private final FlywheelSubsystem flywheel;
     private final IndexerSubsystem indexer = new IndexerSubsystem();
     private final IntakeSubsystem intake = new IntakeSubsystem();
     private final TurretSubsystem turret;
+
     @SuppressWarnings("unused")
     private final PDHSubsystem pdh = new PDHSubsystem();
     private final LEDSubsystem leds = new LEDSubsystem();

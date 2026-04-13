@@ -134,6 +134,8 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 		Optional<EstimatedRobotPose> visionEst = Optional.empty();
 		for (PhotonPipelineResult change : camera.getAllUnreadResults()) {
+			DogLog.time("Timing/Vision/ProcessResultSeconds");
+
 			// Prefer multi-tag PnP for accuracy; single-tag fallback commented out
 			visionEst = photonEstimator.estimateCoprocMultiTagPose(change);
 
@@ -150,6 +152,8 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 				estConsumer.accept(
 						est.estimatedPose, est.timestampSeconds, estStdDevs);
 			});
+
+			DogLog.timeEnd("Timing/Vision/ProcessResultSeconds");
 		}
 	}
 }

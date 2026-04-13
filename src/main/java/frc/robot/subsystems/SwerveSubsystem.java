@@ -101,7 +101,9 @@ public class SwerveSubsystem extends SubsystemBase {
 			Pose3d visionMeasurement,
 			double timestampSeconds,
 			Matrix<N3, N1> stdDevs) {
+		DogLog.time("Timing/Vision/AddMeasurementSeconds");
 		swerveDrive.addVisionMeasurement(visionMeasurement.toPose2d(), timestampSeconds, stdDevs);
+		DogLog.timeEnd("Timing/Vision/AddMeasurementSeconds");
 	}
 
 	public void driveFieldOriented(ChassisSpeeds velocity) {
