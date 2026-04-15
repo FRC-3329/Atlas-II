@@ -3,13 +3,13 @@
   "waypoints": [
     {
       "anchor": {
-        "x": 4.047758620689656,
-        "y": 7.318965517241379
+        "x": 3.93,
+        "y": 7.417996422182468
       },
       "prevControl": null,
       "nextControl": {
-        "x": 5.044676724137932,
-        "y": 7.406928879310345
+        "x": 4.926918103448276,
+        "y": 7.505959784251434
       },
       "isLocked": false,
       "linkedName": "Left Fire Start"
@@ -33,11 +33,11 @@
     {
       "anchor": {
         "x": 7.595614224137931,
-        "y": 5.67698275862069
+        "y": 5.277
       },
       "prevControl": {
         "x": 7.6540603448275855,
-        "y": 6.667855603448276
+        "y": 6.267872844827586
       },
       "nextControl": null,
       "isLocked": false,
@@ -64,7 +64,7 @@
       "minWaypointRelativePos": 1.141479099678457,
       "maxWaypointRelativePos": 2.0,
       "constraints": {
-        "maxVelocity": 0.5,
+        "maxVelocity": 0.75,
         "maxAcceleration": 2.0,
         "maxAngularVelocity": 540.0,
         "maxAngularAcceleration": 540.0,
@@ -114,7 +114,7 @@
   "folder": null,
   "idealStartingState": {
     "velocity": 0,
-    "rotation": -179.37040139158972
+    "rotation": 155.0
   },
   "useDefaultConstraints": true
 }

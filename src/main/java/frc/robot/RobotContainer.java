@@ -128,6 +128,7 @@ public class RobotContainer {
         // and the commands that these subsystems schedule elsewhere
         NamedCommands.registerCommand("IntakeGamePiece", intake.intakeForward().asProxy());
         NamedCommands.registerCommand("RaiseIntake", intake.raise().asProxy());
+        NamedCommands.registerCommand("KickIntake", intake.kick().asProxy());
         NamedCommands.registerCommand("LowerIntake", intake.lower().asProxy());
         NamedCommands.registerCommand("EjectGamePiece",
                 Commands.parallel(

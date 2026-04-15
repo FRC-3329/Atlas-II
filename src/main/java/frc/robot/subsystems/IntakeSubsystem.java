@@ -240,8 +240,9 @@ public class IntakeSubsystem extends SubsystemBase {
     public Command intakeForward() {
         return new ConditionalCommand(
                 this.run(() -> {
-                    rollerMotor.getClosedLoopController().setSetpoint(IntakeConstants.Roller.INTAKE_RPM,
-                            ControlType.kVelocity);
+                    //rollerMotor.getClosedLoopController().setSetpoint(IntakeConstants.Roller.INTAKE_RPM,
+                    //        ControlType.kVelocity);
+                    rollerMotor.setVoltage(IntakeConstants.Roller.INTAKE_VOLTAGE);
                 }),
                 this.runOnce(() -> {
                     DogLog.log(getName() + "/IntakeForwardBlocked",

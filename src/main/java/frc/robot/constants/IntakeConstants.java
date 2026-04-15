@@ -56,6 +56,7 @@ public final class IntakeConstants {
         public static final double kV = 0.0018;
 
         public static final double INTAKE_RPM = 4000;
+        public static final double INTAKE_VOLTAGE = 7.2;
         public static final double OUTTAKE_VOLTAGE = -5.0;
 
         public static final double VOLTAGE_COMPENSATION = 12.0;
