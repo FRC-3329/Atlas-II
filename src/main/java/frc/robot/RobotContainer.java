@@ -17,6 +17,8 @@ import swervelib.SwerveInputStream;
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
 
+import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
+
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
@@ -25,8 +27,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+// import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
@@ -62,7 +63,7 @@ public class RobotContainer {
 
     private final Command driveFieldOrientedAngularVelocity;
     private final SwerveInputStream driveAngularVelocity;
-    private final SendableChooser<Command> autoChooser;
+    private final LoggedDashboardChooser<Command> autoChooser;
 
     public RobotContainer() {
         gameHelpers = new GameHelpers(drivebase::getPose, drivebase::getRobotVelocity);
@@ -95,9 +96,9 @@ public class RobotContainer {
                 && turret.isOnTarget()
                 && gameHelpers.isValidShotDistance());
 
-        autoChooser = AutoBuilder.buildAutoChooser();
-        SmartDashboard.putData("Auto Chooser", autoChooser);
-        autoChooser.setDefaultOption("None", Commands.none());
+        autoChooser = new LoggedDashboardChooser<>("Auto Choices", AutoBuilder.buildAutoChooser());
+        // SmartDashboard.putData("Auto Chooser", autoChooser);
+        autoChooser.addDefaultOption("None", Commands.none());
         autoChooser.addOption("Shoot in Place",
                 Commands.parallel(
                         intake.lower().andThen(shoot()),
@@ -222,7 +223,7 @@ public class RobotContainer {
     }
 
     public Command getAutonomousCommand() {
-        Command auton = autoChooser.getSelected();
+        Command auton = autoChooser.get();
 
         if (auton != null) {
             DogLog.log("Robot/AutoSelected", auton.getName());
