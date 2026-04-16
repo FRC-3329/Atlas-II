@@ -49,6 +49,7 @@ Robot subsystems that control physical mechanisms
 
 ### `utils`
 Utility classes for calculations and data structures
+- **AKTimeLogger.java** - `Doglog.startTiming` & `Doglog.endTiming` replacement with AdvantageKit
 - **GameHelpers.java** - Helper methods for game-specific logic and calculations
 - **ShootOnTheMove.java** - Computes shot parameters for a moving robot using time-of-flight recursion
 - **ShotParameters.java** - Distance-keyed interpolation map of flywheel speed, hood angle, and time-of-flight values

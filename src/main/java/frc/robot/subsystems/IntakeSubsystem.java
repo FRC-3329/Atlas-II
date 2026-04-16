@@ -269,10 +269,13 @@ public class IntakeSubsystem extends SubsystemBase {
     private void updateRollerTunables(SparkFlexConfig rollerConfig) {
         double kV = rollerKv.get();
         double kP = rollerKp.get();
+
         if (kV != appliedRollerKv || kP != appliedRollerKp) {
             rollerConfig.closedLoop.feedForward.kV(kV);
             rollerConfig.closedLoop.p(kP);
+    
             rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+
             appliedRollerKv = kV;
             appliedRollerKp = kP;
         }
