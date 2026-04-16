@@ -22,7 +22,7 @@ import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 import com.pathplanner.lib.auto.AutoBuilder;
 import com.pathplanner.lib.auto.NamedCommands;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
@@ -226,7 +226,7 @@ public class RobotContainer {
         Command auton = autoChooser.get();
 
         if (auton != null) {
-            DogLog.log("Robot/AutoSelected", auton.getName());
+            Logger.recordOutput("Robot/AutoSelected", auton.getName());
             return autoDriving(auton);
         } else {
             DriverStation.reportError(

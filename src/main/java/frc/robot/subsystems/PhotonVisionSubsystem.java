@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 import frc.robot.constants.PVConstants;
+import frc.robot.utils.AKTimeLogger;
 import frc.robot.utils.VisionData.EstimateConsumer;
 
 import org.photonvision.EstimatedRobotPose;
@@ -12,7 +13,7 @@ import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -20,6 +21,7 @@ import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -30,6 +32,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 	private final PhotonPoseEstimator photonEstimator;
 	private final EstimateConsumer estConsumer;
 	private final String logName;
+	private final Alert disconnectedAlert;
 
 	private Matrix<N3, N1> curStdDevs;
 
@@ -44,6 +47,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 		camera = new PhotonCamera(cameraName);
 		logName = "PV/" + cameraName + "/";
+		disconnectedAlert = new Alert(cameraName, Alert.AlertType.kError);
 		photonEstimator = new PhotonPoseEstimator(
 				PVConstants.kTagLayout,
 				robotToCamera);
@@ -126,15 +130,11 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		if (camera.isConnected()) {
-			DogLog.clearFault(cameraName);
-		} else {
-			DogLog.logFault(cameraName);
-		}
+		disconnectedAlert.set(!camera.isConnected());
 
 		Optional<EstimatedRobotPose> visionEst = Optional.empty();
 		for (PhotonPipelineResult change : camera.getAllUnreadResults()) {
-			DogLog.time("Timing/Vision/ProcessResultSeconds");
+			AKTimeLogger.startTiming("Timing/Vision/ProcessResultSeconds");
 
 			// Prefer multi-tag PnP for accuracy; single-tag fallback commented out
 			visionEst = photonEstimator.estimateCoprocMultiTagPose(change);
@@ -147,13 +147,13 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 
 			visionEst.ifPresent(est -> {
 				Pose2d pose2d = est.estimatedPose.toPose2d();
-				DogLog.log(logName + "pose", pose2d);
+				Logger.recordOutput(logName + "pose", pose2d);
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs();
 				estConsumer.accept(
 						est.estimatedPose, est.timestampSeconds, estStdDevs);
 			});
 
-			DogLog.timeEnd("Timing/Vision/ProcessResultSeconds");
+			AKTimeLogger.endTiming("Timing/Vision/ProcessResultSeconds");
 		}
 	}
 }

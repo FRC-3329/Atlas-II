@@ -3,6 +3,7 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Meter;
 
 import frc.robot.constants.Constants;
+import frc.robot.utils.AKTimeLogger;
 
 import java.io.File;
 import java.util.Optional;
@@ -40,7 +41,7 @@ import com.pathplanner.lib.controllers.PPHolonomicDriveController;
 import com.pathplanner.lib.path.PathConstraints;
 import com.pathplanner.lib.path.PathPlannerPath;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
 
 public class SwerveSubsystem extends SubsystemBase {
 	private File directory = new File(Filesystem.getDeployDirectory(), "swerve");
@@ -72,9 +73,9 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	@Override
 	public void periodic() {
-		DogLog.log(getName() + "/SwerveModuleStates", swerveDrive.getStates());
-		DogLog.log(getName() + "/Pose", getPose());
-		DogLog.log(getName() + "/RobotVelocity", getRobotVelocity());
+		Logger.recordOutput(getName() + "/SwerveModuleStates", swerveDrive.getStates());
+		Logger.recordOutput(getName() + "/Pose", getPose());
+		Logger.recordOutput(getName() + "/RobotVelocity", getRobotVelocity());
 	}
 
 	@Override
@@ -101,9 +102,9 @@ public class SwerveSubsystem extends SubsystemBase {
 			Pose3d visionMeasurement,
 			double timestampSeconds,
 			Matrix<N3, N1> stdDevs) {
-		DogLog.time("Timing/Vision/AddMeasurementSeconds");
+		AKTimeLogger.startTiming("Timing/Vision/AddMeasurementSeconds");
 		swerveDrive.addVisionMeasurement(visionMeasurement.toPose2d(), timestampSeconds, stdDevs);
-		DogLog.timeEnd("Timing/Vision/AddMeasurementSeconds");
+		AKTimeLogger.endTiming("Timing/Vision/AddMeasurementSeconds");
 	}
 
 	public void driveFieldOriented(ChassisSpeeds velocity) {

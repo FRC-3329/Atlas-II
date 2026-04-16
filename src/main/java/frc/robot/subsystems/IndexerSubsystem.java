@@ -11,7 +11,7 @@ import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkMaxConfig;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -83,7 +83,7 @@ public class IndexerSubsystem extends SubsystemBase {
 
     private void setIndxerVoltage(double voltage) {
         indexerMotor.setVoltage(voltage);
-        DogLog.log(getName() + "/Voltage", voltage, Volts);
+        Logger.recordOutput(getName() + "/Voltage", voltage, Volts);
     }
 
     private void setBeltVoltage(double voltage) {
@@ -121,16 +121,16 @@ public class IndexerSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        DogLog.log(getName() + "/Current", indexerMotor.getOutputCurrent(), Amps);
-        DogLog.log(getName() + "/Velocity", indexerMotor.getEncoder().getVelocity(), RPM);
+        Logger.recordOutput(getName() + "/Current", indexerMotor.getOutputCurrent(), Amps);
+        Logger.recordOutput(getName() + "/Velocity", indexerMotor.getEncoder().getVelocity(), RPM);
 
         // High current limits can overheat Vortex motors; log temp for monitoring
         if (IndexerConstants.Indexer.CURRENT_LIMIT >= 60) {
-            DogLog.log(getName() + "/Temperature", indexerMotor.getMotorTemperature(), Celsius);
+            Logger.recordOutput(getName() + "/Temperature", indexerMotor.getMotorTemperature(), Celsius);
         }
 
-        DogLog.log(getName() + "/stallDetected", stallDetected.getAsBoolean());
-        DogLog.log(getName() + "/BeltCurrent", beltMotor.getOutputCurrent(), Amps);
-        DogLog.log(getName() + "/BeltVelocity", beltMotor.getEncoder().getVelocity(), RPM);
+        Logger.recordOutput(getName() + "/stallDetected", stallDetected.getAsBoolean());
+        Logger.recordOutput(getName() + "/BeltCurrent", beltMotor.getOutputCurrent(), Amps);
+        Logger.recordOutput(getName() + "/BeltVelocity", beltMotor.getEncoder().getVelocity(), RPM);
     }
 }

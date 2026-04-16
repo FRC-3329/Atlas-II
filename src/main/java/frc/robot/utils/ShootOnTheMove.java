@@ -2,7 +2,7 @@ package frc.robot.utils;
 
 import java.util.function.Function;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
@@ -28,8 +28,8 @@ public class ShootOnTheMove {
             final Pose2d currentPose,
             final ChassisSpeeds chassisSpeeds,
             final Function<Pose2d, ShotParameters.Parameters> parametersFunction) {
-        DogLog.log("Timing/SOTM/IterationCount", MAX_ITERATIONS);
-        DogLog.time("Timing/SOTM/TotalSeconds");
+        Logger.recordOutput("Timing/SOTM/IterationCount", MAX_ITERATIONS);
+        AKTimeLogger.startTiming("Timing/SOTM/TotalSeconds");
 
         Pose2d futureRobotPose = currentPose;
 
@@ -37,7 +37,7 @@ public class ShootOnTheMove {
         double timeOfFlightSeconds = parameters.tofSeconds();
 
         for (int i = 0; i < MAX_ITERATIONS; i++) {
-            DogLog.time("Timing/SOTM/PerIterationSeconds");
+            AKTimeLogger.startTiming("Timing/SOTM/PerIterationSeconds");
 
             final Twist2d twist = new Twist2d(
                     chassisSpeeds.vxMetersPerSecond * timeOfFlightSeconds,
@@ -48,10 +48,10 @@ public class ShootOnTheMove {
             parameters = parametersFunction.apply(futureRobotPose);
             timeOfFlightSeconds = parameters.tofSeconds();
 
-            DogLog.timeEnd("Timing/SOTM/PerIterationSeconds");
+            AKTimeLogger.endTiming("Timing/SOTM/PerIterationSeconds");
         }
 
-        DogLog.timeEnd("Timing/SOTM/TotalSeconds");
+        AKTimeLogger.endTiming("Timing/SOTM/TotalSeconds");
         return new Shot(parameters, futureRobotPose);
     }
 }

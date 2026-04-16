@@ -7,7 +7,7 @@ import java.util.function.Supplier;
 
 import com.pathplanner.lib.util.FlippingUtil;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
@@ -228,7 +228,7 @@ public class GameHelpers extends SubsystemBase {
         if (isInOurZone()) {
             // In our alliance zone - aim directly at hub center
             targetTranslation = hubTranslation;
-            DogLog.log((getName() + "/TargetZone"), "OurZone");
+            Logger.recordOutput((getName() + "/TargetZone"), "OurZone");
         } else if (isAboveHub()) {
             // In opponent zone and above hub - aim at top free space, shifted into our
             // alliance zone
@@ -237,7 +237,7 @@ public class GameHelpers extends SubsystemBase {
                     hubTranslation.getX() + xOffset,
                     hubTranslation.getY() + TurretConstants.TOP_FREE_SPACE_Y_OFFSET);
 
-            DogLog.log((getName() + "/TargetZone"), "OpponentZoneTop");
+            Logger.recordOutput((getName() + "/TargetZone"), "OpponentZoneTop");
         } else {
             // In opponent zone and below hub - aim at bottom free space, shifted into our
             // alliance zone
@@ -246,7 +246,7 @@ public class GameHelpers extends SubsystemBase {
                     hubTranslation.getX() + xOffset,
                     hubTranslation.getY() - TurretConstants.BOTTOM_FREE_SPACE_Y_OFFSET);
 
-            DogLog.log((getName() + "/TargetZone"), "OpponentZoneBottom");
+            Logger.recordOutput((getName() + "/TargetZone"), "OpponentZoneBottom");
         }
 
         // Compute the SOTM-adjusted virtual target and shot parameters
@@ -278,16 +278,16 @@ public class GameHelpers extends SubsystemBase {
                     Meters);
         }
 
-        DogLog.log((getName() + "/InOurZone"), isInOurZone());
-        DogLog.log((getName() + "/AboveHub"), isAboveHub());
-        DogLog.log((getName() + "/VirtualTargetFieldAngle"), virtualTargetFieldAngle);
-        DogLog.log((getName() + "/VirtualTargetDistance"), virtualTargetDistance);
-        DogLog.log((getName() + "/SelectedTargetPosition"), new Pose2d(targetTranslation, Rotation2d.kZero));
-        DogLog.log((getName() + "/VirtualTargetPosition"),
+        Logger.recordOutput((getName() + "/InOurZone"), isInOurZone());
+        Logger.recordOutput((getName() + "/AboveHub"), isAboveHub());
+        Logger.recordOutput((getName() + "/VirtualTargetFieldAngle"), virtualTargetFieldAngle);
+        Logger.recordOutput((getName() + "/VirtualTargetDistance"), virtualTargetDistance);
+        Logger.recordOutput((getName() + "/SelectedTargetPosition"), new Pose2d(targetTranslation, Rotation2d.kZero));
+        Logger.recordOutput((getName() + "/VirtualTargetPosition"),
                 new Pose2d(virtualTargetTranslation, virtualTargetFieldAngle));
-        DogLog.log((getName() + "/FutureRobotPosition"), shot.futureRobotPose());
-        DogLog.forceNt.log((getName() + "/ShiftTimeLeft"), timeLeftInShiftSeconds());
-        DogLog.forceNt.log((getName() + "/IsAllianceGoalActive"), isAllianceGoalActive());
-        DogLog.forceNt.log((getName() + "/PhaseShiftImminent"), isPhaseShiftImminent());
+        Logger.recordOutput((getName() + "/FutureRobotPosition"), shot.futureRobotPose());
+        Logger.recordOutput((getName() + "/ShiftTimeLeft"), timeLeftInShiftSeconds());
+        Logger.recordOutput((getName() + "/IsAllianceGoalActive"), isAllianceGoalActive());
+        Logger.recordOutput((getName() + "/PhaseShiftImminent"), isPhaseShiftImminent());
     }
 }

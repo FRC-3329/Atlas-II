@@ -11,9 +11,6 @@ import org.littletonrobotics.urcl.URCL;
 import com.pathplanner.lib.util.PathPlannerLogging;
 import com.revrobotics.util.StatusLogger;
 
-import dev.doglog.DogLog;
-import dev.doglog.DogLogOptions;
-import edu.wpi.first.wpilibj.DataLogManager;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
@@ -78,11 +75,7 @@ public class Robot extends LoggedRobot {
 
     @Override
     public void robotInit() {
-        // Capture all network table + driver station data for post-match analysis
-        DataLogManager.start();
-        DriverStation.startDataLog(DataLogManager.getLog());
-        DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
-        PathPlannerLogging.setLogTargetPoseCallback(pose -> DogLog.log("PathPlanner/TargetPose", pose));
+        PathPlannerLogging.setLogTargetPoseCallback(pose -> Logger.recordOutput("PathPlanner/TargetPose", pose));
     }
 
     @Override

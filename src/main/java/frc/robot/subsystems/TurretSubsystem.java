@@ -15,7 +15,8 @@ import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -38,7 +39,10 @@ public class TurretSubsystem extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine;
     private final Supplier<Pose2d> turretPoseSupplier;
     private final Supplier<Rotation2d> angleGoalSupplier;
-    private final MutAngle doglogAngle = Degrees.mutable(0.0);
+    private final MutAngle loggedAngle = Degrees.mutable(0.0);
+    private final LoggedNetworkNumber angleSetpointDegrees;
+    private final Alert autoTrackingDisabledAlert =
+            new Alert("Turret auto-tracking disabled", Alert.AlertType.kWarning);
 
     private boolean autoTrackingEnabled = false;
     private double trueTargetRotations = 0.0;
@@ -97,21 +101,14 @@ public class TurretSubsystem extends SubsystemBase {
 
             motor.setPosition(absoluteAngleRotations, 1);
 
-            DogLog.log((getName() + "/AbsoluteEncoderInitialized"), true);
-            DogLog.log((getName() + "/InitialAbsoluteAngle"), absoluteAngleDegrees, Degrees);
-            DogLog.log((getName() + "/InitialMotorPosition"), absoluteAngleRotations, Rotations);
+            Logger.recordOutput((getName() + "/AbsoluteEncoderInitialized"), true);
+            Logger.recordOutput((getName() + "/InitialAbsoluteAngle"), absoluteAngleDegrees, Degrees);
+            Logger.recordOutput((getName() + "/InitialMotorPosition"), absoluteAngleRotations, Rotations);
         } else {
-            DogLog.log((getName() + "/AbsoluteEncoderInitialized"), false);
+            Logger.recordOutput((getName() + "/AbsoluteEncoderInitialized"), false);
         }
 
-        // DogLog tunable for testing angles without redeploying
-        DogLog.tunable(
-                (getName() + "/AngleSetPoint"),
-                0.0,
-                Degrees,
-                (angle) -> {
-                    doglogAngle.mut_replace(angle, Degrees);
-                });
+        angleSetpointDegrees = new LoggedNetworkNumber(getName() + "/AngleSetPoint", 0.0);
 
         setDefaultCommand(
                 this.runOnce(() -> {
@@ -134,7 +131,7 @@ public class TurretSubsystem extends SubsystemBase {
                         null,
                         this));
 
-        SmartDashboard.putData("MoveToDogLog", moveToDogLogAngle());
+        SmartDashboard.putData("MoveToLoggedAngle", moveToLoggedAngle());
         motor.optimizeBusUtilization();
     }
 
@@ -182,12 +179,12 @@ public class TurretSubsystem extends SubsystemBase {
 
     public void enableAutoTracking() {
         autoTrackingEnabled = true;
-        DogLog.log((getName() + "/AutoTracking"), true);
+        Logger.recordOutput((getName() + "/AutoTracking"), true);
     }
 
     public void disableAutoTracking() {
         autoTrackingEnabled = false;
-        DogLog.log((getName() + "/AutoTracking"), false);
+        Logger.recordOutput((getName() + "/AutoTracking"), false);
     }
 
     public boolean isAutoTrackingEnabled() {
@@ -213,10 +210,10 @@ public class TurretSubsystem extends SubsystemBase {
 
             setTargetAngle(Degrees.of(turretRobotSetpoint.getDegrees()));
 
-            DogLog.log((getName() + "/AutoTrackingActive"), true);
-            DogLog.log((getName() + "/TargetFieldAngle"), targetFieldAngle.getDegrees(), Degrees);
-            DogLog.log((getName() + "/RobotHeading"), turretFieldSetpoint.getDegrees(), Degrees);
-            DogLog.log((getName() + "/CalculatedTurretAngle"), turretRobotSetpoint.getDegrees(), Degrees);
+            Logger.recordOutput((getName() + "/AutoTrackingActive"), true);
+            Logger.recordOutput((getName() + "/TargetFieldAngle"), targetFieldAngle.getDegrees(), Degrees);
+            Logger.recordOutput((getName() + "/RobotHeading"), turretFieldSetpoint.getDegrees(), Degrees);
+            Logger.recordOutput((getName() + "/CalculatedTurretAngle"), turretRobotSetpoint.getDegrees(), Degrees);
         })).finallyDo(() -> {
             disableAutoTracking();
         }).withName("TurretAutoTrack");
@@ -251,9 +248,10 @@ public class TurretSubsystem extends SubsystemBase {
         }).withName("TurretMoveToAngle");
     }
 
-    public Command moveToDogLogAngle() {
-        return moveToAngle(doglogAngle).finallyDo(() -> motor.stopMotor())
-                .withName("TurretMoveToDogLogAngle");
+    public Command moveToLoggedAngle() {
+        return this.run(() -> setTargetAngle(loggedAngle.mut_replace(angleSetpointDegrees.get(), Degrees)))
+                .finallyDo(() -> motor.stopMotor())
+                .withName("TurretMoveToLoggedAngle");
     }
 
     public Command sysIdQuasistatic(SysIdRoutine.Direction direction) {
@@ -273,20 +271,20 @@ public class TurretSubsystem extends SubsystemBase {
             absoluteCount = 0;
         }
 
-        DogLog.log((getName() + "/Angle"), getAngle(), Rotations);
-        DogLog.log((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
+        Logger.recordOutput((getName() + "/Angle"), getAngle(), Rotations);
+        Logger.recordOutput((getName() + "/AngleDegrees"), getAngleMeasure().in(Degrees), Degrees);
 
         if (!autoTrackingEnabled) {
-            DogLog.logFault("Turret auto-tracking disabled", Alert.AlertType.kWarning);
+            autoTrackingDisabledAlert.set(true);
         } else {
-            DogLog.clearFault("Turret auto-tracking disabled");
+            autoTrackingDisabledAlert.set(false);
         }
 
-        DogLog.log((getName() + "/MotorOutput"), motor.get());
-        DogLog.log((getName() + "/MotorCurrent"), motor.getStatorCurrent().getValue());
+        Logger.recordOutput((getName() + "/MotorOutput"), motor.get());
+        Logger.recordOutput((getName() + "/MotorCurrent"), motor.getStatorCurrent().getValue());
 
         if (TurretConstants.USE_ABSOLUTE_ENCODER) {
-            DogLog.forceNt.log((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
+            Logger.recordOutput((getName() + "/AbsoluteAngleDegrees"), getAbsoluteAngleRaw(), Degrees);
         }
     }
 }

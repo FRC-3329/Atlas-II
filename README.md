@@ -60,7 +60,7 @@ Utility classes for calculations and data structures
 - **PhotonLib** - Vision processing with PhotonVision
 - **REVLib** - REV Robotics motor controllers
 - **Phoenix5/Phoenix6** - CTRE motor controllers
-- **DogLog** - Advanced logging framework
+- **AdvantageKit** - Advanced logging framework
 
 ## Contributing
 All contributions are welcome! To get started:

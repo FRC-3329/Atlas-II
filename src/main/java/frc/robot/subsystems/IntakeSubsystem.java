@@ -24,7 +24,8 @@ import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
@@ -47,12 +48,20 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private final MotionMagicVoltage pivotPositionRequest = new MotionMagicVoltage(0);
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
-    private final MutAngle doglogangle = Degrees.mutable(0.0);
+    private final SparkFlexConfig rollerConfig = new SparkFlexConfig();
+    private final MutAngle loggedAngle = Degrees.mutable(0.0);
     private final MutAngle pivotAngle = Rotations.mutable(0.0);
-    private final MutAngularVelocity doglogVel = RPM.mutable(0.0);
+    private final MutAngularVelocity loggedVelocity = RPM.mutable(0.0);
+    private final LoggedNetworkNumber pivotAngleSetpointDegrees;
+    private final LoggedNetworkNumber rollerVelocitySetpointRpm;
+    private final LoggedNetworkNumber rollerKv;
+    private final LoggedNetworkNumber rollerKp;
+    private final Alert pivotUpAlert = new Alert("Intake pivot is up", Alert.AlertType.kWarning);
 
     private IntakeState currentState = IntakeState.UP;
     private double targetAngleRotations = 0.0;
+    private double appliedRollerKv = 0.0;
+    private double appliedRollerKp = 0.0;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
@@ -99,7 +108,6 @@ public class IntakeSubsystem extends SubsystemBase {
 
         rollerMotor = new SparkFlex(IntakeConstants.Roller.MOTOR_ID, MotorType.kBrushless);
 
-        SparkFlexConfig rollerConfig = new SparkFlexConfig();
         rollerConfig.smartCurrentLimit(IntakeConstants.Roller.CURRENT_LIMIT);
         rollerConfig.inverted(IntakeConstants.Roller.INVERTED);
         rollerConfig.idleMode(IntakeConstants.Roller.IDLE_MODE);
@@ -122,35 +130,15 @@ public class IntakeSubsystem extends SubsystemBase {
 
         rollerConfig.closedLoop.feedForward.kV(IntakeConstants.Roller.kV);
         rollerConfig.closedLoop.p(IntakeConstants.Roller.greg);
+        appliedRollerKv = IntakeConstants.Roller.kV;
+        appliedRollerKp = IntakeConstants.Roller.greg;
 
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
-        // DogLog tunable for testing specific pivot angles without redeploying
-        DogLog.tunable(
-                (getName() + "/PivotAngleSetPoint"),
-                0.0,
-                Degrees,
-                (angle) -> {
-                    doglogangle.mut_replace(angle, Degrees);
-                });
-
-        DogLog.tunable(
-                (getName() + "/RollerVelocityRPM"),
-                0.0,
-                RPM,
-                (vel) -> {
-                    doglogVel.mut_replace(vel, RPM);
-                });
-
-        DogLog.tunable((getName() + "/kV"), 0.0, (kV) -> {
-            rollerConfig.closedLoop.feedForward.kV(kV);
-            rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        });
-
-        DogLog.tunable((getName() + "/kP"), 0.0, (kP) -> {
-            rollerConfig.closedLoop.p(kP);
-            rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
-        });
+        pivotAngleSetpointDegrees = new LoggedNetworkNumber(getName() + "/PivotAngleSetPoint", 0.0);
+        rollerVelocitySetpointRpm = new LoggedNetworkNumber(getName() + "/RollerVelocityRPM", 0.0);
+        rollerKv = new LoggedNetworkNumber(getName() + "/kV", IntakeConstants.Roller.kV);
+        rollerKp = new LoggedNetworkNumber(getName() + "/kP", IntakeConstants.Roller.greg);
 
         setDefaultCommand(
                 this.runOnce(() -> {
@@ -172,7 +160,7 @@ public class IntakeSubsystem extends SubsystemBase {
     private void setPivotAngle(Angle angle) {
         targetAngleRotations = angle.in(Rotations);
         pivotMotor.setControl(pivotPositionRequest.withPosition(targetAngleRotations));
-        DogLog.log((getName() + "/PivotPIDEnabled"), true);
+        Logger.recordOutput((getName() + "/PivotPIDEnabled"), true);
     }
 
     public IntakeState getState() {
@@ -190,7 +178,9 @@ public class IntakeSubsystem extends SubsystemBase {
 
     public Command tunePID() {
         return this.runOnce(
-                () -> rollerMotor.getClosedLoopController().setSetpoint(doglogVel.in(RPM), ControlType.kVelocity))
+                () -> rollerMotor.getClosedLoopController().setSetpoint(
+                        loggedVelocity.mut_replace(rollerVelocitySetpointRpm.get(), RPM).in(RPM),
+                        ControlType.kVelocity))
                 .andThen(this.idle())
                 .finallyDo(() -> rollerMotor.stopMotor());
     }
@@ -203,7 +193,7 @@ public class IntakeSubsystem extends SubsystemBase {
         return Commands.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.DOWN_ANGLE);
             currentState = IntakeState.DOWN;
-            DogLog.log((getName() + "/IsDown"), true);
+            Logger.recordOutput((getName() + "/IsDown"), true);
         }).andThen(
                 Commands.waitUntil(this::isPivotAtTarget).withTimeout(2.0)
                         .andThen(disablePivotPIDCommand()))
@@ -220,17 +210,17 @@ public class IntakeSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             setPivotAngle(IntakeConstants.Pivot.UP_ANGLE);
             currentState = IntakeState.UP;
-            DogLog.log((getName() + "/IsDown"), false);
+            Logger.recordOutput((getName() + "/IsDown"), false);
         }).withName("IntakeRaise");
     }
 
-    /** Moves to the DogLog tunable angle; disables PID when interrupted. */
-    public Command moveToDogLogAngle() {
+    /** Moves to the AdvantageKit tunable angle; disables PID when interrupted. */
+    public Command moveToLoggedAngle() {
         return this
-                .runOnce(() -> setPivotAngle(doglogangle))
+                .runOnce(() -> setPivotAngle(loggedAngle.mut_replace(pivotAngleSetpointDegrees.get(), Degrees)))
                 .andThen(this.idle())
                 .finallyDo(this::disablePivotPID)
-                .withName("IntakeMoveToDogLogAngle");
+                .withName("IntakeMoveToLoggedAngle");
     }
 
     /**
@@ -245,7 +235,7 @@ public class IntakeSubsystem extends SubsystemBase {
                     rollerMotor.setVoltage(IntakeConstants.Roller.INTAKE_VOLTAGE);
                 }),
                 this.runOnce(() -> {
-                    DogLog.log(getName() + "/IntakeForwardBlocked",
+                    Logger.recordOutput(getName() + "/IntakeForwardBlocked",
                             "Intake forward command blocked - intake is up");
                 }),
                 this::isDown)
@@ -259,7 +249,7 @@ public class IntakeSubsystem extends SubsystemBase {
                     rollerMotor.setVoltage(IntakeConstants.Roller.OUTTAKE_VOLTAGE);
                 }),
                 this.runOnce(() -> {
-                    DogLog.log(getName() + "/IntakeBackwardBlocked",
+                    Logger.recordOutput(getName() + "/IntakeBackwardBlocked",
                             "Intake backward command blocked - intake is up");
                 }),
                 this::isDown)
@@ -273,7 +263,19 @@ public class IntakeSubsystem extends SubsystemBase {
     /** Sets zero duty cycle output so the motor stops holding position. */
     private void disablePivotPID() {
         pivotMotor.setControl(pivotDisableRequest);
-        DogLog.log((getName() + "/PivotPIDEnabled"), false);
+        Logger.recordOutput((getName() + "/PivotPIDEnabled"), false);
+    }
+
+    private void updateRollerTunables(SparkFlexConfig rollerConfig) {
+        double kV = rollerKv.get();
+        double kP = rollerKp.get();
+        if (kV != appliedRollerKv || kP != appliedRollerKp) {
+            rollerConfig.closedLoop.feedForward.kV(kV);
+            rollerConfig.closedLoop.p(kP);
+            rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
+            appliedRollerKv = kV;
+            appliedRollerKp = kP;
+        }
     }
 
     public Command stop() {
@@ -285,22 +287,25 @@ public class IntakeSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        DogLog.log((getName() + "/PivotAngle"), getPivotAngle());
-        DogLog.log((getName() + "/PivotAngleDegrees"), getPivotAngleMeasure().in(Degrees), Degrees);
-        DogLog.log((getName() + "/PivotCurrent"), pivotMotor.getSupplyCurrent().getValueAsDouble(), Amps);
-        DogLog.log((getName() + "/PivotVelocity"), pivotMotor.getVelocity().getValueAsDouble());
+        // NetworkTables-backed AdvantageKit inputs update before user periodic.
+        updateRollerTunables(rollerConfig);
 
-        DogLog.log((getName() + "/RollerVoltage"), rollerMotor.getAppliedOutput() * rollerMotor.getBusVoltage(), Volts);
-        DogLog.log((getName() + "/RollerCurrent"), rollerMotor.getOutputCurrent(), Amps);
-        DogLog.log((getName() + "/RollerVelocity"), rollerMotor.getEncoder().getVelocity(), RPM);
-        DogLog.log((getName() + "/RollerTemp"), rollerMotor.getMotorTemperature(), Celsius);
+        Logger.recordOutput((getName() + "/PivotAngle"), getPivotAngle());
+        Logger.recordOutput((getName() + "/PivotAngleDegrees"), getPivotAngleMeasure().in(Degrees), Degrees);
+        Logger.recordOutput((getName() + "/PivotCurrent"), pivotMotor.getSupplyCurrent().getValueAsDouble(), Amps);
+        Logger.recordOutput((getName() + "/PivotVelocity"), pivotMotor.getVelocity().getValueAsDouble());
 
-        DogLog.log((getName() + "/State"), currentState.toString());
+        Logger.recordOutput((getName() + "/RollerVoltage"), rollerMotor.getAppliedOutput() * rollerMotor.getBusVoltage(), Volts);
+        Logger.recordOutput((getName() + "/RollerCurrent"), rollerMotor.getOutputCurrent(), Amps);
+        Logger.recordOutput((getName() + "/RollerVelocity"), rollerMotor.getEncoder().getVelocity(), RPM);
+        Logger.recordOutput((getName() + "/RollerTemp"), rollerMotor.getMotorTemperature(), Celsius);
+
+        Logger.recordOutput((getName() + "/State"), currentState.toString());
 
         if (!isDown()) {
-            DogLog.logFault("Intake pivot is up", Alert.AlertType.kWarning);
+            pivotUpAlert.set(true);
         } else {
-            DogLog.clearFault("Intake pivot is up");
+            pivotUpAlert.set(false);
         }
     }
 }

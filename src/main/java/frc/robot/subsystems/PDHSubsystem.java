@@ -1,6 +1,7 @@
 package frc.robot.subsystems;
 
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.LoggedPowerDistribution;
+
 import edu.wpi.first.wpilibj.PowerDistribution;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
@@ -11,7 +12,7 @@ public class PDHSubsystem extends SubsystemBase {
         pdh = new PowerDistribution();
         pdh.clearStickyFaults();
 
-        DogLog.setPdh(pdh);
+        LoggedPowerDistribution.getInstance();
     }
 
     /** Controls the PDH switchable channel (e.g. for powering LEDs or sensors). */

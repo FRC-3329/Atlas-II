@@ -22,7 +22,8 @@ import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
-import dev.doglog.DogLog;
+import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.networktables.LoggedNetworkNumber;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngle;
@@ -52,8 +53,11 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     private boolean varyingRPMEnabled = true;
 
-    private final MutAngularVelocity doglogVelocity = RPM.mutable(0.0);
-    private final MutAngle doglogAngle = Degrees.mutable(0.0);
+    private final MutAngularVelocity loggedVelocity = RPM.mutable(0.0);
+    private final MutAngle loggedAngle = Degrees.mutable(0.0);
+    private final LoggedNetworkNumber velocitySetpointRpm;
+    private final LoggedNetworkNumber angleSetpointDegrees;
+    private final Alert varyingRPMDisabledAlert = new Alert("VaryingRPMDisabled", Alert.AlertType.kWarning);
 
     public FlywheelSubsystem(Supplier<ShotParameters.Parameters> shotParametersSupplier) {
         this.shotParametersSupplier = shotParametersSupplier;
@@ -128,22 +132,8 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         hood.setPosition(Degrees.zero(), 2);
 
-        // DogLog tunables for live RPM/angle adjustment during testing
-        DogLog.tunable(
-                (getName() + "/RPMSetPoint"),
-                750.0,
-                RPM,
-                (angularVelocity) -> {
-                    doglogVelocity.mut_replace(angularVelocity, RPM);
-                });
-
-        DogLog.tunable(
-                (getName() + "/DegreesSetPoint"),
-                20.0,
-                Degrees,
-                (angle) -> {
-                    doglogAngle.mut_replace(angle, Degrees);
-                });
+        velocitySetpointRpm = new LoggedNetworkNumber(getName() + "/RPMSetPoint", 750.0);
+        angleSetpointDegrees = new LoggedNetworkNumber(getName() + "/DegreesSetPoint", 20.0);
 
         setDefaultCommand(
                 this.runOnce(() -> {
@@ -171,7 +161,7 @@ public class FlywheelSubsystem extends SubsystemBase {
 
         SmartDashboard.putData("ZeroHood", zeroHood());
 
-        DogLog.log(
+        Logger.recordOutput(
                 (getName() + "/VaryingRPMEnabled"),
                 varyingRPMEnabled);
 
@@ -198,8 +188,8 @@ public class FlywheelSubsystem extends SubsystemBase {
             right.setControl(request.withVelocity(params.flywheelRPS()));
             hood.setControl(hoodRequest.withPosition(params.hoodRotations()));
 
-            DogLog.log(getName() + "/AngularVelocitySetPoint", params.flywheelRPS(), RotationsPerSecond);
-            DogLog.log(getName() + "/AngularSetPoint", params.hoodRotations(), Rotations);
+            Logger.recordOutput(getName() + "/AngularVelocitySetPoint", params.flywheelRPS(), RotationsPerSecond);
+            Logger.recordOutput(getName() + "/AngularSetPoint", params.hoodRotations(), Rotations);
         }).withName("FlywheelShoot");
     }
 
@@ -218,14 +208,14 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     public void enableVaryingRPM() {
         varyingRPMEnabled = true;
-        DogLog.log(getName() + "/VaryingRPMEnabled", true);
-        DogLog.clearFault("VaryingRPMDisabled");
+        Logger.recordOutput(getName() + "/VaryingRPMEnabled", true);
+        varyingRPMDisabledAlert.set(false);
     }
 
     public void disableVaryingRPM() {
         varyingRPMEnabled = false;
-        DogLog.log(getName() + "/VaryingRPMEnabled", false);
-        DogLog.logFault("VaryingRPMDisabled", Alert.AlertType.kWarning);
+        Logger.recordOutput(getName() + "/VaryingRPMEnabled", false);
+        varyingRPMDisabledAlert.set(true);
     }
 
     public Command toggleVaryingRPM() {
@@ -246,11 +236,15 @@ public class FlywheelSubsystem extends SubsystemBase {
     }
 
     /**
-     * Shoots at the RPM/angle set via DogLog dashboard tunables.
+     * Shoots at the RPM/angle set via AdvantageKit dashboard inputs.
      * Disables the hood PID on interruption so it doesn't fight gravity while idle.
      */
     public Command tunableShoot() {
-        return shoot(doglogVelocity, doglogAngle)
+        return this.run(() -> {
+            left.setControl(request.withVelocity(loggedVelocity.mut_replace(velocitySetpointRpm.get(), RPM)));
+            right.setControl(request.withVelocity(loggedVelocity));
+            hood.setControl(hoodRequest.withPosition(loggedAngle.mut_replace(angleSetpointDegrees.get(), Degrees)));
+        })
                 .finallyDo(() -> hood.set(0))
                 .withName("FlywheelTunableShoot");
     }
@@ -271,7 +265,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         return this
                 .run(() -> {
                     setHoodVoltage(Hood.ZEROING_VOLTAGE);
-                    DogLog.log((getName() + "/HoodStatorCurrent"), getHoodCurrent());
+                    Logger.recordOutput((getName() + "/HoodStatorCurrent"), getHoodCurrent());
                 })
                 .until(spikeDetected)
                 .finallyDo(() -> {
@@ -329,19 +323,19 @@ public class FlywheelSubsystem extends SubsystemBase {
 
     @Override
     public void periodic() {
-        DogLog.log(
+        Logger.recordOutput(
                 (getName() + "/Speed"),
                 left.get());
 
-        DogLog.log(
+        Logger.recordOutput(
                 (getName() + "/Velocity"),
                 left.getVelocity().getValue());
 
-        DogLog.log(
+        Logger.recordOutput(
                 (getName() + "/HoodPosition"),
                 hood.getPosition().getValue());
 
-        DogLog.log(
+        Logger.recordOutput(
                 (getName() + "/HoodStatorCurrent"),
                 getHoodCurrent());
     }
