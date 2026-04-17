@@ -8,11 +8,9 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PDHSubsystem;
 import frc.robot.subsystems.PhotonVisionSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.subsystems.swerve.Swerve;
 import frc.robot.utils.GameHelpers;
-
-import swervelib.SwerveInputStream;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
@@ -33,7 +31,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 
 public class RobotContainer {
-    private final SwerveSubsystem drivebase = new SwerveSubsystem();
+    private final Swerve drivebase = new Swerve();
 
     // While these cameras aren't referenced directly, they still need to be
     // initalized in the RobotContainer
@@ -62,7 +60,6 @@ public class RobotContainer {
             OperatorConstants.kDriverControllerPort);
 
     private final Command driveFieldOrientedAngularVelocity;
-    private final SwerveInputStream driveAngularVelocity;
     private final LoggedDashboardChooser<Command> autoChooser;
 
     public RobotContainer() {
@@ -75,20 +72,12 @@ public class RobotContainer {
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
         // Coast during setup so the robot can be pushed into position
         setMotorBrake(false);
-        driveAngularVelocity = SwerveInputStream
-                .of(drivebase.getSwerveDrive(),
-                        () -> -driverController.getLeftY(),
-                        () -> -driverController.getLeftX())
-                .withControllerRotationAxis(
-                        () -> -driverController.getRightX())
-                .deadband(OperatorConstants.DEADBAND)
-                .scaleTranslation(0.8)
-                .allianceRelativeControl(true)
-                .aim(() -> new Pose2d(gameHelpers.getVirtualTargetTranslation(), Rotation2d.kZero))
-                .aimHeadingOffset(Rotation2d.fromDegrees(180.0))
-                .aimHeadingOffset(true)
-                .aimWhile(driverController.b());
-        driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
+        driveFieldOrientedAngularVelocity = drivebase.driveCommand(
+                () -> -driverController.getLeftY(),
+                () -> -driverController.getLeftX(),
+                () -> -driverController.getRightX(),
+                driverController.b(),
+                () -> new Pose2d(gameHelpers.getVirtualTargetTranslation(), Rotation2d.kZero));
         drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
         // Signal readiness to the driver so they know when to shoot
@@ -196,11 +185,7 @@ public class RobotContainer {
      * the heading lock was never updated during auto driving.
      */
     private Command autoDriving(Command drivingCommand) {
-        return drivingCommand.beforeStarting(() -> {
-            driveAngularVelocity.get();
-        }).finallyDo(interrupted -> {
-            driveAngularVelocity.get();
-        }).withName("AutoDriving");
+        return drivingCommand.finallyDo(interrupted -> drivebase.stop()).withName("AutoDriving");
     }
 
     /**

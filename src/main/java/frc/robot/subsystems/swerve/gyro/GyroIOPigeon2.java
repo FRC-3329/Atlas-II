@@ -11,7 +11,7 @@ import edu.wpi.first.units.measure.AngularVelocity;
 import frc.robot.constants.SwerveConstants;
 
 // https://github.com/pittsfordrobotics/ChargedUp2023/blob/master/src/main/java/com/team3181/frc2023/subsystems/swerve/GyroIOPigeon.java
-public class GyroIOPigeon implements GyroIO {
+public class GyroIOPigeon2 implements GyroIO {
     private final Pigeon2 pigeon = new Pigeon2(SwerveConstants.Pigeon.ID);
     private final Pigeon2Configuration config = new Pigeon2Configuration();
 
@@ -22,7 +22,7 @@ public class GyroIOPigeon implements GyroIO {
     private final StatusSignal<AngularVelocity> pitchVelocity = pigeon.getAngularVelocityYWorld();
     private final StatusSignal<AngularVelocity> yawVelocity = pigeon.getAngularVelocityZWorld();
 
-    public GyroIOPigeon() {
+    public GyroIOPigeon2() {
         config.MountPose.MountPoseRoll = 0;
         pigeon.getConfigurator().apply(config);
         pigeon.setYaw(0);

@@ -1,36 +1,44 @@
 package frc.robot.subsystems.swerve.module;
 
+import edu.wpi.first.math.kinematics.SwerveModuleState;
 import org.littletonrobotics.junction.AutoLog;
 
-// https://github.com/pittsfordrobotics/ChargedUp2023/blob/master/src/main/java/com/team3181/frc2023/subsystems/swerve/SwerveModuleIO.java
 public interface ModuleIO {
     @AutoLog
-    class SwerveModuleIOInputs {
+    class ModuleIOInputs {
+        public boolean driveConnected = false;
+        public boolean angleConnected = false;
+        public boolean encoderConnected = false;
+
         public double drivePositionMeters = 0.0;
         public double driveVelocityMetersPerSec = 0.0;
         public double driveAppliedVolts = 0.0;
         public double driveCurrentAmps = 0.0;
         public double driveTempCelsius = 0.0;
 
-        public double steerAbsolutePositionRad = 0.0;
-        public double steerOffsetAbsolutePositionRad = 0.0;
-        public double steerAbsoluteVelocityRadPerSec = 0.0;
-        public double steerAppliedVolts = 0.0;
-        public double steerCurrentAmps = 0.0;
-        public double steerTempCelsius = 0.0;
+        public double anglePositionRad = 0.0;
+        public double angleVelocityRadPerSec = 0.0;
+        public double angleAbsolutePositionRad = 0.0;
+        public double angleAppliedVolts = 0.0;
+        public double angleCurrentAmps = 0.0;
+        public double angleTempCelsius = 0.0;
     }
 
-    default void updateInputs(SwerveModuleIOInputs inputs) {}
+    default void updateInputs(ModuleIOInputs inputs) {
+    }
 
-    default void setDriveVoltage(double voltage) {}
+    default void setDesiredState(SwerveModuleState state) {
+    }
 
-    default void setSteerVoltage(double voltage) {}
-    
-    default void setModuleState(BetterSwerveModuleState state, boolean isOpenLoop) {}
+    default void setDriveVoltage(double volts) {
+    }
 
-    default void stopMotors() {}
+    default void setAngleVoltage(double volts) {
+    }
 
-    default void setDriveBrakeMode(boolean enable) {}
+    default void setBrakeMode(boolean brake) {
+    }
 
-    default void setSteerBrakeMode(boolean enable) {}
+    default void stop() {
+    }
 }

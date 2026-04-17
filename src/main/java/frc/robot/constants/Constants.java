@@ -15,7 +15,10 @@ public class Constants {
 
     /** TimedRobot loop period — 20ms matches the default CAN frame rate. */
     public static final Time LOOP_TIME = Seconds.of(0.02);
+    public static final double LOOP_TIME_SECONDS = 0.02;
+
     public static final double MAX_SPEED = Units.feetToMeters(10);
+
     /** Shots closer than this hit the hub rim; shots farther lose accuracy. */
     public static final double MIN_SHOT_DISTANCE = 1.9;
     public static final double MAX_SHOT_DISTANCE = 4.02;
@@ -23,7 +26,6 @@ public class Constants {
     // AKit
     public static final Mode simMode = Mode.SIM;
     public static final Mode currentMode = RobotBase.isReal() ? Mode.REAL : simMode;
-
     public static enum Mode {
         /** Running on a real robot. */
         REAL,
