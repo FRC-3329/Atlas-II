@@ -136,7 +136,7 @@ public class DriveSubsystem extends SubsystemBase {
 
         // Stop moving when disabled
         if (DriverStation.isDisabled()) {
-            for (var module : modules) {
+            for (Module module : modules) {
                 module.stop();
             }
         }
