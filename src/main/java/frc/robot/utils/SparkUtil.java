@@ -1,3 +1,10 @@
+// Copyright (c) 2021-2026 Littleton Robotics
+// http://github.com/Mechanical-Advantage
+//
+// Use of this source code is governed by a BSD
+// license that can be found in the LICENSE file
+// at the root directory of this project.
+
 package frc.robot.utils;
 
 import com.revrobotics.REVLibError;
@@ -23,7 +30,8 @@ public class SparkUtil {
     }
 
     /** Processes a value from a Spark only if the value is valid. */
-    public static void ifOk(SparkBase spark, DoubleSupplier[] suppliers, Consumer<double[]> consumer) {
+    public static void ifOk(
+            SparkBase spark, DoubleSupplier[] suppliers, Consumer<double[]> consumer) {
         double[] values = new double[suppliers.length];
 
         for (int i = 0; i < suppliers.length; i++) {
