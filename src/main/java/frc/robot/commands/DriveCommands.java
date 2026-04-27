@@ -10,9 +10,7 @@ package frc.robot.commands;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.filter.SlewRateLimiter;
-import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.trajectory.TrapezoidProfile;
@@ -54,9 +52,7 @@ public class DriveCommands {
         linearMagnitude = linearMagnitude * linearMagnitude;
 
         // Return new linear velocity
-        return new Pose2d(Translation2d.kZero, linearDirection)
-                .transformBy(new Transform2d(linearMagnitude, 0.0, Rotation2d.kZero))
-                .getTranslation();
+        return new Translation2d(linearMagnitude, linearDirection);
     }
 
     /**
@@ -198,12 +194,12 @@ public class DriveCommands {
                         .finallyDo(
                                 () -> {
                                     int n = velocitySamples.size();
-                                    
+
                                     double sumX = 0.0;
                                     double sumY = 0.0;
                                     double sumXY = 0.0;
                                     double sumX2 = 0.0;
-                                    
+
                                     for (int i = 0; i < n; i++) {
                                         sumX += velocitySamples.get(i);
                                         sumY += voltageSamples.get(i);

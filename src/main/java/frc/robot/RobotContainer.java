@@ -127,7 +127,8 @@ public class RobotContainer {
                 () -> -driverController.getLeftX(),
                 () -> -driverController.getRightX(),
                 driverController.b(),
-                () -> new Pose2d(gameHelpers.getVirtualTargetTranslation(), Rotation2d.kZero));
+                gameHelpers::getVirtualTargetTranslation,
+                Rotation2d.k180deg);
         drive.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
         // Signal readiness to the driver so they know when to shoot

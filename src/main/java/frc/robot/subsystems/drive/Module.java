@@ -23,6 +23,7 @@ public class Module {
 
     private final Alert driveDisconnectedAlert;
     private final Alert turnDisconnectedAlert;
+    private final Alert turnAbsoluteDisconnectedAlert;
     private SwerveModulePosition[] odometryPositions = new SwerveModulePosition[] {};
 
     public Module(ModuleIO io, int index) {
@@ -34,6 +35,8 @@ public class Module {
                 AlertType.kError);
         turnDisconnectedAlert = new Alert(
                 "Disconnected turn motor on module " + Integer.toString(index) + ".", AlertType.kError);
+        turnAbsoluteDisconnectedAlert = new Alert(
+                "Disconnected turn CANCoder on module " + Integer.toString(index) + ".", AlertType.kError);
     }
 
     public void periodic() {
@@ -53,6 +56,7 @@ public class Module {
         // Update alerts
         driveDisconnectedAlert.set(!inputs.driveConnected);
         turnDisconnectedAlert.set(!inputs.turnConnected);
+        turnAbsoluteDisconnectedAlert.set(!inputs.turnAbsoluteConnected);
     }
 
     /**

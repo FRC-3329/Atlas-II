@@ -23,6 +23,7 @@ import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.math.geometry.Twist2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
@@ -37,7 +38,6 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
 import frc.robot.constants.Constants;
@@ -350,31 +350,22 @@ public class DriveSubsystem extends SubsystemBase {
 
     /**
      * Drives field-relative with joystick rotation until the trigger is held, then
-     * locks heading toward the supplied target pose translation.
+     * locks heading toward the supplied target translation.
      */
     public Command driveCommand(
             DoubleSupplier translationX,
             DoubleSupplier translationY,
             DoubleSupplier omega,
             BooleanSupplier aimAtTarget,
-            Supplier<Pose2d> targetPoseSupplier) {
+            Supplier<Translation2d> targetTranslationSupplier,
+            Rotation2d angleOffset) {
         Command manualDrive = DriveCommands.joystickDrive(this, translationX, translationY, omega);
         Command targetLockDrive = DriveCommands.joystickDriveAtAngle(
                 this,
                 translationX,
                 translationY,
-                () -> targetPoseSupplier.get().getTranslation().minus(getPose().getTranslation()).getAngle());
+                () -> targetTranslationSupplier.get().minus(getPose().getTranslation()).getAngle().plus(angleOffset));
         return Commands.either(targetLockDrive, manualDrive, aimAtTarget).withName("DriveCommand");
-    }
-
-    /** Convenience overload for WPILib triggers. */
-    public Command driveCommand(
-            DoubleSupplier translationX,
-            DoubleSupplier translationY,
-            DoubleSupplier omega,
-            Trigger aimAtTarget,
-            Supplier<Pose2d> targetPoseSupplier) {
-        return driveCommand(translationX, translationY, omega, aimAtTarget::getAsBoolean, targetPoseSupplier);
     }
 
     /** Locks the modules in an X pattern while the command is scheduled. */

@@ -47,6 +47,7 @@ public class ModuleIOSpark implements ModuleIO {
     private final RelativeEncoder turnEncoder;
     private final CANcoder turnAbsoluteEncoder;
     private final StatusSignal<Angle> turnAbsolutePosition;
+    private final StatusSignal<Angle> turnAbsolutePositionOdometry;
 
     // Closed loop controllers
     private final SparkClosedLoopController driveController;
@@ -60,6 +61,7 @@ public class ModuleIOSpark implements ModuleIO {
     // Connection debouncers
     private final Debouncer driveConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
     private final Debouncer turnConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
+    private final Debouncer turnAbsoluteConnectedDebounce = new Debouncer(0.5, Debouncer.DebounceType.kFalling);
 
     public ModuleIOSpark(int module) {
         zeroRotation = switch (module) {
@@ -102,6 +104,7 @@ public class ModuleIOSpark implements ModuleIO {
         driveEncoder = driveSpark.getEncoder();
         turnEncoder = turnSpark.getEncoder();
         turnAbsolutePosition = turnAbsoluteEncoder.getAbsolutePosition();
+        turnAbsolutePositionOdometry = turnAbsolutePosition.clone();
         driveController = driveSpark.getClosedLoopController();
         turnController = turnSpark.getClosedLoopController();
 
@@ -168,12 +171,17 @@ public class ModuleIOSpark implements ModuleIO {
                 5,
                 () -> turnSpark.configure(
                         turnConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters));
+        turnAbsolutePosition.setUpdateFrequency(odometryFrequency);
+        turnAbsoluteEncoder.optimizeBusUtilization();
         syncTurnEncoderWithAbsolute();
 
         // Create odometry queues
         timestampQueue = SparkOdometryThread.getInstance().makeTimestampQueue();
         drivePositionQueue = SparkOdometryThread.getInstance().registerSignal(driveSpark, driveEncoder::getPosition);
-        turnPositionQueue = SparkOdometryThread.getInstance().registerSignal(this::getAbsoluteAngleRadians);
+        turnPositionQueue = SparkOdometryThread.getInstance()
+                .registerSignal(() -> Rotation2d.fromRotations(turnAbsolutePositionOdometry.refresh().getValueAsDouble())
+                        .minus(zeroRotation)
+                        .getRadians());
     }
 
     @Override
@@ -195,15 +203,17 @@ public class ModuleIOSpark implements ModuleIO {
         sparkStickyFault = false;
 
         StatusCode turnEncoderStatus = BaseStatusSignal.refreshAll(turnAbsolutePosition);
-        inputs.turnPosition = getAbsoluteAngle();
+        ifOk(turnSpark, turnEncoder::getPosition, (value) -> inputs.turnPosition = new Rotation2d(value));
         ifOk(turnSpark, turnEncoder::getVelocity, (value) -> inputs.turnVelocityRadPerSec = value);
         ifOk(
                 turnSpark,
                 new DoubleSupplier[] { turnSpark::getAppliedOutput, turnSpark::getBusVoltage },
                 (values) -> inputs.turnAppliedVolts = values[0] * values[1]);
         ifOk(turnSpark, turnSpark::getOutputCurrent, (value) -> inputs.turnCurrentAmps = value);
+        inputs.turnAbsolutePosition = getAbsoluteAngle();
 
-        inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault && turnEncoderStatus.equals(StatusCode.OK));
+        inputs.turnConnected = turnConnectedDebounce.calculate(!sparkStickyFault);
+        inputs.turnAbsoluteConnected = turnAbsoluteConnectedDebounce.calculate(turnEncoderStatus.equals(StatusCode.OK));
 
         // Update odometry inputs
         inputs.odometryTimestamps = timestampQueue.stream().mapToDouble((Double value) -> value).toArray();
