@@ -36,7 +36,6 @@ import edu.wpi.first.wpilibj.Alert.AlertType;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.commands.DriveCommands;
@@ -359,13 +358,14 @@ public class DriveSubsystem extends SubsystemBase {
             BooleanSupplier aimAtTarget,
             Supplier<Translation2d> targetTranslationSupplier,
             Rotation2d angleOffset) {
-        Command manualDrive = DriveCommands.joystickDrive(this, translationX, translationY, omega);
-        Command targetLockDrive = DriveCommands.joystickDriveAtAngle(
+        return DriveCommands.joystickDriveMaybeAtAngle(
                 this,
                 translationX,
                 translationY,
-                () -> targetTranslationSupplier.get().minus(getPose().getTranslation()).getAngle().plus(angleOffset));
-        return Commands.either(targetLockDrive, manualDrive, aimAtTarget).withName("DriveCommand");
+                omega,
+                aimAtTarget,
+                () -> targetTranslationSupplier.get().minus(getPose().getTranslation()).getAngle().plus(angleOffset))
+                .withName("DriveCommand");
     }
 
     /** Locks the modules in an X pattern while the command is scheduled. */

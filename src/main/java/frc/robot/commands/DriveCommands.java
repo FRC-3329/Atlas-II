@@ -26,6 +26,7 @@ import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.function.BooleanSupplier;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -148,6 +149,79 @@ public class DriveCommands {
 
                 // Reset PID controller when command starts
                 .beforeStarting(() -> angleController.reset(drive.getRotation().getRadians()));
+    }
+
+    /**
+     * Field relative drive command that can switch between joystick rotation and
+     * PID angle control while scheduled.
+     */
+    public static Command joystickDriveMaybeAtAngle(
+            DriveSubsystem drive,
+            DoubleSupplier xSupplier,
+            DoubleSupplier ySupplier,
+            DoubleSupplier omegaSupplier,
+            BooleanSupplier useAngleSupplier,
+            Supplier<Rotation2d> rotationSupplier) {
+
+        // Create PID controller
+        ProfiledPIDController angleController = new ProfiledPIDController(
+                ANGLE_KP,
+                0.0,
+                ANGLE_KD,
+                new TrapezoidProfile.Constraints(ANGLE_MAX_VELOCITY, ANGLE_MAX_ACCELERATION));
+
+        angleController.enableContinuousInput(-Math.PI, Math.PI);
+        boolean[] wasUsingAngle = new boolean[] { false };
+
+        // Construct command
+        return Commands.run(
+                () -> {
+                    // Get linear velocity
+                    Translation2d linearVelocity = getLinearVelocityFromJoysticks(xSupplier.getAsDouble(),
+                            ySupplier.getAsDouble());
+
+                    double omega;
+                    boolean useAngle = useAngleSupplier.getAsBoolean();
+                    if (useAngle) {
+                        if (!wasUsingAngle[0]) {
+                            angleController.reset(drive.getRotation().getRadians());
+                        }
+
+                        // Calculate angular speed
+                        omega = angleController.calculate(
+                                drive.getRotation().getRadians(), rotationSupplier.get().getRadians());
+                    } else {
+                        // Apply rotation deadband
+                        omega = MathUtil.applyDeadband(omegaSupplier.getAsDouble(), DEADBAND);
+
+                        // Square rotation value for more precise control
+                        omega = Math.copySign(omega * omega, omega) * drive.getMaxAngularSpeedRadPerSec();
+                    }
+                    wasUsingAngle[0] = useAngle;
+
+                    // Convert to field relative speeds & send command
+                    ChassisSpeeds speeds = new ChassisSpeeds(
+                            linearVelocity.getX() * drive.getMaxLinearSpeedMetersPerSec(),
+                            linearVelocity.getY() * drive.getMaxLinearSpeedMetersPerSec(),
+                            omega);
+
+                    boolean isFlipped = DriverStation.getAlliance().isPresent()
+                            && DriverStation.getAlliance().get() == Alliance.Red;
+
+                    drive.runVelocity(
+                            ChassisSpeeds.fromFieldRelativeSpeeds(
+                                    speeds,
+                                    isFlipped
+                                            ? drive.getRotation().plus(new Rotation2d(Math.PI))
+                                            : drive.getRotation()));
+                },
+                drive)
+
+                // Reset PID controller when command starts
+                .beforeStarting(() -> {
+                    angleController.reset(drive.getRotation().getRadians());
+                    wasUsingAngle[0] = false;
+                });
     }
 
     /**
