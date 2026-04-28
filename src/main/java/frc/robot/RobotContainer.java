@@ -1,5 +1,7 @@
 package frc.robot;
 
+import frc.robot.commands.DriveCommands;
+import frc.robot.constants.Constants;
 import frc.robot.constants.OperatorConstants;
 import frc.robot.constants.PVConstants;
 import frc.robot.subsystems.FlywheelSubsystem;
@@ -8,11 +10,14 @@ import frc.robot.subsystems.IntakeSubsystem;
 import frc.robot.subsystems.LEDSubsystem;
 import frc.robot.subsystems.PDHSubsystem;
 import frc.robot.subsystems.PhotonVisionSubsystem;
-import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.subsystems.drive.DriveSubsystem;
+import frc.robot.subsystems.drive.GyroIO;
+import frc.robot.subsystems.drive.GyroIOPigeon2;
+import frc.robot.subsystems.drive.ModuleIO;
+import frc.robot.subsystems.drive.ModuleIOSim;
+import frc.robot.subsystems.drive.ModuleIOSpark;
 import frc.robot.utils.GameHelpers;
-
-import swervelib.SwerveInputStream;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
@@ -31,21 +36,19 @@ import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 
 public class RobotContainer {
-    private final SwerveSubsystem drivebase = new SwerveSubsystem();
+    private final DriveSubsystem drive;
 
     // While these cameras aren't referenced directly, they still need to be
     // initalized in the RobotContainer
     @SuppressWarnings("unused")
-    private final PhotonVisionSubsystem blueCam = new PhotonVisionSubsystem("Blue_cam",
-            PVConstants.A_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem blueCam;
     @SuppressWarnings("unused")
-    private final PhotonVisionSubsystem redCam = new PhotonVisionSubsystem("Red_cam",
-            PVConstants.C_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem redCam;
     @SuppressWarnings("unused")
-    private final PhotonVisionSubsystem yellowCam = new PhotonVisionSubsystem("Yellow_cam",
-            PVConstants.D_ROBOT_TO_CAMERA, drivebase::addVisionMeasurement);
+    private final PhotonVisionSubsystem yellowCam;
 
     private final GameHelpers gameHelpers;
 
@@ -62,34 +65,71 @@ public class RobotContainer {
             OperatorConstants.kDriverControllerPort);
 
     private final Command driveFieldOrientedAngularVelocity;
-    private final SwerveInputStream driveAngularVelocity;
     private final LoggedDashboardChooser<Command> autoChooser;
 
     public RobotContainer() {
-        gameHelpers = new GameHelpers(drivebase::getPose, drivebase::getRobotVelocity);
+        switch (Constants.currentMode) {
+            case REAL:
+                // Real robot, instantiate hardware IO implementations
+                drive = new DriveSubsystem(
+                        new GyroIOPigeon2(),
+                        new ModuleIOSpark(0),
+                        new ModuleIOSpark(1),
+                        new ModuleIOSpark(2),
+                        new ModuleIOSpark(3));
+                break;
+
+            case SIM:
+                // Sim robot, instantiate physics sim IO implementations
+                drive = new DriveSubsystem(
+                        new GyroIO() {
+                        },
+                        new ModuleIOSim(),
+                        new ModuleIOSim(),
+                        new ModuleIOSim(),
+                        new ModuleIOSim());
+                break;
+
+            default:
+                // Replayed robot, disable IO implementations
+                drive = new DriveSubsystem(
+                        new GyroIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        });
+                break;
+        }
+
+        blueCam = new PhotonVisionSubsystem("Blue_cam",
+                PVConstants.A_ROBOT_TO_CAMERA, drive::addVisionMeasurement);
+        redCam = new PhotonVisionSubsystem("Red_cam",
+                PVConstants.C_ROBOT_TO_CAMERA, drive::addVisionMeasurement);
+        yellowCam = new PhotonVisionSubsystem("Yellow_cam",
+                PVConstants.D_ROBOT_TO_CAMERA, drive::addVisionMeasurement);
+
+        gameHelpers = new GameHelpers(drive::getPose, drive::getRobotVelocity);
         flywheel = new FlywheelSubsystem(gameHelpers::getShotParameters);
-        turret = new TurretSubsystem(drivebase::getPose, gameHelpers::getVirtualTargetFieldAngle);
+        turret = new TurretSubsystem(drive::getPose, gameHelpers::getVirtualTargetFieldAngle);
 
         configurePathPlannerCommands();
 
-        drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
+        drive.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
         // Coast during setup so the robot can be pushed into position
         setMotorBrake(false);
-        driveAngularVelocity = SwerveInputStream
-                .of(drivebase.getSwerveDrive(),
-                        () -> -driverController.getLeftY(),
-                        () -> -driverController.getLeftX())
-                .withControllerRotationAxis(
-                        () -> -driverController.getRightX())
-                .deadband(OperatorConstants.DEADBAND)
-                .scaleTranslation(0.8)
-                .allianceRelativeControl(true)
-                .aim(() -> new Pose2d(gameHelpers.getVirtualTargetTranslation(), Rotation2d.kZero))
-                .aimHeadingOffset(Rotation2d.fromDegrees(180.0))
-                .aimHeadingOffset(true)
-                .aimWhile(driverController.b());
-        driveFieldOrientedAngularVelocity = drivebase.driveFieldOriented(driveAngularVelocity);
-        drivebase.setDefaultCommand(driveFieldOrientedAngularVelocity);
+        driveFieldOrientedAngularVelocity = drive.driveCommand(
+                () -> -driverController.getLeftY(),
+                () -> -driverController.getLeftX(),
+                () -> -driverController.getRightX(),
+                driverController.b(),
+                gameHelpers::getVirtualTargetTranslation,
+                Rotation2d.k180deg);
+        drive.setDefaultCommand(driveFieldOrientedAngularVelocity);
 
         // Signal readiness to the driver so they know when to shoot
         leds.configureLEDs(() -> turret.isAutoTrackingEnabled()
@@ -107,6 +147,21 @@ public class RobotContainer {
                         .andThen(Commands.sequence(
                                 flywheel.stop(), indexer.stop(), intake.stop(),
                                 turret.stopAutoTracking())));
+        // Set up SysId routines
+        autoChooser.addOption(
+                "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+        autoChooser.addOption(
+                "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+        autoChooser.addOption(
+                "Drive SysId (Quasistatic Forward)",
+                drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        autoChooser.addOption(
+                "Drive SysId (Quasistatic Reverse)",
+                drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        autoChooser.addOption(
+                "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        autoChooser.addOption(
+                "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
         configureBindings();
     }
@@ -160,7 +215,7 @@ public class RobotContainer {
                 .whileTrue(indexer.feedBackwards());
         // b is bound to swerve aiming above
         driverController.x()
-                .whileTrue(drivebase.lockWheels());
+                .whileTrue(drive.lockWheels());
         // Rumble confirms the toggle so the driver doesn't have to check the dashboard
         driverController.y()
                 .onTrue(flywheel.toggleVaryingRPM()
@@ -185,7 +240,7 @@ public class RobotContainer {
     }
 
     public void setMotorBrake(boolean brake) {
-        drivebase.setMotorBrake(brake);
+        drive.setMotorBrake(brake);
     }
 
     /**
@@ -196,11 +251,7 @@ public class RobotContainer {
      * the heading lock was never updated during auto driving.
      */
     private Command autoDriving(Command drivingCommand) {
-        return drivingCommand.beforeStarting(() -> {
-            driveAngularVelocity.get();
-        }).finallyDo(interrupted -> {
-            driveAngularVelocity.get();
-        }).withName("AutoDriving");
+        return drivingCommand.finallyDo(interrupted -> drive.stop()).withName("AutoDriving");
     }
 
     /**
