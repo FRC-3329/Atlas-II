@@ -14,6 +14,8 @@ import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.CANcoderSimState;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.signals.FeedbackSensorSourceValue;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
@@ -23,17 +25,31 @@ import com.revrobotics.spark.SparkFlex;
 import com.revrobotics.spark.SparkBase.ControlType;
 import com.revrobotics.spark.SparkLowLevel.MotorType;
 import com.revrobotics.spark.config.SparkFlexConfig;
+import com.revrobotics.sim.SparkFlexSim;
 
 import dev.doglog.DogLog;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.ConditionalCommand;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.constants.Constants;
 import frc.robot.constants.IntakeConstants;
+import swervelib.simulation.ironmaple.simulation.motorsims.SimulatedBattery;
 
 public class IntakeSubsystem extends SubsystemBase {
     public enum IntakeState {
@@ -45,6 +61,13 @@ public class IntakeSubsystem extends SubsystemBase {
     private final SparkFlex rollerMotor;
     private final CANcoder cancoder;
 
+    private final TalonFXSimState pivotSimState;
+    private final CANcoderSimState cancoderSimState;
+    private final SingleJointedArmSim pivotSimulation;
+    private final SparkFlexSim rollerSparkSimulation;
+    private final DCMotorSim rollerMechanismSimulation;
+    private final MechanismLigament2d pivotLigament;
+
     private final MotionMagicVoltage pivotPositionRequest = new MotionMagicVoltage(0);
     private final DutyCycleOut pivotDisableRequest = new DutyCycleOut(0);
     private final MutAngle doglogangle = Degrees.mutable(0.0);
@@ -53,6 +76,8 @@ public class IntakeSubsystem extends SubsystemBase {
 
     private IntakeState currentState = IntakeState.UP;
     private double targetAngleRotations = 0.0;
+    private double rollerCommandedVoltage;
+    private volatile double simulationCurrentDrawAmps;
 
     public IntakeSubsystem() {
         pivotMotor = new TalonFX(IntakeConstants.Pivot.MOTOR_ID);
@@ -125,6 +150,54 @@ public class IntakeSubsystem extends SubsystemBase {
 
         rollerMotor.configure(rollerConfig, ResetMode.kResetSafeParameters, PersistMode.kPersistParameters);
 
+        if (RobotBase.isSimulation()) {
+            DCMotor pivotMotorModel = DCMotor.getKrakenX60Foc(1);
+            pivotSimulation = new SingleJointedArmSim(
+                    LinearSystemId.identifyPositionSystem(
+                            IntakeConstants.Pivot.kV / (2.0 * Math.PI),
+                            IntakeConstants.Pivot.kA / (2.0 * Math.PI)),
+                    pivotMotorModel,
+                    IntakeConstants.Pivot.GEARING_RATIO,
+                    IntakeConstants.Pivot.LENGTH_METERS,
+                    IntakeConstants.Pivot.MIN_ANGLE.in(edu.wpi.first.units.Units.Radians),
+                    IntakeConstants.Pivot.MAX_ANGLE.in(edu.wpi.first.units.Units.Radians),
+                    true,
+                    IntakeConstants.Pivot.UP_ANGLE.in(edu.wpi.first.units.Units.Radians));
+            pivotSimState = pivotMotor.getSimState();
+            cancoderSimState = cancoder.getSimState();
+            cancoderSimState.SensorOffset = IntakeConstants.Pivot.CANCODER_OFFSET.in(Rotations);
+            setSimulatedPivotSensorState(
+                    IntakeConstants.Pivot.UP_ANGLE.in(Rotations), 0.0);
+
+            DCMotor rollerMotorModel = DCMotor.getNeoVortex(1);
+            rollerSparkSimulation = new SparkFlexSim(rollerMotor, rollerMotorModel);
+            rollerMechanismSimulation = new DCMotorSim(
+                    LinearSystemId.createDCMotorSystem(
+                            rollerMotorModel,
+                            IntakeConstants.Roller.MOMENT_OF_INERTIA,
+                            1.0),
+                    rollerMotorModel);
+
+            Mechanism2d mechanism = new Mechanism2d(1.0, 1.0);
+            pivotLigament = mechanism.getRoot("IntakePivot", 0.5, 0.25)
+                    .append(new MechanismLigament2d(
+                            "Intake",
+                            IntakeConstants.Pivot.LENGTH_METERS,
+                            IntakeConstants.Pivot.UP_ANGLE.in(Degrees),
+                            8.0,
+                            new Color8Bit(Color.kYellow)));
+            SmartDashboard.putData("Simulation/Intake", mechanism);
+            SimulatedBattery.addElectricalAppliances(
+                    () -> edu.wpi.first.units.Units.Amps.of(simulationCurrentDrawAmps));
+        } else {
+            pivotSimState = null;
+            cancoderSimState = null;
+            pivotSimulation = null;
+            rollerSparkSimulation = null;
+            rollerMechanismSimulation = null;
+            pivotLigament = null;
+        }
+
         // DogLog tunable for testing specific pivot angles without redeploying
         DogLog.tunable(
                 (getName() + "/PivotAngleSetPoint"),
@@ -154,6 +227,7 @@ public class IntakeSubsystem extends SubsystemBase {
 
         setDefaultCommand(
                 this.runOnce(() -> {
+                    rollerCommandedVoltage = 0.0;
                     rollerMotor.setVoltage(0);
                 }).andThen(
                         this.idle()));
@@ -242,7 +316,7 @@ public class IntakeSubsystem extends SubsystemBase {
                 this.run(() -> {
                     //rollerMotor.getClosedLoopController().setSetpoint(IntakeConstants.Roller.INTAKE_RPM,
                     //        ControlType.kVelocity);
-                    rollerMotor.setVoltage(IntakeConstants.Roller.INTAKE_VOLTAGE);
+                    setRollerVoltage(IntakeConstants.Roller.INTAKE_VOLTAGE);
                 }),
                 this.runOnce(() -> {
                     DogLog.log(getName() + "/IntakeForwardBlocked",
@@ -256,7 +330,7 @@ public class IntakeSubsystem extends SubsystemBase {
     public Command intakeBackward() {
         return new ConditionalCommand(
                 this.run(() -> {
-                    rollerMotor.setVoltage(IntakeConstants.Roller.OUTTAKE_VOLTAGE);
+                    setRollerVoltage(IntakeConstants.Roller.OUTTAKE_VOLTAGE);
                 }),
                 this.runOnce(() -> {
                     DogLog.log(getName() + "/IntakeBackwardBlocked",
@@ -280,7 +354,41 @@ public class IntakeSubsystem extends SubsystemBase {
         return this.runOnce(() -> {
             pivotMotor.stopMotor();
             rollerMotor.stopMotor();
+            rollerCommandedVoltage = 0.0;
         });
+    }
+
+    private void setRollerVoltage(double voltage) {
+        rollerCommandedVoltage = voltage;
+        rollerMotor.setVoltage(voltage);
+    }
+
+    public boolean isRollerRunningForward() {
+        return rollerCommandedVoltage > 0.0;
+    }
+
+    public boolean isRollerRunningBackward() {
+        return rollerCommandedVoltage < 0.0;
+    }
+
+    public double getRollerVelocityRPM() {
+        return rollerMotor.getEncoder().getVelocity();
+    }
+
+    public double getSimulationCurrentDrawAmps() {
+        return simulationCurrentDrawAmps;
+    }
+
+    private void setSimulatedPivotSensorState(double positionRotations, double velocityRps) {
+        pivotSimState.setRawRotorPosition(positionRotations * IntakeConstants.Pivot.GEARING_RATIO);
+        pivotSimState.setRotorVelocity(velocityRps * IntakeConstants.Pivot.GEARING_RATIO);
+        cancoderSimState.setRawPosition(positionRotations);
+        cancoderSimState.setVelocity(velocityRps);
+        cancoder.getAbsolutePosition().refresh();
+        cancoder.getPosition().refresh();
+        cancoder.getVelocity().refresh();
+        pivotMotor.getPosition().refresh();
+        pivotMotor.getVelocity().refresh();
     }
 
     @Override
@@ -302,5 +410,42 @@ public class IntakeSubsystem extends SubsystemBase {
         } else {
             DogLog.clearFault("Intake pivot is up");
         }
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        if (pivotSimulation == null) {
+            return;
+        }
+
+        double batteryVoltage = RobotController.getBatteryVoltage();
+        double dtSeconds = Constants.LOOP_TIME.in(edu.wpi.first.units.Units.Seconds);
+        pivotSimState.setSupplyVoltage(batteryVoltage);
+        cancoderSimState.setSupplyVoltage(batteryVoltage);
+
+        pivotSimulation.setInputVoltage(pivotSimState.getMotorVoltage());
+        pivotSimulation.update(dtSeconds);
+
+        double pivotPositionRotations = edu.wpi.first.math.util.Units
+                .radiansToRotations(pivotSimulation.getAngleRads());
+        double pivotVelocityRps = pivotSimulation.getVelocityRadPerSec() / (2.0 * Math.PI);
+        setSimulatedPivotSensorState(pivotPositionRotations, pivotVelocityRps);
+
+        rollerMechanismSimulation.setInputVoltage(rollerMotor.getAppliedOutput() * batteryVoltage);
+        rollerMechanismSimulation.update(dtSeconds);
+        rollerSparkSimulation.iterate(
+                rollerMechanismSimulation.getAngularVelocityRPM(), batteryVoltage, dtSeconds);
+        rollerSparkSimulation.setMotorCurrent(
+                Math.abs(rollerMechanismSimulation.getCurrentDrawAmps()));
+
+        simulationCurrentDrawAmps = Math.min(
+                Math.abs(pivotSimulation.getCurrentDrawAmps()),
+                IntakeConstants.Pivot.CURRENT_LIMIT)
+                + Math.min(
+                        Math.abs(rollerMechanismSimulation.getCurrentDrawAmps()),
+                        IntakeConstants.Roller.CURRENT_LIMIT);
+        pivotLigament.setAngle(Math.toDegrees(pivotSimulation.getAngleRads()));
+
+        DogLog.log(getName() + "/Simulation/CurrentDraw", simulationCurrentDrawAmps, Amps);
     }
 }

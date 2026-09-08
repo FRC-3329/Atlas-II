@@ -10,6 +10,7 @@ import frc.robot.subsystems.PDHSubsystem;
 import frc.robot.subsystems.PhotonVisionSubsystem;
 import frc.robot.subsystems.SwerveSubsystem;
 import frc.robot.subsystems.TurretSubsystem;
+import frc.robot.simulation.RobotSimulation;
 import frc.robot.utils.GameHelpers;
 
 import swervelib.SwerveInputStream;
@@ -24,6 +25,7 @@ import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.GenericHID.RumbleType;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
@@ -52,9 +54,9 @@ public class RobotContainer {
     private final IntakeSubsystem intake = new IntakeSubsystem();
     private final TurretSubsystem turret;
 
-    @SuppressWarnings("unused")
     private final PDHSubsystem pdh = new PDHSubsystem();
     private final LEDSubsystem leds = new LEDSubsystem();
+    private final RobotSimulation simulation;
 
     private final CommandXboxController driverController = new CommandXboxController(
             OperatorConstants.kDriverControllerPort);
@@ -73,6 +75,12 @@ public class RobotContainer {
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
         // Coast during setup so the robot can be pushed into position
         setMotorBrake(false);
+
+        simulation = RobotBase.isSimulation()
+                ? new RobotSimulation(
+                        drivebase, flywheel, indexer, intake, turret,
+                        blueCam, redCam, yellowCam)
+                : null;
         driveAngularVelocity = SwerveInputStream
                 .of(drivebase.getSwerveDrive(),
                         () -> -driverController.getLeftY(),
@@ -184,6 +192,46 @@ public class RobotContainer {
 
     public void setMotorBrake(boolean brake) {
         drivebase.setMotorBrake(brake);
+    }
+
+    public void simulationPeriodic() {
+        if (simulation != null) {
+            simulation.periodic();
+        }
+    }
+
+    RobotSimulation getSimulation() {
+        return simulation;
+    }
+
+    SwerveSubsystem getDrivebase() {
+        return drivebase;
+    }
+
+    FlywheelSubsystem getFlywheel() {
+        return flywheel;
+    }
+
+    IndexerSubsystem getIndexer() {
+        return indexer;
+    }
+
+    IntakeSubsystem getIntake() {
+        return intake;
+    }
+
+    TurretSubsystem getTurret() {
+        return turret;
+    }
+
+    PDHSubsystem getPdh() {
+        return pdh;
+    }
+
+    int getAcceptedVisionEstimateCount() {
+        return blueCam.getAcceptedEstimateCount()
+                + redCam.getAcceptedEstimateCount()
+                + yellowCam.getAcceptedEstimateCount();
     }
 
     /**

@@ -9,6 +9,9 @@ import frc.robot.utils.VisionData.EstimateConsumer;
 import org.photonvision.EstimatedRobotPose;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
+import org.photonvision.simulation.PhotonCameraSim;
+import org.photonvision.simulation.SimCameraProperties;
+import org.photonvision.simulation.VisionSystemSim;
 import org.photonvision.targeting.PhotonPipelineResult;
 import org.photonvision.targeting.PhotonTrackedTarget;
 
@@ -17,9 +20,11 @@ import edu.wpi.first.math.Matrix;
 import edu.wpi.first.math.VecBuilder;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform3d;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
+import edu.wpi.first.wpilibj.RobotBase;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -30,8 +35,11 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 	private final PhotonPoseEstimator photonEstimator;
 	private final EstimateConsumer estConsumer;
 	private final String logName;
+	private final Transform3d robotToCamera;
+	private PhotonCameraSim cameraSimulation;
 
-	private Matrix<N3, N1> curStdDevs;
+	private Matrix<N3, N1> curStdDevs = PVConstants.kSingleTagStdDevs;
+	private int acceptedEstimateCount;
 
 	/**
 	 * @param cameraName    name of the camera in PhotonVision
@@ -41,6 +49,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 	public PhotonVisionSubsystem(String cameraName, Transform3d robotToCamera, EstimateConsumer estConsumer) {
 		this.cameraName = cameraName;
 		this.estConsumer = estConsumer;
+		this.robotToCamera = robotToCamera;
 
 		camera = new PhotonCamera(cameraName);
 		logName = "PV/" + cameraName + "/";
@@ -57,6 +66,36 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 		SmartDashboard.putData(cameraName + " Camera Fast", this.runOnce(() -> {
 			camera.setFPSLimit(20);
 		}).ignoringDisable(true));
+	}
+
+	/** Adds this camera to the shared PhotonVision field simulation. */
+	public void addToSimulation(VisionSystemSim visionSystemSimulation) {
+		if (!RobotBase.isSimulation() || cameraSimulation != null) {
+			return;
+		}
+
+		SimCameraProperties properties = new SimCameraProperties()
+				.setCalibration(
+						PVConstants.SIM_RESOLUTION_WIDTH,
+						PVConstants.SIM_RESOLUTION_HEIGHT,
+						Rotation2d.fromDegrees(PVConstants.SIM_DIAGONAL_FOV.in(
+								edu.wpi.first.units.Units.Degrees)))
+				.setCalibError(
+						PVConstants.SIM_CALIBRATION_ERROR_AVERAGE_PX,
+						PVConstants.SIM_CALIBRATION_ERROR_STD_DEV_PX)
+				.setFPS(PVConstants.SIM_FPS)
+				.setAvgLatencyMs(PVConstants.SIM_AVERAGE_LATENCY_MS)
+				.setLatencyStdDevMs(PVConstants.SIM_LATENCY_STD_DEV_MS)
+				.setRandomSeed(cameraName.hashCode());
+
+		cameraSimulation = new PhotonCameraSim(camera, properties, PVConstants.kTagLayout);
+		cameraSimulation.enableDrawWireframe(true);
+		cameraSimulation.setMaxSightRange(9.0);
+		visionSystemSimulation.addCamera(cameraSimulation, robotToCamera);
+	}
+
+	public int getAcceptedEstimateCount() {
+		return acceptedEstimateCount;
 	}
 
 	/**
@@ -146,6 +185,7 @@ public class PhotonVisionSubsystem extends SubsystemBase {
 			updateEstimationStdDevs(visionEst, change.getTargets());
 
 			visionEst.ifPresent(est -> {
+				acceptedEstimateCount++;
 				Pose2d pose2d = est.estimatedPose.toPose2d();
 				DogLog.log(logName + "pose", pose2d);
 				Matrix<N3, N1> estStdDevs = getEstimationStdDevs();

@@ -16,6 +16,22 @@ Source code for the robot used in REBUILT developed by team 3329, the Wildbots!
 ./gradlew deploy
 ```
 
+### Run the Full Robot Simulation
+```sh
+./gradlew simulateJava
+```
+
+The desktop simulation includes YAGSL/MapleSim swerve physics, CTRE and REV mechanism physics,
+PhotonVision cameras, battery sag and PDH voltage, LEDs, and REBUILT fuel intake/launch behavior.
+Use the simulated Driver Station normally. Mechanism views and the `Simulation/LoadFuel` and
+`Simulation/ClearStoredFuel` controls are published to SmartDashboard; robot, shooter, and fuel
+poses are logged under `Simulation` for AdvantageScope/DogLog inspection.
+
+Run the automated end-to-end simulation test with:
+```sh
+./gradlew test
+```
+
 ## Code Outline
 Code outline for `src/main/java/frc/robot`
 
@@ -28,6 +44,7 @@ All constant values
 - **LEDConstants.java** - PWM port and strip length for addressable LEDs
 - **OperatorConstants.java** - Controller ports and joystick deadband values
 - **PVConstants.java** - PhotonVision AprilTag field layout and vision standard deviations
+- **SimulationConstants.java** - Game-piece and mechanism parameters used only in desktop simulation
 - **TrenchConstants.java** - Field dimensions, path names, and motion constraints for trench driving
 - **TurretConstants.java** - PID gains, angle limits, and encoder settings for turret rotation
 

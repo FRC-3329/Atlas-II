@@ -1,12 +1,14 @@
 package frc.robot.constants;
 
 import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Inches;
 import static edu.wpi.first.units.Units.RPM;
 
 import com.ctre.phoenix6.signals.InvertedValue;
 
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
+import edu.wpi.first.units.measure.Distance;
 
 public final class FlywheelConstants {
     /** Fallback values used when distance-based (varying) RPM is disabled. */
@@ -30,6 +32,9 @@ public final class FlywheelConstants {
 
         public static final double CURRENT_LIMIT = 60.0;
         public static final InvertedValue INVERTED = InvertedValue.CounterClockwise_Positive;
+
+        /** Diameter used to convert simulated wheel speed into fuel launch speed. */
+        public static final Distance WHEEL_DIAMETER = Inches.of(4.0);
     }
 
     public static final class Hood {
@@ -56,5 +61,11 @@ public final class FlywheelConstants {
         public static final double ZEROING_VOLTAGE = -0.5;
         public static final double ZEROING_CURRENT_THRESHOLD = 5.0;
         public static final double STALL_DEBOUNCE_TIME = 0.1;
+
+        /** Physical limits used by the hood arm simulation. */
+        public static final Angle MIN_ANGLE = Degrees.of(-2.36);
+        public static final Angle MAX_ANGLE = Degrees.of(60.0);
+        public static final double LENGTH_METERS = 0.25;
+        public static final double GEARING_RATIO = 18.0;
     }
 }

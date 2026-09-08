@@ -79,6 +79,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	@Override
 	public void simulationPeriodic() {
+		DogLog.log(getName() + "/Simulation/GroundTruthPose", getSimulationPose());
 	}
 
 	public SwerveDrive getSwerveDrive() {
@@ -87,6 +88,11 @@ public class SwerveSubsystem extends SubsystemBase {
 
 	public Pose2d getPose() {
 		return swerveDrive.getPose();
+	}
+
+	/** Returns the physics-engine pose in simulation and odometry pose on hardware. */
+	public Pose2d getSimulationPose() {
+		return swerveDrive.getSimulationDriveTrainPose().orElseGet(swerveDrive::getPose);
 	}
 
 	public ChassisSpeeds getRobotVelocity() {

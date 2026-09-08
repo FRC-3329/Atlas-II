@@ -54,4 +54,8 @@ public final class TurretConstants {
     /** Physical offset from robot center to turret pivot point. */
     public static final Transform2d ROBOT_TO_TURRET = new Transform2d(Inches.of(-6.500), Inches.zero(),
             Rotation2d.kZero);
+
+    /** Physical dimensions used by the horizontal arm simulation. */
+    public static final double GEARING_RATIO = 30.0;
+    public static final double LENGTH_METERS = 0.30;
 }

@@ -1,7 +1,9 @@
 package frc.robot.subsystems;
 
 import dev.doglog.DogLog;
+import edu.wpi.first.hal.simulation.PowerDistributionDataJNI;
 import edu.wpi.first.wpilibj.PowerDistribution;
+import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class PDHSubsystem extends SubsystemBase {
@@ -19,6 +21,15 @@ public class PDHSubsystem extends SubsystemBase {
         pdh.setSwitchableChannel(state);
     }
 
+    public double getVoltage() {
+        return pdh.getVoltage();
+    }
+
     @Override
     public void periodic() {}
+
+    @Override
+    public void simulationPeriodic() {
+        PowerDistributionDataJNI.setVoltage(pdh.getModule(), RobotController.getBatteryVoltage());
+    }
 }

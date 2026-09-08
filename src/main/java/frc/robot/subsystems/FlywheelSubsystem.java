@@ -1,9 +1,12 @@
 package frc.robot.subsystems;
 
+import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
+import static edu.wpi.first.units.Units.Radians;
+import static edu.wpi.first.units.Units.RadiansPerSecond;
 import static edu.wpi.first.units.Units.Rotations;
 import static edu.wpi.first.units.Units.RotationsPerSecond;
-import static edu.wpi.first.units.Units.Degrees;
+import static edu.wpi.first.units.Units.Volts;
 
 import java.util.function.Supplier;
 
@@ -14,28 +17,41 @@ import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.sim.ChassisReference;
+import com.ctre.phoenix6.sim.TalonFXSimState;
 import com.ctre.phoenix6.signals.GravityTypeValue;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
-import static edu.wpi.first.units.Units.Volts;
-
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
 import dev.doglog.DogLog;
+import edu.wpi.first.math.system.plant.DCMotor;
+import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
 import edu.wpi.first.units.measure.MutAngle;
 import edu.wpi.first.units.measure.MutAngularVelocity;
 import edu.wpi.first.wpilibj.Alert;
+import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.RobotController;
+import edu.wpi.first.wpilibj.simulation.FlywheelSim;
+import edu.wpi.first.wpilibj.simulation.SingleJointedArmSim;
+import edu.wpi.first.wpilibj.smartdashboard.Mechanism2d;
+import edu.wpi.first.wpilibj.smartdashboard.MechanismLigament2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Direction;
+import frc.robot.constants.Constants;
 import frc.robot.constants.FlywheelConstants.Flywheel;
 import frc.robot.constants.FlywheelConstants.Hood;
 import frc.robot.utils.ShotParameters;
+import swervelib.simulation.ironmaple.simulation.SimulatedArena;
+import swervelib.simulation.ironmaple.simulation.motorsims.SimulatedBattery;
 
 public class FlywheelSubsystem extends SubsystemBase {
     private final TalonFX left, right, hood;
@@ -49,6 +65,17 @@ public class FlywheelSubsystem extends SubsystemBase {
     private final SysIdRoutine sysIdRoutine;
 
     private final Trigger spikeDetected;
+
+    private final FlywheelSim leftSimulation;
+    private final FlywheelSim rightSimulation;
+    private final SingleJointedArmSim hoodSimulation;
+    private final TalonFXSimState leftSimState;
+    private final TalonFXSimState rightSimState;
+    private final TalonFXSimState hoodSimState;
+    private final MechanismLigament2d hoodLigament;
+    private double leftSimPositionRotations;
+    private double rightSimPositionRotations;
+    private volatile double simulationCurrentDrawAmps;
 
     private boolean varyingRPMEnabled = true;
 
@@ -115,8 +142,7 @@ public class FlywheelSubsystem extends SubsystemBase {
         hoodConfig.MotorOutput.Inverted = Hood.INVERTED;
         hoodConfig.MotorOutput.NeutralMode = NeutralModeValue.Brake;
 
-        // 9:1 gearbox with 48:24 (2:1) belt = 18:1 total reduction
-        hoodConfig.Feedback.SensorToMechanismRatio = 18.0;
+        hoodConfig.Feedback.SensorToMechanismRatio = Hood.GEARING_RATIO;
 
         hood.getConfigurator().apply(hoodConfig);
 
@@ -127,6 +153,57 @@ public class FlywheelSubsystem extends SubsystemBase {
         hood.getStatorCurrent().setUpdateFrequency(50); // 50 Hz for stator current monitoring
 
         hood.setPosition(Degrees.zero(), 2);
+
+        if (RobotBase.isSimulation()) {
+            DCMotor flywheelMotor = DCMotor.getKrakenX60Foc(1);
+            leftSimulation = new FlywheelSim(
+                    LinearSystemId.identifyVelocitySystem(Flywheel.kV / (2.0 * Math.PI),
+                            Flywheel.kA / (2.0 * Math.PI)),
+                    flywheelMotor);
+            rightSimulation = new FlywheelSim(
+                    LinearSystemId.identifyVelocitySystem(Flywheel.kV / (2.0 * Math.PI),
+                            Flywheel.kA / (2.0 * Math.PI)),
+                    flywheelMotor);
+
+            DCMotor hoodMotor = DCMotor.getKrakenX60Foc(1);
+            hoodSimulation = new SingleJointedArmSim(
+                    LinearSystemId.identifyPositionSystem(Hood.kV / (2.0 * Math.PI),
+                            Hood.kA / (2.0 * Math.PI)),
+                    hoodMotor,
+                    Hood.GEARING_RATIO,
+                    Hood.LENGTH_METERS,
+                    Hood.MIN_ANGLE.in(Radians),
+                    Hood.MAX_ANGLE.in(Radians),
+                    true,
+                    0.0);
+
+            leftSimState = left.getSimState();
+            rightSimState = right.getSimState();
+            hoodSimState = hood.getSimState();
+            // The right wheel is mechanically mirrored; Phoenix inversion remains a
+            // controller setting and is intentionally not used to choose orientation.
+            rightSimState.Orientation = ChassisReference.Clockwise_Positive;
+
+            Mechanism2d mechanism = new Mechanism2d(1.0, 1.0);
+            hoodLigament = mechanism.getRoot("HoodPivot", 0.5, 0.35)
+                    .append(new MechanismLigament2d(
+                            "Hood",
+                            Hood.LENGTH_METERS,
+                            0.0,
+                            8.0,
+                            new Color8Bit(Color.kOrange)));
+            SmartDashboard.putData("Simulation/Flywheel", mechanism);
+            SimulatedBattery.addElectricalAppliances(
+                    () -> edu.wpi.first.units.Units.Amps.of(simulationCurrentDrawAmps));
+        } else {
+            leftSimulation = null;
+            rightSimulation = null;
+            hoodSimulation = null;
+            leftSimState = null;
+            rightSimState = null;
+            hoodSimState = null;
+            hoodLigament = null;
+        }
 
         // DogLog tunables for live RPM/angle adjustment during testing
         DogLog.tunable(
@@ -289,6 +366,22 @@ public class FlywheelSubsystem extends SubsystemBase {
         return leftAtSpeed && rightAtSpeed;
     }
 
+    public AngularVelocity getVelocityMeasure() {
+        return left.getVelocity().getValue();
+    }
+
+    public AngularVelocity getRightVelocityMeasure() {
+        return right.getVelocity().getValue();
+    }
+
+    public Angle getHoodAngleMeasure() {
+        return hood.getPosition().getValue();
+    }
+
+    public double getSimulationCurrentDrawAmps() {
+        return simulationCurrentDrawAmps;
+    }
+
     public double getHoodCurrent() {
         return hood.getStatorCurrent().getValueAsDouble();
     }
@@ -344,5 +437,66 @@ public class FlywheelSubsystem extends SubsystemBase {
         DogLog.log(
                 (getName() + "/HoodStatorCurrent"),
                 getHoodCurrent());
+    }
+
+    @Override
+    public void simulationPeriodic() {
+        if (leftSimulation == null) {
+            return;
+        }
+
+        double batteryVoltage = RobotController.getBatteryVoltage();
+        int subTicks = SimulatedArena.getSimulationSubTicksIn1Period();
+        double dtSeconds = Constants.LOOP_TIME.in(edu.wpi.first.units.Units.Seconds) / subTicks;
+
+        leftSimState.setSupplyVoltage(batteryVoltage);
+        rightSimState.setSupplyVoltage(batteryVoltage);
+        hoodSimState.setSupplyVoltage(batteryVoltage);
+
+        for (int i = 0; i < subTicks; i++) {
+            leftSimulation.setInputVoltage(leftSimState.getMotorVoltage());
+            rightSimulation.setInputVoltage(rightSimState.getMotorVoltage());
+            hoodSimulation.setInputVoltage(hoodSimState.getMotorVoltage());
+
+            leftSimulation.update(dtSeconds);
+            rightSimulation.update(dtSeconds);
+            hoodSimulation.update(dtSeconds);
+
+            double leftVelocityRps = leftSimulation.getAngularVelocity().in(RotationsPerSecond);
+            double rightVelocityRps = rightSimulation.getAngularVelocity().in(RotationsPerSecond);
+            leftSimPositionRotations += leftVelocityRps * dtSeconds;
+            rightSimPositionRotations += rightVelocityRps * dtSeconds;
+
+            leftSimState.setRawRotorPosition(leftSimPositionRotations);
+            leftSimState.setRotorVelocity(leftVelocityRps);
+            rightSimState.setRawRotorPosition(rightSimPositionRotations);
+            rightSimState.setRotorVelocity(rightVelocityRps);
+
+            double hoodPositionRotations = edu.wpi.first.math.util.Units
+                    .radiansToRotations(hoodSimulation.getAngleRads());
+            double hoodVelocityRps = hoodSimulation.getVelocityRadPerSec() / (2.0 * Math.PI);
+            hoodSimState.setRawRotorPosition(hoodPositionRotations * Hood.GEARING_RATIO);
+            hoodSimState.setRotorVelocity(hoodVelocityRps * Hood.GEARING_RATIO);
+
+            left.getVelocity().refresh();
+            right.getVelocity().refresh();
+            hood.getPosition().refresh();
+            hood.getVelocity().refresh();
+        }
+
+        simulationCurrentDrawAmps = Math.min(
+                Math.abs(leftSimulation.getCurrentDrawAmps()), Flywheel.CURRENT_LIMIT)
+                + Math.min(Math.abs(rightSimulation.getCurrentDrawAmps()), Flywheel.CURRENT_LIMIT)
+                + Math.min(Math.abs(hoodSimulation.getCurrentDrawAmps()), Hood.CURRENT_LIMIT);
+        hoodLigament.setAngle(Math.toDegrees(hoodSimulation.getAngleRads()));
+
+        DogLog.log(getName() + "/Simulation/LeftVelocity",
+                leftSimulation.getAngularVelocity().in(RadiansPerSecond), RadiansPerSecond);
+        DogLog.log(getName() + "/Simulation/RightVelocity",
+                rightSimulation.getAngularVelocity().in(RadiansPerSecond), RadiansPerSecond);
+        DogLog.log(getName() + "/Simulation/HoodAngle",
+                Math.toDegrees(hoodSimulation.getAngleRads()), Degrees);
+        DogLog.log(getName() + "/Simulation/CurrentDraw", simulationCurrentDrawAmps,
+                edu.wpi.first.units.Units.Amps);
     }
 }

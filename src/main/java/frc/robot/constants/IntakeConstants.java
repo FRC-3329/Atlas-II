@@ -47,6 +47,11 @@ public final class IntakeConstants {
         public static final SensorDirectionValue CANCODER_DIRECTION = SensorDirectionValue.CounterClockwise_Positive;
         /** Total reduction from motor to pivot: 4:1 * 5:1 * 43:24 */
         public static final double GEARING_RATIO = 4.0 * 5.0 * 43.0 / 24.0;
+
+        /** Physical dimensions used by the intake arm simulation. */
+        public static final double LENGTH_METERS = 0.38;
+        public static final Angle MIN_ANGLE = Degrees.of(-2.0);
+        public static final Angle MAX_ANGLE = Degrees.of(155.0);
     }
 
     public static final class Roller {
@@ -64,6 +69,9 @@ public final class IntakeConstants {
         public static final int CURRENT_LIMIT = 70;
         public static final boolean INVERTED = false;
         public static final IdleMode IDLE_MODE = IdleMode.kCoast;
+
+        /** Approximate roller inertia for desktop physics simulation. */
+        public static final double MOMENT_OF_INERTIA = 0.0025;
 
     }
 }

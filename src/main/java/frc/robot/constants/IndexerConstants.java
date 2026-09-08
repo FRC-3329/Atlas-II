@@ -3,8 +3,6 @@ package frc.robot.constants;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 
 public final class IndexerConstants {
-    
-
     /** Duration the motor must be at current limit before we consider it stalled. */
     public static final double CURRENT_STALL_TIME = 0.5;
     /** Brief reversal to un-jam fuel before resuming forward feed. */
@@ -17,6 +15,9 @@ public final class IndexerConstants {
         public static final int CURRENT_LIMIT = 60;
         public static final boolean INVERTED = true;
         public static final IdleMode IDLE_MODE = IdleMode.kBrake;
+
+        /** Approximate rotating inertia for desktop physics simulation. */
+        public static final double MOMENT_OF_INERTIA = 0.003;
     }
 
     public static final class Belt {
@@ -28,5 +29,8 @@ public final class IndexerConstants {
         public static final int CURRENT_LIMIT = 40;
         public static final IdleMode IDLE_MODE = IdleMode.kBrake;
         public static final boolean INVERTED = true;
+
+        /** Approximate rotating inertia for desktop physics simulation. */
+        public static final double MOMENT_OF_INERTIA = 0.002;
     }
 }

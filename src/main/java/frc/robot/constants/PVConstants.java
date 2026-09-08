@@ -67,4 +67,14 @@ public final class PVConstants {
     public static final Matrix<N3, N1> kSingleTagStdDevs = VecBuilder.fill(4, 4, 8);
     /** Multi-tag solves are much more reliable, so we trust them more. */
     public static final Matrix<N3, N1> kMultiTagStdDevs = VecBuilder.fill(0.5, 0.5, 4);
+
+    /** Camera model used by PhotonVision's desktop simulation. */
+    public static final int SIM_RESOLUTION_WIDTH = 1280;
+    public static final int SIM_RESOLUTION_HEIGHT = 720;
+    public static final Angle SIM_DIAGONAL_FOV = Degrees.of(75.0);
+    public static final double SIM_FPS = 30.0;
+    public static final double SIM_AVERAGE_LATENCY_MS = 30.0;
+    public static final double SIM_LATENCY_STD_DEV_MS = 5.0;
+    public static final double SIM_CALIBRATION_ERROR_AVERAGE_PX = 0.35;
+    public static final double SIM_CALIBRATION_ERROR_STD_DEV_PX = 0.10;
 }
