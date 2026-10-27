@@ -1,7 +1,5 @@
 package frc.robot;
 
-import com.pathplanner.lib.util.PathPlannerLogging;
-
 import dev.doglog.DogLog;
 import dev.doglog.DogLogOptions;
 import edu.wpi.first.wpilibj.DataLogManager;
@@ -10,6 +8,7 @@ import edu.wpi.first.wpilibj.TimedRobot;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.constants.TurretConstants;
+import frc.robot.lib.BLine.FollowPath;
 
 public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
@@ -30,7 +29,12 @@ public class Robot extends TimedRobot {
         DataLogManager.start();
         DriverStation.startDataLog(DataLogManager.getLog());
         DogLog.setOptions(new DogLogOptions().withCaptureDs(true));
-        PathPlannerLogging.setLogTargetPoseCallback(pose -> DogLog.log("PathPlanner/TargetPose", pose));
+
+        // BLine keys already carry the FollowPath/ prefix
+        FollowPath.setPoseLoggingConsumer(entry -> DogLog.log(entry.getFirst(), entry.getSecond()));
+        FollowPath.setTranslationListLoggingConsumer(entry -> DogLog.log(entry.getFirst(), entry.getSecond()));
+        FollowPath.setBooleanLoggingConsumer(entry -> DogLog.log(entry.getFirst(), entry.getSecond()));
+        FollowPath.setDoubleLoggingConsumer(entry -> DogLog.log(entry.getFirst(), entry.getSecond()));
     }
 
     @Override

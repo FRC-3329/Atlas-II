@@ -5,8 +5,6 @@ import static edu.wpi.first.units.Units.Meters;
 import java.util.Optional;
 import java.util.function.Supplier;
 
-import com.pathplanner.lib.util.FlippingUtil;
-
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -19,6 +17,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.constants.Constants;
 import frc.robot.constants.TurretConstants;
+import frc.robot.lib.BLine.FlippingUtil;
 
 /**
  * Computes game-state-aware targeting: selects the correct target based

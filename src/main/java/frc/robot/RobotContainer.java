@@ -2,6 +2,8 @@ package frc.robot;
 
 import frc.robot.constants.OperatorConstants;
 import frc.robot.constants.PVConstants;
+import frc.robot.lib.BLine.BLineCommands;
+import frc.robot.lib.BLine.FollowPath;
 import frc.robot.subsystems.FlywheelSubsystem;
 import frc.robot.subsystems.IndexerSubsystem;
 import frc.robot.subsystems.IntakeSubsystem;
@@ -16,9 +18,6 @@ import swervelib.SwerveInputStream;
 
 import static edu.wpi.first.units.Units.Degrees;
 import static edu.wpi.first.units.Units.RPM;
-
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.auto.NamedCommands;
 
 import dev.doglog.DogLog;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -68,7 +67,7 @@ public class RobotContainer {
         flywheel = new FlywheelSubsystem(gameHelpers::getShotParameters);
         turret = new TurretSubsystem(drivebase::getPose, gameHelpers::getVirtualTargetFieldAngle);
 
-        configurePathPlannerCommands();
+        configureEventTriggers();
 
         drivebase.resetOdometry(new Pose2d(1, 1, Rotation2d.kZero));
         // Coast during setup so the robot can be pushed into position
@@ -94,9 +93,17 @@ public class RobotContainer {
                 && turret.isOnTarget()
                 && gameHelpers.isValidShotDistance());
 
-        autoChooser = AutoBuilder.buildAutoChooser();
+        autoChooser = new SendableChooser<>();
         SmartDashboard.putData("Auto Chooser", autoChooser);
         autoChooser.setDefaultOption("None", Commands.none());
+        // Deferred so each run loads fresh paths: a path stays flipped once it has
+        // been flipped for red, which would be wrong if the alliance changes between runs
+        autoChooser.addOption("Left Fire First",
+                BLineCommands.deferredProxy(() -> fireFirstAuto("LeftFireFirst", "LeftSweepBack"))
+                        .withName("Left Fire First"));
+        autoChooser.addOption("Right Fire First",
+                BLineCommands.deferredProxy(() -> fireFirstAuto("RightFireFirst", "RightSweepBack"))
+                        .withName("Right Fire First"));
         autoChooser.addOption("Shoot in Place",
                 Commands.parallel(
                         intake.lower().andThen(shoot()),
@@ -122,24 +129,52 @@ public class RobotContainer {
                 .withName("RumbleControllers");
     }
 
-    /** Registers commands that PathPlanner auto routines can reference by name. */
-    private void configurePathPlannerCommands() {
-        // asProxy() prevents requirement conflicts between the auto command group
-        // and the commands that these subsystems schedule elsewhere
-        NamedCommands.registerCommand("IntakeGamePiece", intake.intakeForward().asProxy());
-        NamedCommands.registerCommand("RaiseIntake", intake.raise().asProxy());
-        NamedCommands.registerCommand("KickIntake", intake.kick().asProxy());
-        NamedCommands.registerCommand("LowerIntake", intake.lower().asProxy());
-        NamedCommands.registerCommand("EjectGamePiece",
+    /**
+     * Registers commands that BLine paths can reference by event trigger key.
+     * <p>
+     * Triggered commands are scheduled independently of the path, so they don't
+     * need to be proxied.
+     */
+    private void configureEventTriggers() {
+        FollowPath.registerEventTrigger("IntakeGamePiece", intake.intakeForward());
+        FollowPath.registerEventTrigger("RaiseIntake", intake.raise());
+        FollowPath.registerEventTrigger("KickIntake", intake.kick());
+        FollowPath.registerEventTrigger("LowerIntake", intake.lower());
+        FollowPath.registerEventTrigger("EjectGamePiece",
                 Commands.parallel(
-                        intake.intakeBackward().asProxy(),
+                        intake.intakeBackward(),
                         indexer.feedBackwards())
                         .withName("EjectGamePiece"));
-        NamedCommands.registerCommand("Shoot", shoot().asProxy());
-        NamedCommands.registerCommand("StopFlywheel", flywheel.stop().asProxy());
-        NamedCommands.registerCommand("StopIndexer", indexer.stop().asProxy());
-        NamedCommands.registerCommand("StopIntake", intake.stop().asProxy());
-        NamedCommands.registerCommand("AutoTrackTurret", turret.autoTrack().asProxy());
+        FollowPath.registerEventTrigger("Shoot", shoot());
+        FollowPath.registerEventTrigger("StopFlywheel", flywheel.stop());
+        FollowPath.registerEventTrigger("StopIndexer", indexer.stop());
+        FollowPath.registerEventTrigger("StopIntake", intake.stop());
+        FollowPath.registerEventTrigger("AutoTrackTurret", turret.autoTrack());
+    }
+
+    /**
+     * Shoots the preload, drives out to sweep fuel, then drives back and shoots
+     * until auto ends.
+     * <p>
+     * BLineCommands proxies each step so the drivetrain, intake and shooter
+     * requirements are only held while that step runs.
+     */
+    private Command fireFirstAuto(String sweepPath, String returnPath) {
+        return BLineCommands.sequence(
+                intake.lower(),
+                Commands.race(
+                        turret.autoTrack(),
+                        shoot(),
+                        Commands.waitSeconds(3.0)),
+                flywheel.stop(),
+                indexer.stop(),
+                intake.stop(),
+                drivebase.followPath(sweepPath),
+                drivebase.followPath(returnPath),
+                Commands.race(
+                        turret.autoTrack(),
+                        shoot(),
+                        Commands.waitSeconds(20.0)));
     }
 
     /** Button bindings - see CONTROLLER.md for the full layout diagram. */

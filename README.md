@@ -27,6 +27,7 @@ All constant values
 - **IntakeConstants.java** - Pivot and roller motor settings for ground intake mechanism
 - **LEDConstants.java** - PWM port and strip length for addressable LEDs
 - **OperatorConstants.java** - Controller ports and joystick deadband values
+- **PathingConstants.java** - BLine path follower PID gains (kinematic limits live in `deploy/autos/config.json`)
 - **PVConstants.java** - PhotonVision AprilTag field layout and vision standard deviations
 - **TrenchConstants.java** - Field dimensions, path names, and motion constraints for trench driving
 - **TurretConstants.java** - PID gains, angle limits, and encoder settings for turret rotation
@@ -44,7 +45,7 @@ Robot subsystems that control physical mechanisms
 - **LEDSubsystem.java** - Controls addressable LED strip with pattern-based status indicators
 - **PDHSubsystem.java** - Manages the Power Distribution Hub switchable channel and logging
 - **PhotonVisionSubsystem.java** - Processes AprilTag detection data for robot pose estimation
-- **SwerveSubsystem.java** - Swerve drive control with field-relative driving, odometry, and pathfinding
+- **SwerveSubsystem.java** - Swerve drive control with field-relative driving, odometry, and BLine path following
 - **TurretSubsystem.java** - Rotates turret to aim at targets with auto-tracking capability
 
 ### `utils`
@@ -56,7 +57,7 @@ Utility classes for calculations and data structures
 
 ## Dependencies
 - **YAGSL** - Yet Another Generic Swerve Library
-- **PathplannerLib** - Path planning and autonomous
+- **BLine-Lib** - Point-to-point path following and autonomous
 - **PhotonLib** - Vision processing with PhotonVision
 - **REVLib** - REV Robotics motor controllers
 - **Phoenix5/Phoenix6** - CTRE motor controllers

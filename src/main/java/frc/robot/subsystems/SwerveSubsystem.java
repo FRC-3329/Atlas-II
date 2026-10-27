@@ -3,9 +3,11 @@ package frc.robot.subsystems;
 import static edu.wpi.first.units.Units.Meter;
 
 import frc.robot.constants.Constants;
+import frc.robot.constants.PathingConstants;
+import frc.robot.lib.BLine.FollowPath;
+import frc.robot.lib.BLine.Path;
 
 import java.io.File;
-import java.util.Optional;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 
@@ -14,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import edu.wpi.first.math.Matrix;
+import edu.wpi.first.math.controller.PIDController;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -23,7 +26,6 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.numbers.N1;
 import edu.wpi.first.math.numbers.N3;
 import edu.wpi.first.wpilibj.DriverStation;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj.Filesystem;
 
@@ -32,19 +34,12 @@ import swervelib.SwerveDrive;
 import swervelib.SwerveDriveTest;
 import swervelib.math.SwerveMath;
 
-import com.pathplanner.lib.auto.AutoBuilder;
-import com.pathplanner.lib.commands.PathPlannerAuto;
-import com.pathplanner.lib.config.PIDConstants;
-import com.pathplanner.lib.config.RobotConfig;
-import com.pathplanner.lib.controllers.PPHolonomicDriveController;
-import com.pathplanner.lib.path.PathConstraints;
-import com.pathplanner.lib.path.PathPlannerPath;
-
 import dev.doglog.DogLog;
 
 public class SwerveSubsystem extends SubsystemBase {
 	private File directory = new File(Filesystem.getDeployDirectory(), "swerve");
 	private SwerveDrive swerveDrive;
+	private FollowPath.Builder pathBuilder;
 
 	public SwerveSubsystem() {
 		try {
@@ -67,7 +62,7 @@ public class SwerveSubsystem extends SubsystemBase {
 
 		SmartDashboard.putData("ZeroGyro", zeroGyro().withName("Zero Gyro"));
 
-		setupPathPlanner();
+		setupBLine();
 	}
 
 	@Override
@@ -185,56 +180,32 @@ public class SwerveSubsystem extends SubsystemBase {
 				3, 4, 1.5);
 	}
 
-	public void setupPathPlanner() {
-		RobotConfig config;
-		try {
-			config = RobotConfig.fromGUISettings();
-			final boolean enableFeedforward = true;
-
-			AutoBuilder.configure(
-					swerveDrive::getPose, // Supplier for current robot pose
-					swerveDrive::resetOdometry, // Consumer to reset odometry
-					swerveDrive::getRobotVelocity, // Supplier for current robot velocity
-					(speedsRobotRelative, moduleFeedForwards) -> {
-						if (enableFeedforward) {
-							swerveDrive.drive(
-									speedsRobotRelative,
-									swerveDrive.kinematics.toSwerveModuleStates(speedsRobotRelative),
-									moduleFeedForwards.linearForces());
-						} else {
-							swerveDrive.setChassisSpeeds(speedsRobotRelative);
-						}
-					},
-					new PPHolonomicDriveController(
-							new PIDConstants(4.5, 0.0, 0.2),
-							new PIDConstants(4.5, 0.0, 0.2)
-					),
-					config,
-					// PathPlanner needs to mirror paths for the red alliance
-					() -> {
-						Optional<Alliance> alliance = DriverStation.getAlliance();
-
-						if (alliance.isPresent()) {
-							return alliance.get() == DriverStation.Alliance.Red;
-						}
-
-						return false;
-					},
-					this);
-		} catch (Exception e) {
-			DriverStation.reportError(
-					"Failed to setup PathPlanner: " + e.getMessage(), e.getStackTrace());
-		}
+	public void setupBLine() {
+		pathBuilder = new FollowPath.Builder(
+				this,
+				swerveDrive::getPose,
+				swerveDrive::getRobotVelocity,
+				swerveDrive::drive,
+				new PIDController(
+						PathingConstants.TRANSLATION_kP,
+						PathingConstants.TRANSLATION_kI,
+						PathingConstants.TRANSLATION_kD),
+				new PIDController(
+						PathingConstants.ROTATION_kP,
+						PathingConstants.ROTATION_kI,
+						PathingConstants.ROTATION_kD),
+				new PIDController(
+						PathingConstants.CROSS_TRACK_kP,
+						PathingConstants.CROSS_TRACK_kI,
+						PathingConstants.CROSS_TRACK_kD))
+				// BLine paths are authored on the blue side and flipped for the red alliance
+				.withDefaultShouldFlip();
 	}
 
-	public Command getAutonomousCommand(String pathName) {
-		return new PathPlannerAuto(pathName);
-	}
-
-	public Command pathfindThenFollowPath(String pathName, PathConstraints constraints) {
+	/** Loads a path from deploy/autos/paths and builds a command that follows it. */
+	public Command followPath(String pathName) {
 		try {
-			PathPlannerPath path = PathPlannerPath.fromPathFile(pathName);
-			return AutoBuilder.pathfindThenFollowPath(path, constraints);
+			return pathBuilder.build(new Path(pathName));
 		} catch (Exception e) {
 			DriverStation.reportError(
 					"Unable to load path: " + pathName, e.getStackTrace());

@@ -1,0 +1,45 @@
+{
+  "path_elements": [
+    {
+      "type": "waypoint",
+      "translation_target": {
+        "x_meters": 3.188,
+        "y_meters": 0.819
+      },
+      "rotation_target": {
+        "rotation_radians": 3.1416,
+        "t_ratio": 1.0,
+        "profiled_rotation": true
+      }
+    },
+    {
+      "type": "event_trigger",
+      "t_ratio": 0.05,
+      "lib_key": "IntakeGamePiece"
+    },
+    {
+      "type": "waypoint",
+      "translation_target": {
+        "x_meters": 5.748,
+        "y_meters": 0.604
+      },
+      "rotation_target": {
+        "rotation_radians": 3.1416,
+        "t_ratio": 1.0,
+        "profiled_rotation": true
+      }
+    },
+    {
+      "type": "waypoint",
+      "translation_target": {
+        "x_meters": 6.775,
+        "y_meters": 3.136
+      },
+      "rotation_target": {
+        "rotation_radians": 2.6239,
+        "t_ratio": 1.0,
+        "profiled_rotation": true
+      }
+    }
+  ]
+}
