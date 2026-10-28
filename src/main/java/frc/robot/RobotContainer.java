@@ -187,21 +187,6 @@ public class RobotContainer {
     }
 
     /**
-     * Wraps an auto-driving command to prevent heading-lock snap-back.
-     * <p>
-     * The drive input stream caches the last heading. Without this wrapper,
-     * the robot snaps to the pre-auto heading when the command ends because
-     * the heading lock was never updated during auto driving.
-     */
-    private Command autoDriving(Command drivingCommand) {
-        return drivingCommand.beforeStarting(() -> {
-            driveAngularVelocity.get();
-        }).finallyDo(interrupted -> {
-            driveAngularVelocity.get();
-        }).withName("AutoDriving");
-    }
-
-    /**
      * Spins up the flywheel while simultaneously waiting for target speed,
      * then feeds fuel through the indexer and intake.
      * <p>
@@ -225,7 +210,7 @@ public class RobotContainer {
 
         if (auton != null) {
             DogLog.log("Robot/AutoSelected", auton.getName());
-            return autoDriving(auton);
+            return auton;
         } else {
             DriverStation.reportError(
                     "Auton error: No auton selected :(",
