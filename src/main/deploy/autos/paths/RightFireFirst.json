@@ -14,14 +14,27 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 0.618,
+      "t_ratio": 0.973,
       "lib_key": "IntakeGamePiece"
     },
     {
       "type": "waypoint",
       "translation_target": {
+        "x_meters": 6.3,
+        "y_meters": 0.7
+      },
+      "rotation_target": {
+        "rotation_radians": 3.1416,
+        "t_ratio": 1.0,
+        "profiled_rotation": true
+      }
+    },
+    {
+      "type": "waypoint",
+      "translation_target": {
         "x_meters": 7.491,
-        "y_meters": 0.717
+        "y_meters": 0.717,
+        "intermediate_handoff_radius_meters": 0.5
       },
       "rotation_target": {
         "rotation_radians": 1.5708,
@@ -31,7 +44,7 @@
     },
     {
       "type": "event_trigger",
-      "t_ratio": 1.0,
+      "t_ratio": 0.95,
       "lib_key": "StopIntake"
     },
     {
@@ -46,5 +59,19 @@
         "profiled_rotation": true
       }
     }
-  ]
+  ],
+  "constraints": {
+    "max_velocity_meters_per_sec": [
+      {
+        "value": 1.5,
+        "start_ordinal": 2,
+        "end_ordinal": 2
+      },
+      {
+        "value": 0.75,
+        "start_ordinal": 3,
+        "end_ordinal": 3
+      }
+    ]
+  }
 }

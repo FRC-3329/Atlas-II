@@ -112,6 +112,10 @@ public class RobotContainer {
                         .andThen(Commands.sequence(
                                 flywheel.stop(), indexer.stop(), intake.stop(),
                                 turret.stopAutoTracking())));
+        // Path-following tuning runs - see the BLine tuning guide
+        autoChooser.addOption("Tune: Translation", drivebase.translationTuningPath());
+        autoChooser.addOption("Tune: Rotation", drivebase.rotationTuningPath());
+        autoChooser.addOption("Tune: Cross Track", drivebase.crossTrackTuningPath());
 
         configureBindings();
     }
@@ -161,6 +165,7 @@ public class RobotContainer {
      */
     private Command fireFirstAuto(String sweepPath, String returnPath) {
         return BLineCommands.sequence(
+                drivebase.resetPoseToPathStartInSim(sweepPath),
                 intake.lower(),
                 Commands.race(
                         turret.autoTrack(),

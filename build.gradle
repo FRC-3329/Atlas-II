@@ -78,6 +78,8 @@ dependencies {
 test {
     useJUnitPlatform()
     systemProperty 'junit.jupiter.extensions.autodetection.enabled', 'true'
+    // Full-robot simulation runs are opt-in through simAuto below
+    exclude '**/AutoSimTest*'
 }
 
 // Simulation configuration (e.g. environment variables).
@@ -100,6 +102,27 @@ jar {
 deployArtifact.jarTask = jar
 wpi.java.configureExecutableTasks(jar)
 wpi.java.configureTestTasks(test)
+
+// Runs one autonomous routine headless in simulation and fails if a BLine path
+// doesn't finish or the bumpers hit the field, e.g.
+//   ./gradlew simAuto -Pauto="Left Fire First" -Pred=true
+// Optional: -Pseconds=20, -PstartPose=x,y,degrees, -Pgains=Rotation/kP=5,CrossTrack/kP=1
+def simAuto = tasks.register('simAuto', Test) {
+    description = 'Runs an autonomous routine headless in simulation.'
+    group = 'verification'
+    useJUnitPlatform()
+    testClassesDirs = sourceSets.test.output.classesDirs
+    classpath = sourceSets.test.runtimeClasspath
+    filter { includeTestsMatching 'frc.robot.AutoSimTest' }
+    outputs.upToDateWhen { false }
+    testLogging { showStandardStreams = true }
+    ['auto', 'red', 'seconds', 'startPose', 'gains'].each { key ->
+        if (project.hasProperty(key)) {
+            systemProperty key, project.property(key)
+        }
+    }
+}
+wpi.java.configureTestTasks(simAuto.get())
 
 // Configure string concat to always inline compile
 tasks.withType(JavaCompile) {

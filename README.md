@@ -16,6 +16,12 @@ Source code for the robot used in REBUILT developed by team 3329, the Wildbots!
 ./gradlew deploy
 ```
 
+### Check an Auto in Simulation
+Runs an autonomous routine headless and fails if a path doesn't finish or the bumpers hit the field
+```sh
+./gradlew simAuto -Pauto="Left Fire First" -Pred=true
+```
+
 ## Code Outline
 Code outline for `src/main/java/frc/robot`
 
@@ -27,7 +33,7 @@ All constant values
 - **IntakeConstants.java** - Pivot and roller motor settings for ground intake mechanism
 - **LEDConstants.java** - PWM port and strip length for addressable LEDs
 - **OperatorConstants.java** - Controller ports and joystick deadband values
-- **PathingConstants.java** - BLine path follower PID gains (kinematic limits live in `deploy/autos/config.json`)
+- **PathingConstants.java** - BLine path follower PID gains, live-tunable under `/Tunable/BLine` (kinematic limits live in `deploy/autos/config.json`)
 - **PVConstants.java** - PhotonVision AprilTag field layout and vision standard deviations
 - **TrenchConstants.java** - Field dimensions, path names, and motion constraints for trench driving
 - **TurretConstants.java** - PID gains, angle limits, and encoder settings for turret rotation
